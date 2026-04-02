@@ -1,0 +1,180 @@
+/* ============================================
+   EmailCapture Component Styles
+   ============================================ */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 460px;
+  opacity: 0;
+  animation: fadeInUp 1s ease 1.1s forwards;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+/* ── Label ───────────────────────────────────── */
+.heading {
+  font-family: var(--font-inter);
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0.5em;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* ── Form ────────────────────────────────────── */
+.form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── Input wrapper ───────────────────────────── */
+.inputWrap {
+  display: flex;
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  transition: border-color 250ms ease;
+}
+
+.inputWrap:focus-within {
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.inputWrapError {
+  border-color: rgba(255, 80, 80, 0.45) !important;
+}
+
+/* ── Input field ─────────────────────────────── */
+.input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 15px 18px;
+  color: #fff;
+  font-family: var(--font-inter);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+}
+
+.input::placeholder {
+  color: rgba(255, 255, 255, 0.18);
+  letter-spacing: 0.18em;
+}
+
+.input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Submit button ───────────────────────────── */
+.button {
+  flex-shrink: 0;
+  min-width: 110px;
+  padding: 15px 22px;
+  background: #fff;
+  color: #000;
+  font-family: var(--font-inter);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 200ms ease, color 200ms ease;
+  cursor: pointer;
+  border: none;
+}
+
+.button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.button:active:not(:disabled) {
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Loading spinner ─────────────────────────── */
+.spinner {
+  display: block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(0, 0, 0, 0.25);
+  border-top-color: #000;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Error message ───────────────────────────── */
+.error {
+  font-family: var(--font-inter);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  color: rgba(255, 90, 90, 0.85);
+  text-align: center;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Success state ───────────────────────────── */
+.success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  animation: fadeIn 0.5s ease forwards;
+}
+
+.checkmark {
+  font-size: 22px;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1;
+}
+
+.successText {
+  font-family: var(--font-inter);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.45);
+  text-align: center;
+  max-width: 320px;
+  line-height: 1.6;
+}
+
+/* ── Responsive ──────────────────────────────── */
+@media (max-width: 480px) {
+  .container {
+    max-width: 100%;
+  }
+
+  .button {
+    min-width: 90px;
+    padding: 15px 16px;
+    font-size: 9px;
+  }
+}

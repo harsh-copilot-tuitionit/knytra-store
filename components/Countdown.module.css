@@ -1,0 +1,122 @@
+/* ============================================
+   Countdown Component Styles
+   ============================================ */
+
+.countdown {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  margin-bottom: 52px;
+  opacity: 0;
+  animation: fadeInUp 1s ease 0.9s forwards;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+/* ── Unit cell ───────────────────────────────── */
+.unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.numberWrap {
+  width: 96px;
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.02);
+  margin-bottom: 10px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle inner gradient */
+.numberWrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.025) 0%,
+    transparent 60%
+  );
+  pointer-events: none;
+}
+
+.number {
+  font-family: var(--font-space-grotesk);
+  font-size: 48px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  /* Triggered every render change via key prop */
+  animation: flipIn 0.25s ease;
+}
+
+@keyframes flipIn {
+  from { opacity: 0.4; transform: translateY(-6px); }
+  to   { opacity: 1;   transform: translateY(0);    }
+}
+
+.label {
+  font-family: var(--font-inter);
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0.3em;
+  color: rgba(255, 255, 255, 0.25);
+}
+
+/* ── Separator ───────────────────────────────── */
+.separator {
+  font-family: var(--font-space-grotesk);
+  font-size: 36px;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.1);
+  padding: 0 2px;
+  /* Align with number wrap vertically */
+  margin-top: 28px;
+  user-select: none;
+}
+
+/* ── Responsive ──────────────────────────────── */
+@media (max-width: 520px) {
+  .numberWrap {
+    width: 66px;
+    height: 66px;
+  }
+
+  .number {
+    font-size: 32px;
+  }
+
+  .separator {
+    font-size: 24px;
+    margin-top: 18px;
+    padding: 0 1px;
+  }
+
+  .label {
+    font-size: 8px;
+    letter-spacing: 0.2em;
+  }
+}
+
+@media (max-width: 360px) {
+  .numberWrap {
+    width: 56px;
+    height: 56px;
+  }
+
+  .number {
+    font-size: 26px;
+  }
+}

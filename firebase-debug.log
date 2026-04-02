@@ -1,0 +1,110 @@
+[debug] [2026-04-02T04:01:39.163Z] ----------------------------------------------------------------------
+[debug] [2026-04-02T04:01:39.165Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\Harsh Rathore (हर्ष)\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy
+[debug] [2026-04-02T04:01:39.165Z] CLI Version:   15.12.0
+[debug] [2026-04-02T04:01:39.166Z] Platform:      win32
+[debug] [2026-04-02T04:01:39.166Z] Node Version:  v22.18.0
+[debug] [2026-04-02T04:01:39.166Z] Time:          Thu Apr 02 2026 09:31:39 GMT+0530 (India Standard Time)
+[debug] [2026-04-02T04:01:39.166Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-04-02T04:01:40.594Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-02T04:01:40.595Z] > authorizing via signed-in user (harsh@harshrathore.com)
+[debug] [2026-04-02T04:01:40.595Z] [iam] checking project knytra-85510 for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2026-04-02T04:01:40.596Z] Checked if tokens are valid: true, expires at: 1775105044477
+[debug] [2026-04-02T04:01:40.596Z] Checked if tokens are valid: true, expires at: 1775105044477
+[debug] [2026-04-02T04:01:40.597Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/knytra-85510:testIamPermissions [none]
+[debug] [2026-04-02T04:01:40.597Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/knytra-85510:testIamPermissions  x-goog-user-project=knytra-85510
+[debug] [2026-04-02T04:01:40.597Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/knytra-85510:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-04-02T04:01:42.154Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/knytra-85510:testIamPermissions 200
+[debug] [2026-04-02T04:01:42.155Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/knytra-85510:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-04-02T04:01:42.155Z] Checked if tokens are valid: true, expires at: 1775105044477
+[debug] [2026-04-02T04:01:42.155Z] Checked if tokens are valid: true, expires at: 1775105044477
+[debug] [2026-04-02T04:01:42.155Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/knytra-85510 [none]
+[debug] [2026-04-02T04:01:42.776Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/knytra-85510 200
+[debug] [2026-04-02T04:01:42.776Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/knytra-85510 {"projectId":"knytra-85510","projectNumber":"901753801894","displayName":"Knytra","name":"projects/knytra-85510","resources":{"hostingSite":"knytra-85510"},"state":"ACTIVE","etag":"1_4dcb1343-e67e-46ad-8d85-d296df638dc6"}
+[debug] [2026-04-02T04:01:44.387Z] defaultcredentials: writing to file C:\Users\Harsh Rathore (हर्ष)\AppData\Roaming\firebase\harsh_harshrathore_com_application_default_credentials.json
+[debug] [2026-04-02T04:01:44.388Z] Checked if tokens are valid: true, expires at: 1775105044477
+[debug] [2026-04-02T04:01:44.388Z] Checked if tokens are valid: true, expires at: 1775105044477
+[debug] [2026-04-02T04:01:44.388Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/knytra-85510/sites pageToken=&pageSize=10
+[debug] [2026-04-02T04:01:45.846Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/knytra-85510/sites 200
+[debug] [2026-04-02T04:01:45.846Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/knytra-85510/sites {"sites":[{"name":"projects/knytra-85510/sites/knytra-85510","defaultUrl":"https://knytra-85510.web.app","type":"DEFAULT_SITE"}]}
+[debug] [2026-04-02T04:01:45.846Z] Checked if tokens are valid: true, expires at: 1775105044477
+[debug] [2026-04-02T04:01:45.846Z] Checked if tokens are valid: true, expires at: 1775105044477
+[debug] [2026-04-02T04:01:45.847Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/knytra-85510/sites 
+[debug] [2026-04-02T04:01:46.665Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/knytra-85510/sites 200
+[debug] [2026-04-02T04:01:46.665Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/knytra-85510/sites {"sites":[{"name":"projects/knytra-85510/sites/knytra-85510","defaultUrl":"https://knytra-85510.web.app","type":"DEFAULT_SITE"}]}
+[debug] [2026-04-02T04:01:46.665Z] Checked if tokens are valid: true, expires at: 1775105044477
+[debug] [2026-04-02T04:01:46.665Z] Checked if tokens are valid: true, expires at: 1775105044477
+[debug] [2026-04-02T04:01:46.666Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/knytra-85510/webApps/-/config [none]
+[debug] [2026-04-02T04:01:47.792Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/knytra-85510/webApps/-/config 200
+[debug] [2026-04-02T04:01:47.792Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/knytra-85510/webApps/-/config {"projectId":"knytra-85510","appId":"1:901753801894:web:a2d97eed93c9e59e59f867","storageBucket":"knytra-85510.firebasestorage.app","apiKey":"AIzaSyBZ_uh7I3rxpPqXfgFHDjJpGqDDskYCetE","authDomain":"knytra-85510.firebaseapp.com","messagingSenderId":"901753801894","measurementId":"G-MEMKR62JVW","projectNumber":"901753801894","version":"2"}
+[info] 
+   Thank you for trying our early preview of Next.js support on Firebase Hosting.
+   During the preview, support is best-effort and breaking changes can be expected. Proceed with caution.
+   The integration is known to work with Next.js version 12 - 15.0. You may encounter errors.
+
+   Documentation: https://firebase.google.com/docs/hosting/frameworks/nextjs
+   File a bug: https://github.com/firebase/firebase-tools/issues/new?template=bug_report.md
+   Submit a feature request: https://github.com/firebase/firebase-tools/issues/new?template=feature_request.md
+
+   We'd love to learn from you. Express your interest in helping us shape the future of Firebase Hosting: https://goo.gle/41enW5X
+
+[debug] [2026-04-02T04:01:51.699Z] Checked if tokens are valid: true, expires at: 1775105044477
+[debug] [2026-04-02T04:01:51.700Z] Checked if tokens are valid: true, expires at: 1775105044477
+[debug] [2026-04-02T04:01:51.700Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/knytra-85510/sites/knytra-85510 [none]
+[debug] [2026-04-02T04:01:53.014Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/knytra-85510/sites/knytra-85510 200
+[debug] [2026-04-02T04:01:53.014Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/knytra-85510/sites/knytra-85510 {"name":"projects/knytra-85510/sites/knytra-85510","defaultUrl":"https://knytra-85510.web.app","type":"DEFAULT_SITE"}
+[info] ▲ Next.js 16.2.2 (Turbopack)
+
+[info] - Environments: .env.local
+
+
+[info]   Creating an optimized production build ...
+
+[info] ✓ Compiled successfully in 2.4s
+
+[info]   Running TypeScript ...
+
+[info]   Finished TypeScript in 2.7s ...
+
+[info]   Collecting page data using 6 workers ...
+
+[info] [Knytra] Firebase Admin SDK Initialized Successfully.
+
+[info]   Generating static pages using 6 workers (0/5) ...
+
+[info] [Knytra] Firebase Admin SDK Initialized Successfully.
+
+[info]   Generating static pages using 6 workers (1/5) 
+
+[info]   Generating static pages using 6 workers (2/5) 
+
+[info]   Generating static pages using 6 workers (3/5) 
+
+[info] ✓ Generating static pages using 6 workers (5/5) in 801ms
+
+[info]   Finalizing page optimization ...
+
+[info] 
+
+[info] Route (app)
+┌ ○ /
+├ ○ /_not-found
+└ ƒ /api/waitlist
+
+
+
+[info] ○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+[info] Building a Cloud Function to run this application. This is needed due to:
+[info]  • non-static component /api/waitlist/route
+[info] 
+[debug] [2026-04-02T04:02:10.350Z] Checked if tokens are valid: true, expires at: 1775105044477
+[debug] [2026-04-02T04:02:10.350Z] Checked if tokens are valid: true, expires at: 1775105044477
+[debug] [2026-04-02T04:02:10.350Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/knytra-85510/sites/knytra-85510 [none]
+[debug] [2026-04-02T04:02:11.639Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/knytra-85510/sites/knytra-85510 200
+[debug] [2026-04-02T04:02:11.639Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/knytra-85510/sites/knytra-85510 {"name":"projects/knytra-85510/sites/knytra-85510","defaultUrl":"https://knytra-85510.web.app","type":"DEFAULT_SITE"}
+[debug] [2026-04-02T04:02:11.957Z] Error: EPERM: operation not permitted, symlink 'E:\Brands\Knytra\Website\node_modules\firebase-admin' -> 'E:\Brands\Knytra\Website\.firebase\knytra-85510\functions\.next\node_modules\firebase-admin-a14c8a5423a75469'
+[error] 
+[error] Error: An unexpected error has occurred.
