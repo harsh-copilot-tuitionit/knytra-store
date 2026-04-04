@@ -1,0 +1,121 @@
+.adminContainer {
+  display: flex;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-color: var(--color-black);
+  color: var(--color-white);
+  font-family: var(--font-body);
+}
+
+.sidebar {
+  width: 260px;
+  background-color: var(--color-off-black);
+  border-right: 1px solid var(--color-white-12);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.sidebarHeader {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--sp-6);
+  border-bottom: 1px solid var(--color-white-12);
+}
+
+.sidebarHeader h2 {
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.sidebarNav {
+  flex-grow: 1;
+  padding: var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.navLink {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  color: var(--color-white-60);
+  border-radius: 6px;
+  transition: all var(--ease-fast);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.navLink:hover {
+  background-color: var(--color-white-06);
+  color: var(--color-white);
+}
+
+.navLink[data-active="true"] {
+  background-color: var(--color-white-12);
+  color: var(--color-white);
+}
+
+.sidebarFooter {
+  padding: var(--sp-4);
+  border-top: 1px solid var(--color-white-12);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.logoutButton {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  color: #ff4a4a;
+  border-radius: 6px;
+  transition: all var(--ease-fast);
+  font-size: 14px;
+  font-weight: 500;
+  width: 100%;
+  text-align: left;
+}
+
+.logoutButton:hover {
+  background-color: rgba(255, 74, 74, 0.1);
+}
+
+.mainContent {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.topHeader {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--sp-6);
+  border-bottom: 1px solid var(--color-white-12);
+  background-color: var(--color-black);
+}
+
+.headerSpacer {
+  flex-grow: 1;
+}
+
+.adminProfile {
+  font-size: 14px;
+  color: var(--color-white-60);
+}
+
+.contentPadder {
+  padding: var(--sp-8);
+  flex-grow: 1;
+  overflow-y: auto;
+  background-color: #050505;
+}

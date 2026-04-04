@@ -1,0 +1,146 @@
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--color-white-12);
+  width: 100%;
+}
+
+.navContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 72px;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 var(--sp-6);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 24px;
+  letter-spacing: 0.05em;
+  color: var(--color-white);
+  transition: opacity var(--ease-fast);
+}
+
+.logo:hover {
+  opacity: 0.8;
+}
+
+.navLinks {
+  display: none;
+  align-items: center;
+  gap: var(--sp-8);
+}
+
+.link {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-white-60);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all var(--ease-fast);
+  position: relative;
+}
+
+.link:hover {
+  color: var(--color-white);
+}
+
+.link::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0%;
+  height: 1px;
+  background-color: var(--color-white);
+  transition: width var(--ease-fast);
+}
+
+.link:hover::after {
+  width: 100%;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+}
+
+.iconButton {
+  color: var(--color-white-60);
+  transition: color var(--ease-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.iconButton:hover {
+  color: var(--color-white);
+}
+
+.cartButton {
+  position: relative;
+  color: var(--color-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity var(--ease-fast);
+}
+
+.cartButton:hover {
+  opacity: 0.8;
+}
+
+.cartBadge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  background-color: var(--color-white);
+  color: var(--color-black);
+  font-size: 10px;
+  font-weight: 700;
+  height: 16px;
+  min-width: 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+.mobileMenu {
+  display: block;
+}
+
+.desktopSearch {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .navLinks {
+    display: flex;
+  }
+  
+  .mobileMenu {
+    display: none;
+  }
+
+  .desktopSearch {
+    display: block;
+  }
+
+  .navContainer {
+    padding: 0 var(--sp-10);
+  }
+}

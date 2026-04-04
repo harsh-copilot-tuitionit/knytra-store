@@ -1,0 +1,240 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+  max-width: 1200px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+}
+
+.backButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  border: 1px solid var(--color-white-12);
+  color: var(--color-white-60);
+  transition: all var(--ease-fast);
+}
+
+.backButton:hover {
+  background-color: var(--color-white-06);
+  color: var(--color-white);
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.saveButton {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  background-color: var(--color-white);
+  color: var(--color-black);
+  padding: 10px var(--sp-4);
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  transition: opacity var(--ease-fast);
+}
+
+.saveButton:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.saveButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--sp-6);
+  align-items: start;
+}
+
+.mainCol {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+}
+
+.sideCol {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+}
+
+.card {
+  background-color: var(--color-off-black);
+  border: 1px solid var(--color-white-12);
+  border-radius: 8px;
+  padding: var(--sp-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+.cardTitle {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.inputGroup label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-white-60);
+}
+
+.inputGroup input,
+.inputGroup textarea,
+.inputGroup select {
+  background-color: var(--color-black);
+  border: 1px solid var(--color-white-12);
+  border-radius: 6px;
+  padding: 12px;
+  color: var(--color-white);
+  font-size: 14px;
+  transition: border-color var(--ease-fast);
+}
+
+.inputGroup input:focus,
+.inputGroup textarea:focus,
+.inputGroup select:focus {
+  border-color: var(--color-white-40);
+  outline: none;
+}
+
+.inputGroup textarea {
+  resize: vertical;
+}
+
+.imageGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--sp-4);
+}
+
+.imagePreview {
+  aspect-ratio: 1;
+  border-radius: 6px;
+  background-color: var(--color-black);
+  border: 1px solid var(--color-white-12);
+  position: relative;
+  overflow: hidden;
+}
+
+.previewImg {
+  object-fit: cover;
+}
+
+.removeImgBtn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  background-color: rgba(0,0,0,0.5);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+  transition: background-color var(--ease-fast);
+}
+
+.removeImgBtn:hover {
+  background-color: rgba(255, 74, 74, 0.8);
+}
+
+.uploadBox {
+  aspect-ratio: 1;
+  border-radius: 6px;
+  border: 2px dashed var(--color-white-12);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  color: var(--color-white-40);
+  cursor: pointer;
+  transition: all var(--ease-fast);
+}
+
+.uploadBox:hover {
+  border-color: var(--color-white-40);
+  color: var(--color-white-60);
+}
+
+.uploadBox span {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.hiddenInput {
+  display: none;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--color-white-12);
+}
+
+.sizesGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+}
+
+.sizeBtn {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  border: 1px solid var(--color-white-12);
+  background-color: transparent;
+  color: var(--color-white-60);
+  font-weight: 500;
+  transition: all var(--ease-fast);
+}
+
+.sizeBtn:hover {
+  border-color: var(--color-white-40);
+  color: var(--color-white);
+}
+
+.sizeActive {
+  background-color: var(--color-white);
+  border-color: var(--color-white);
+  color: var(--color-black);
+}
+
+.helpText {
+  font-size: 13px;
+  color: var(--color-white-40);
+  margin-top: var(--sp-1);
+}

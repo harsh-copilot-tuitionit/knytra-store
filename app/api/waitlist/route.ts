@@ -1,12 +1,10 @@
 import { NextRequest } from "next/server";
-import { getAdminDb } from "@/lib/firebase-admin";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const email: unknown = body?.email;
 
-    /* ── Validate ── */
     if (!email || typeof email !== "string") {
       return Response.json({ error: "Email is required." }, { status: 400 });
     }
@@ -18,13 +16,11 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: "Invalid email address." }, { status: 400 });
     }
 
-    /* ── Persist to Firebase (Firestore) securely via Admin SDK ── */
+    const { getAdminDb } = await import("@/lib/firebase-admin");
     const adminDb = getAdminDb();
     const waitlistRef = adminDb.collection("waitlist");
-    
-    // 1. Check if email already exists
+
     const snapshot = await waitlistRef.where("email", "==", normalized).get();
-    
     if (!snapshot.empty) {
       return Response.json(
         { error: "You're already on the list! We'll see you on drop day." },
@@ -32,22 +28,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2. Add to Firestore NoSQL Database
     await waitlistRef.add({
       email: normalized,
       joinedAt: new Date().toISOString(),
       source: "coming-soon",
-      status: "active"
+      status: "active",
     });
-
-    console.log(`[Knytra Waitlist] ✅ Saved to Firestore: ${normalized}`);
 
     return Response.json(
       { success: true, message: "You're on the list. We'll hit you up on launch day." },
       { status: 200 }
     );
   } catch (err) {
-    console.error("[Knytra Waitlist] Firebase Error:", err);
+    console.error("[Knytra Waitlist] Error:", err);
     return Response.json({ error: "Internal server error." }, { status: 500 });
   }
 }
