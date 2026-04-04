@@ -5,24 +5,36 @@ runConfig:
   maxInstances: 2
 
 env:
+  # ── Public Firebase config (safe to commit)
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
-    secret: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: "AIzaSyBZ_uh7I3rxpPqXfgFHDjJpGqDDskYCetE"
+    availability: [BUILD, RUNTIME]
 
   - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-    secret: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: "knytra-85510.firebaseapp.com"
+    availability: [BUILD, RUNTIME]
 
   - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
-    secret: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: "knytra-85510"
+    availability: [BUILD, RUNTIME]
 
   - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-    secret: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: "knytra-85510.firebasestorage.app"
+    availability: [BUILD, RUNTIME]
 
   - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-    secret: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: "901753801894"
+    availability: [BUILD, RUNTIME]
 
   - variable: NEXT_PUBLIC_FIREBASE_APP_ID
-    secret: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: "1:901753801894:web:a2d97eed93c9e59e59f867"
+    availability: [BUILD, RUNTIME]
 
+  - variable: NEXT_PUBLIC_SITE_URL
+    value: "https://knytra-85510.web.app"
+    availability: [BUILD, RUNTIME]
+
+  # ── Secrets (set via: npx firebase-tools apphosting:secrets:set <NAME>)
   - variable: NEXT_PUBLIC_ADMIN_UID
     secret: NEXT_PUBLIC_ADMIN_UID
 
@@ -31,3 +43,19 @@ env:
 
   - variable: FIREBASE_PRIVATE_KEY
     secret: FIREBASE_PRIVATE_KEY
+
+  - variable: RAZORPAY_KEY_SECRET
+    secret: RAZORPAY_KEY_SECRET
+
+  - variable: NEXT_PUBLIC_RAZORPAY_KEY_ID
+    secret: NEXT_PUBLIC_RAZORPAY_KEY_ID
+
+  - variable: QIKINK_CLIENT_ID
+    secret: QIKINK_CLIENT_ID
+
+  - variable: QIKINK_CLIENT_SECRET
+    secret: QIKINK_CLIENT_SECRET
+
+  - variable: QIKINK_API_BASE
+    secret: QIKINK_API_BASE
+
