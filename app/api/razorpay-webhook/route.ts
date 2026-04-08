@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
   if (eventType === "payment.captured") {
     const payment = (
       event.payload as { payment: { entity: Record<string, string> } }
-    ).payload.payment.entity;
+    ).payment.entity;
 
     const razorpay_order_id = payment.order_id;
     const razorpay_payment_id = payment.id;
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
   if (eventType === "payment.failed") {
     const payment = (
       event.payload as { payment: { entity: Record<string, string> } }
-    ).payload.payment.entity;
+    ).payment.entity;
 
     const razorpay_order_id = payment.order_id;
 
