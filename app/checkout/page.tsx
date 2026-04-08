@@ -102,16 +102,33 @@ export default function CheckoutPage() {
     // 2. Create Razorpay order via our backend
     let razorpay_order_id: string;
     let orderAmount: number;
+    let firestoreOrderId: string;
     try {
       const res = await fetch("/api/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: checkoutTotal * 100 }), // paise
+        body: JSON.stringify({
+          amount: checkoutTotal * 100, // paise
+          items: checkoutItems,
+          user: {
+            name: form.name,
+            email: form.email,
+            phone: form.phone,
+          },
+          address: {
+            name: form.name,
+            phone: form.phone,
+            pincode: form.pincode,
+            city: form.city,
+            fullAddress: form.fullAddress,
+          },
+        }),
       });
       if (!res.ok) throw new Error("Order creation failed");
       const data = await res.json();
       razorpay_order_id = data.razorpay_order_id;
       orderAmount = data.amount;
+      firestoreOrderId = data.firestore_order_id;
     } catch {
       setPaymentError("Could not initiate payment. Please try again.");
       setPaying(false);
@@ -140,7 +157,8 @@ export default function CheckoutPage() {
         router.push(
           `/order-confirmation?payment_id=${response.razorpay_payment_id}` +
           `&order_id=${response.razorpay_order_id}` +
-          `&signature=${response.razorpay_signature}`
+          `&signature=${response.razorpay_signature}` +
+          `&doc_id=${firestoreOrderId}`
         );
       },
 
