@@ -441,19 +441,7 @@
   }
 
   .addToCartBtn {
-    position: static;
-    width: 100%;
-    background: #fff;
-    color: #000;
-    border: 2.5px solid #000;
-  }
-  .addToCartBtn:hover {
-    background: #000;
-    color: #fff;
-  }
-  .added {
-    background: #000;
-    color: #fff;
+    display: none;
   }
 
   .productTitle { font-size: 26px; padding: 20px 24px 12px; }
