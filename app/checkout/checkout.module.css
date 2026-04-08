@@ -1,0 +1,320 @@
+/* ============================================
+   KNYTRA — Checkout Page
+   ============================================ */
+
+.page {
+  background: #fff;
+  color: #000;
+  min-height: 100vh;
+}
+
+/* ── Header ── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1.5px solid #000;
+}
+
+.backBtn {
+  font-size: 14px;
+  color: #000;
+  text-decoration: none;
+  font-family: var(--font-body);
+  transition: opacity 150ms ease;
+}
+.backBtn:hover { opacity: 0.55; }
+
+.brand {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+}
+
+/* ── Layout ── */
+.layout {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .layout {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 0;
+  }
+}
+
+/* ── Form Section ── */
+.formSection {
+  flex: 1;
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+@media (min-width: 768px) {
+  .formSection {
+    padding: 40px 48px 40px 40px;
+    border-right: 1.5px solid #e8e8e8;
+  }
+}
+
+.sectionTitle {
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: 4px;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.fieldRow {
+  display: flex;
+  gap: 12px;
+}
+
+.label {
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #555;
+}
+
+.input,
+.textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid #d0d0d0;
+  background: #fff;
+  color: #000;
+  font-family: var(--font-body);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 150ms ease;
+  box-sizing: border-box;
+}
+.input:focus,
+.textarea:focus {
+  border-color: #000;
+}
+.input::placeholder,
+.textarea::placeholder {
+  color: #bbb;
+}
+
+.textarea {
+  resize: none;
+}
+
+.paymentPlaceholder {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  background: #f5f5f5;
+  border: 1.5px dashed #ccc;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: #666;
+  margin-top: 4px;
+}
+
+.paymentIcon {
+  font-size: 18px;
+}
+
+/* ── Summary Section ── */
+.summarySection {
+  width: 100%;
+  padding: 32px 24px;
+  background: #fafafa;
+  border-top: 1.5px solid #e8e8e8;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+@media (min-width: 768px) {
+  .summarySection {
+    width: 380px;
+    flex-shrink: 0;
+    padding: 40px 40px 40px 36px;
+    border-top: none;
+    border-left: none;
+    background: #fafafa;
+    min-height: calc(100vh - 69px);
+  }
+}
+
+/* ── Items ── */
+.itemsList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.itemImageWrap {
+  position: relative;
+  width: 72px;
+  height: 88px;
+  flex-shrink: 0;
+  border: 1.5px solid #e0e0e0;
+  background: #f2f2f2;
+  overflow: hidden;
+}
+
+.itemImage {
+  object-fit: cover;
+}
+
+.itemImageFallback {
+  width: 100%;
+  height: 100%;
+  background: #e8e8e8;
+}
+
+.itemDetails {
+  flex: 1;
+  min-width: 0;
+}
+
+.itemName {
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.itemMeta {
+  font-size: 12px;
+  color: #888;
+  margin-top: 4px;
+}
+
+.itemPrice {
+  font-family: var(--font-heading);
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* ── Totals ── */
+.totalsBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 1.5px solid #e0e0e0;
+}
+
+.totalRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #444;
+}
+
+.free {
+  color: #1a8a3a;
+  font-weight: 600;
+}
+
+.grandTotal {
+  font-family: var(--font-heading);
+  font-size: 17px;
+  font-weight: 700;
+  color: #000;
+  padding-top: 10px;
+  border-top: 1.5px solid #000;
+  margin-top: 2px;
+}
+
+/* ── CTA ── */
+.placeOrderBtn {
+  width: 100%;
+  padding: 16px;
+  background: #000;
+  color: #fff;
+  border: none;
+  font-family: var(--font-heading);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.paymentNote {
+  text-align: center;
+  font-size: 12px;
+  color: #aaa;
+  margin-top: -8px;
+}
+
+/* ── Empty state ── */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+  gap: 12px;
+  text-align: center;
+  padding: 40px;
+}
+
+.emptyIcon {
+  font-size: 48px;
+}
+
+.emptyTitle {
+  font-family: var(--font-heading);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.emptySub {
+  font-size: 14px;
+  color: #666;
+}
+
+.shopBtn {
+  margin-top: 8px;
+  display: inline-block;
+  padding: 12px 32px;
+  background: #000;
+  color: #fff;
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: opacity 150ms ease;
+}
+.shopBtn:hover { opacity: 0.8; }
