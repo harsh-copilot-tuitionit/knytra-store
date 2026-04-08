@@ -7,10 +7,12 @@
   background: #fff;
   color: #000;
   min-height: 100vh;
+  width: 100%;
   max-width: 680px;
   margin: 0 auto;
   padding-bottom: 100px; /* space for sticky ATC */
   overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 /* ── Header ── */
@@ -70,6 +72,8 @@
   flex-direction: column;
   gap: 10px;
   padding: 0 16px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Mobile: main image full width, aspect-ratio based */
@@ -156,6 +160,9 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .block {
@@ -176,6 +183,9 @@
   font-size: 13px;
   color: #444;
   line-height: 1.75;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
 }
 
 /* ── Size ── */
@@ -218,7 +228,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
 }
 
 .priceNumbers {
