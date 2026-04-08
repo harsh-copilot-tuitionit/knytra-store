@@ -1,13 +1,52 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import styles from "./checkout.module.css";
 
+// Minimal Razorpay window type
+declare global {
+  interface Window {
+    Razorpay: new (options: RazorpayOptions) => RazorpayInstance;
+  }
+}
+interface RazorpayOptions {
+  key: string;
+  amount: number;
+  currency: string;
+  name: string;
+  description: string;
+  order_id: string;
+  prefill: { name: string; email: string; contact: string };
+  theme: { color: string };
+  handler: (response: RazorpaySuccessResponse) => void;
+  modal: { ondismiss: () => void };
+}
+interface RazorpayInstance { open(): void; }
+export interface RazorpaySuccessResponse {
+  razorpay_payment_id: string;
+  razorpay_order_id: string;
+  razorpay_signature: string;
+}
+
+function loadRazorpayScript(): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (document.getElementById("razorpay-script")) { resolve(true); return; }
+    const script = document.createElement("script");
+    script.id = "razorpay-script";
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+}
+
 export default function CheckoutPage() {
-  const { cart, cartTotal, cartCount, buyNowItem, clearBuyNow } = useCart();
+  const router = useRouter();
+  const { cart, cartTotal, cartCount, buyNowItem, clearBuyNow, clearCart } = useCart();
 
   // Clear buyNowItem when the user navigates away from this page
   useEffect(() => {
@@ -31,9 +70,12 @@ export default function CheckoutPage() {
     city: "",
     fullAddress: "",
   });
+  const [paying, setPaying] = useState(false);
+  const [paymentError, setPaymentError] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    setPaymentError("");
   };
 
   // All required fields must be non-empty (email is optional)
@@ -44,9 +86,74 @@ export default function CheckoutPage() {
     form.city.trim() !== "" &&
     form.fullAddress.trim() !== "";
 
-  const handleProceed = () => {
-    if (!isValid) return;
-    // Razorpay payment initiation — Ticket 4
+  const handleProceed = async () => {
+    if (!isValid || paying) return;
+    setPaymentError("");
+    setPaying(true);
+
+    // 1. Load Razorpay SDK
+    const loaded = await loadRazorpayScript();
+    if (!loaded) {
+      setPaymentError("Failed to load payment gateway. Please try again.");
+      setPaying(false);
+      return;
+    }
+
+    // 2. Create Razorpay order via our backend
+    let razorpay_order_id: string;
+    let orderAmount: number;
+    try {
+      const res = await fetch("/api/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: checkoutTotal * 100 }), // paise
+      });
+      if (!res.ok) throw new Error("Order creation failed");
+      const data = await res.json();
+      razorpay_order_id = data.razorpay_order_id;
+      orderAmount = data.amount;
+    } catch {
+      setPaymentError("Could not initiate payment. Please try again.");
+      setPaying(false);
+      return;
+    }
+
+    // 3. Open Razorpay modal
+    const rzp = new window.Razorpay({
+      key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
+      amount: orderAmount,
+      currency: "INR",
+      name: "KNYTRA",
+      description: `Order (${checkoutItems.length} item${checkoutItems.length > 1 ? "s" : ""})`,
+      order_id: razorpay_order_id,
+      prefill: {
+        name: form.name,
+        email: form.email,
+        contact: form.phone,
+      },
+      theme: { color: "#000000" },
+
+      // 4. Success
+      handler: (response: RazorpaySuccessResponse) => {
+        clearBuyNow();
+        if (!isBuyNow) clearCart();
+        router.push(
+          `/order-confirmation?payment_id=${response.razorpay_payment_id}` +
+          `&order_id=${response.razorpay_order_id}` +
+          `&signature=${response.razorpay_signature}`
+        );
+      },
+
+      // 5. Dismiss / failure
+      modal: {
+        ondismiss: () => {
+          setPaymentError("Payment cancelled. You can try again.");
+          setPaying(false);
+        },
+      },
+    });
+
+    rzp.open();
   };
 
   if (!hasItems) {
@@ -205,10 +312,13 @@ export default function CheckoutPage() {
           <button
             className={styles.placeOrderBtn}
             onClick={handleProceed}
-            disabled={!isValid}
+            disabled={!isValid || paying}
           >
-            {isValid ? "Proceed to Pay →" : "Fill details to continue"}
+            {paying ? "Opening payment…" : isValid ? "Proceed to Pay →" : "Fill details to continue"}
           </button>
+          {paymentError && (
+            <p className={styles.paymentError}>{paymentError}</p>
+          )}
         </section>
 
       </div>

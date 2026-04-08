@@ -128,6 +128,16 @@
   margin-top: 4px;
 }
 
+.paymentError {
+  font-size: 13px;
+  color: #c00;
+  text-align: center;
+  margin-top: -8px;
+  padding: 10px 12px;
+  background: #fff5f5;
+  border: 1px solid #fcc;
+}
+
 /* ── Summary Section ── */
 .summarySection {
   width: 100%;
