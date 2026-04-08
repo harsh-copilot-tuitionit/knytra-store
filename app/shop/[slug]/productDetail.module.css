@@ -315,6 +315,47 @@
   transform: scale(0.99);
 }
 
+/* ── Inline action buttons ── */
+.actionRow {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.inlineCartBtn {
+  flex: 1;
+  padding: 16px 12px;
+  background: #fff;
+  color: #000;
+  border: 2px solid #000;
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 200ms ease, color 200ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.inlineCartBtn:hover { background: #f0f0f0; }
+
+.buyNowBtn {
+  flex: 1;
+  padding: 16px 12px;
+  background: #000;
+  color: #fff;
+  border: 2px solid #000;
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 200ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.buyNowBtn:hover { opacity: 0.82; }
+
 /* ── Policies ── */
 .policies {
   display: flex;

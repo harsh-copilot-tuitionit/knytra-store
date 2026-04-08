@@ -100,6 +100,25 @@ export default function ProductDetailClient() {
     setTimeout(() => setAddedPulse(false), 1200);
   };
 
+  const handleBuyNow = () => {
+    if (!selectedSize) {
+      setSizeError(true);
+      return;
+    }
+    if (!product) return;
+    setSizeError(false);
+    addToCart({
+      id: `${product.id}-${selectedSize}`,
+      productId: product.id,
+      name: product.name,
+      size: selectedSize,
+      price: product.price,
+      image: product.images?.[0] ?? "",
+      quantity,
+    });
+    router.push("/checkout");
+  };
+
   if (loading) {
     return (
       <div className={styles.loadingContainer}>
@@ -258,6 +277,22 @@ export default function ProductDetailClient() {
         >
           {addedPulse ? "ADDED TO CART ✓" : "ADD TO CART +"}
         </button>
+
+        {/* ── Inline action buttons ── */}
+        <div className={styles.actionRow}>
+          <button
+            className={styles.inlineCartBtn}
+            onClick={handleAddToCart}
+          >
+            {addedPulse ? "ADDED ✓" : "ADD TO CART"}
+          </button>
+          <button
+            className={styles.buyNowBtn}
+            onClick={handleBuyNow}
+          >
+            BUY NOW
+          </button>
+        </div>
 
         <div className={styles.policies}>
           <span>🇮🇳 Made in India · Print on Demand</span>
