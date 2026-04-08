@@ -4,6 +4,7 @@ import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
 import { AuthProvider } from "@/context/AuthContext";
 import CartSidebar from "@/components/CartSidebar";
+import MusicPlayer from "@/components/MusicPlayer";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
@@ -69,6 +70,7 @@ export default function RootLayout({
         <AuthProvider>
           <CartProvider>
             <CartSidebar />
+            <MusicPlayer />
             {children}
           </CartProvider>
         </AuthProvider>
