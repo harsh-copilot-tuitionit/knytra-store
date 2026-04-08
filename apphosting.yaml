@@ -57,5 +57,6 @@ env:
     secret: QIKINK_CLIENT_SECRET
 
   - variable: QIKINK_API_BASE
-    secret: QIKINK_API_BASE
+    value: "https://api.qikink.com"
+    availability: [BUILD, RUNTIME]
 
