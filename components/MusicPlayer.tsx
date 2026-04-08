@@ -3,17 +3,29 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "./MusicPlayer.module.css";
 
+
 export default function MusicPlayer() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [playing, setPlaying] = useState(false);
+  const [playing, setPlaying] = useState(true); // default to playing
   const [visible, setVisible] = useState(false);
+  const [autoplayBlocked, setAutoplayBlocked] = useState(false);
 
-  // Create audio element once, on mount
   useEffect(() => {
     const audio = new Audio("/bg-music.mp3");
     audio.loop = true;
     audio.volume = 0.25;
     audioRef.current = audio;
+
+    // Try to autoplay
+    audio.play()
+      .then(() => {
+        setPlaying(true);
+        setAutoplayBlocked(false);
+      })
+      .catch(() => {
+        setPlaying(false);
+        setAutoplayBlocked(true);
+      });
 
     // Show the button after a short delay
     const t = setTimeout(() => setVisible(true), 1200);
