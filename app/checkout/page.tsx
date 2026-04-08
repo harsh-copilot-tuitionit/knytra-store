@@ -82,7 +82,7 @@ export default function CheckoutPage() {
               name="name"
               value={form.name}
               onChange={handleChange}
-              placeholder="Harsh Rathore"
+              placeholder="First Name Last Name"
               autoComplete="name"
             />
           </div>
@@ -96,7 +96,7 @@ export default function CheckoutPage() {
                 type="email"
                 value={form.email}
                 onChange={handleChange}
-                placeholder="harsh@knytra.in"
+                placeholder="yourmail@mail.com"
                 autoComplete="email"
               />
             </div>
