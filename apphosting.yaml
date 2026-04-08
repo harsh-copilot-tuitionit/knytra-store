@@ -50,6 +50,9 @@ env:
   - variable: NEXT_PUBLIC_RAZORPAY_KEY_ID
     secret: NEXT_PUBLIC_RAZORPAY_KEY_ID
 
+  - variable: RAZORPAY_WEBHOOK_SECRET
+    secret: RAZORPAY_WEBHOOK_SECRET
+
   - variable: QIKINK_CLIENT_ID
     secret: QIKINK_CLIENT_ID
 
