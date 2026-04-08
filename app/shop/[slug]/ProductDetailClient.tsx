@@ -113,7 +113,7 @@ export default function ProductDetailClient() {
       <div className={styles.notFound}>
         <h1>Product not found.</h1>
         <Link href="/shop" className={styles.backLink}>
-          \u2190 Back to Shop
+          ← Back to Shop
         </Link>
       </div>
     );
@@ -133,7 +133,7 @@ export default function ProductDetailClient() {
           onClick={() => router.back()}
           aria-label="Go back"
         >
-          \u2190
+          ←
         </button>
         <div className={styles.headerActions}>
           <button
@@ -144,7 +144,7 @@ export default function ProductDetailClient() {
             {wishlisted ? "\u2665" : "\u2661"}
           </button>
           <Link href="/shop" className={styles.headerIcon} aria-label="Back to shop">
-            \uD83D\uDECD
+            🛍
           </Link>
         </div>
       </div>
@@ -225,11 +225,11 @@ export default function ProductDetailClient() {
             <div className={styles.priceNumbers}>
               {product.originalPrice && (
                 <span className={styles.originalPrice}>
-                  \u20B9{product.originalPrice.toLocaleString("en-IN")}
+                  ₹{product.originalPrice.toLocaleString("en-IN")}
                 </span>
               )}
               <span className={styles.salePrice}>
-                \u20B9{product.price.toLocaleString("en-IN")}
+                ₹{product.price.toLocaleString("en-IN")}
               </span>
             </div>
             <div className={styles.qtyControl}>
@@ -238,7 +238,7 @@ export default function ProductDetailClient() {
                 onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                 aria-label="Decrease quantity"
               >
-                \u2212
+                −
               </button>
               <span className={styles.qtyValue}>{quantity}</span>
               <button
@@ -256,13 +256,13 @@ export default function ProductDetailClient() {
           className={`${styles.addToCartBtn} ${addedPulse ? styles.added : ""}`}
           onClick={handleAddToCart}
         >
-          {addedPulse ? "ADDED TO CART \u2713" : "ADD TO CART +"}
+          {addedPulse ? "ADDED TO CART ✓" : "ADD TO CART +"}
         </button>
 
         <div className={styles.policies}>
-          <span>\uD83C\uDDEE\uD83C\uDDF3 Made in India \u00B7 Print on Demand</span>
-          <span>\uD83D\uDE9A Ships within 5\u20137 business days</span>
-          <span>\uD83D\uDD04 Easy returns within 7 days</span>
+          <span>🇮🇳 Made in India · Print on Demand</span>
+          <span>🚚 Ships within 5–7 business days</span>
+          <span>🔄 Easy returns within 7 days</span>
         </div>
 
       </div>
