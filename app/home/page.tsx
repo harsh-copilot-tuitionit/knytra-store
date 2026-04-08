@@ -5,11 +5,11 @@ import styles from "./home.module.css";
 
 const MARQUEE_WORDS = [
   "WEAR THE STREETS",
-  "PRINT ON DEMAND",
+  "LIMITED DROPS",
   "MADE IN INDIA",
   "RAW · BOLD · URBAN",
   "WEAR THE STREETS",
-  "PRINT ON DEMAND",
+  "LIMITED DROPS",
   "MADE IN INDIA",
   "RAW · BOLD · URBAN",
 ];
@@ -77,7 +77,7 @@ export default function HomePage() {
             <span>STREETS.</span>
           </h1>
           <p className={styles.heroSub}>
-            Raw streetwear. Print on demand. Built for those who move.
+            Raw streetwear. Limited drops. Built for those who move.
           </p>
           <div className={styles.heroCtas}>
             <Link href="/shop" className={styles.ctaPrimary}>
@@ -270,8 +270,8 @@ export default function HomePage() {
         <div className={styles.brandStripGrid}>
           <div className={styles.brandStripItem}>
             <span className={styles.brandStripIcon}>⬡</span>
-            <p className={styles.brandStripLabel}>Print on Demand</p>
-            <p className={styles.brandStripSub}>Zero waste. Made when you order.</p>
+            <p className={styles.brandStripLabel}>Limited Drops</p>
+            <p className={styles.brandStripSub}>Small batches. Intentionally made.</p>
           </div>
           <div className={styles.brandStripItem}>
             <span className={styles.brandStripIcon}>◈</span>

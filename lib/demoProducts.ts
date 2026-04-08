@@ -34,7 +34,7 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
     id: "raw-edge-tee",
     name: "Raw Edge Tee",
     description:
-      "Drop-shoulder in washed cotton. Intentionally unhemmed sleeves — the raw edge is the aesthetic. Every unit is print-on-demand, made when you order. Zero waste. 100% intentional.",
+      "Drop-shoulder in washed cotton. Intentionally unhemmed sleeves — the raw edge is the aesthetic. Small batch production, built to last. Zero compromises. 100% intentional.",
     price: 999,
     images: [
       `${U}/photo-1583743814966-8936f5b7be1a?w=800&h=960&fit=crop`,

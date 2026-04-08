@@ -295,7 +295,7 @@ export default function ProductDetailClient() {
         </div>
 
         <div className={styles.policies}>
-          <span>🇮🇳 Made in India · Print on Demand</span>
+          <span>🇮🇳 Made in India · Premium Quality</span>
           <span>🚚 Ships within 5–7 business days</span>
           <span>🔄 Easy returns within 7 days</span>
         </div>
