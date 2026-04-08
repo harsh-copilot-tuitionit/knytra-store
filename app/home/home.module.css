@@ -1,0 +1,558 @@
+/* ============================================
+   KNYTRA — Home Page
+   Premium · Raw · Urban
+   ============================================ */
+
+.page {
+  background: var(--color-black);
+  color: var(--color-white);
+  overflow-x: hidden;
+}
+
+/* ─────────────────────────────────────────────
+   HERO
+───────────────────────────────────────────── */
+.hero {
+  position: relative;
+  height: 100dvh;
+  min-height: 580px;
+  max-height: 900px;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+
+.heroMedia {
+  position: absolute;
+  inset: 0;
+}
+
+.heroImg {
+  object-fit: cover;
+  object-position: center top;
+}
+
+.heroOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.85) 0%,
+    rgba(0, 0, 0, 0.35) 55%,
+    rgba(0, 0, 0, 0.1) 100%
+  );
+}
+
+.heroContent {
+  position: relative;
+  z-index: 1;
+  padding: 0 24px 80px;
+  max-width: 600px;
+}
+
+.heroEyebrow {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--color-white-60);
+  margin-bottom: 16px;
+}
+
+.heroHeadline {
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-heading);
+  font-size: clamp(52px, 14vw, 110px);
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: -0.03em;
+  margin-bottom: 20px;
+}
+
+.heroSub {
+  font-size: 14px;
+  color: var(--color-white-60);
+  line-height: 1.6;
+  margin-bottom: 32px;
+  max-width: 340px;
+}
+
+.heroCtas {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.ctaPrimary {
+  display: inline-block;
+  padding: 14px 36px;
+  background: var(--color-white);
+  color: var(--color-black);
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: opacity var(--ease-base);
+}
+.ctaPrimary:hover { opacity: 0.85; }
+
+.ctaGhost {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--color-white-60);
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid rgba(255,255,255,0.3);
+  padding-bottom: 2px;
+  transition: color var(--ease-base), border-color var(--ease-base);
+}
+.ctaGhost:hover { color: var(--color-white); border-color: var(--color-white); }
+
+/* Scroll hint */
+.scrollHint {
+  position: absolute;
+  bottom: 32px;
+  right: 28px;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.scrollLine {
+  width: 1px;
+  height: 48px;
+  background: var(--color-white-40);
+  animation: scrollPulse 2s ease-in-out infinite;
+}
+
+@keyframes scrollPulse {
+  0%, 100% { opacity: 0.3; transform: scaleY(1); }
+  50%       { opacity: 1;   transform: scaleY(1.2); }
+}
+
+.scrollLabel {
+  font-family: var(--font-body);
+  font-size: 9px;
+  letter-spacing: 0.25em;
+  color: var(--color-white-40);
+  writing-mode: vertical-rl;
+}
+
+/* ─────────────────────────────────────────────
+   MARQUEE
+───────────────────────────────────────────── */
+.marqueeWrap {
+  overflow: hidden;
+  background: var(--color-white);
+  padding: 13px 0;
+  white-space: nowrap;
+}
+
+.marqueeTrack {
+  display: inline-flex;
+  animation: marquee 28s linear infinite;
+}
+
+.marqueeItem {
+  font-family: var(--font-heading);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-black);
+  padding: 0 16px;
+}
+
+.marqueeDot {
+  margin-left: 16px;
+  opacity: 0.35;
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ─────────────────────────────────────────────
+   SECTIONS (shared)
+───────────────────────────────────────────── */
+.section {
+  padding: 64px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  gap: 16px;
+}
+
+.sectionEye {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--color-white-40);
+  margin-bottom: 6px;
+}
+
+.sectionTitle {
+  font-family: var(--font-heading);
+  font-size: clamp(22px, 5vw, 34px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.sectionLink {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--color-white-60);
+  white-space: nowrap;
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+  padding-bottom: 2px;
+  transition: color var(--ease-base), border-color var(--ease-base);
+  flex-shrink: 0;
+}
+.sectionLink:hover { color: var(--color-white); border-color: var(--color-white); }
+
+/* ─────────────────────────────────────────────
+   FEATURED PRODUCTS GRID
+───────────────────────────────────────────── */
+.productGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2px;
+}
+
+.productCard {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  background: var(--color-off-black);
+  transition: opacity var(--ease-base);
+}
+.productCard:hover { opacity: 0.88; }
+.productCard:hover .productImage { transform: scale(1.04); }
+
+.productImageWrap {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  background: #111;
+}
+
+.productImage {
+  object-fit: cover;
+  transition: transform 500ms ease;
+}
+
+.productTag {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-family: var(--font-heading);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  padding: 4px 8px;
+}
+
+.tagNew {
+  background: var(--color-white);
+  color: var(--color-black);
+}
+
+.tagBest {
+  background: var(--color-black);
+  color: var(--color-white);
+  border: 1px solid rgba(255,255,255,0.3);
+}
+
+.productInfo {
+  padding: 12px 12px 16px;
+}
+
+.productName {
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+
+.productPricing {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.productOriginal {
+  font-size: 11px;
+  color: var(--color-white-40);
+  text-decoration: line-through;
+}
+
+.productPrice {
+  font-family: var(--font-heading);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* ─────────────────────────────────────────────
+   MANIFESTO BANNER
+───────────────────────────────────────────── */
+.manifesto {
+  position: relative;
+  height: 420px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.manifestoMedia {
+  position: absolute;
+  inset: 0;
+}
+
+.manifestoImg {
+  object-fit: cover;
+  object-position: center 30%;
+}
+
+.manifestoOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+}
+
+.manifestoContent {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 0 24px;
+}
+
+.manifestoQuote {
+  font-family: var(--font-heading);
+  font-size: clamp(22px, 5vw, 42px);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin-bottom: 28px;
+  max-width: 700px;
+}
+
+.manifestoCta {
+  display: inline-block;
+  padding: 13px 32px;
+  border: 1.5px solid var(--color-white);
+  font-family: var(--font-heading);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: background var(--ease-base), color var(--ease-base);
+}
+.manifestoCta:hover { background: var(--color-white); color: var(--color-black); }
+
+/* ─────────────────────────────────────────────
+   CATEGORY GRID
+───────────────────────────────────────────── */
+.categoryGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.categoryCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  text-decoration: none;
+}
+.categoryCard:hover .categoryImage { transform: scale(1.06); }
+
+.categoryImageWrap {
+  position: absolute;
+  inset: 0;
+}
+
+.categoryImage {
+  object-fit: cover;
+  transition: transform 500ms ease;
+}
+
+.categoryOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.72) 0%, transparent 55%);
+  transition: opacity var(--ease-base);
+}
+.categoryCard:hover .categoryOverlay { opacity: 0.6; }
+
+.categoryLabel {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--color-white);
+  padding-bottom: 20px;
+  text-transform: uppercase;
+}
+
+/* ─────────────────────────────────────────────
+   NEW ARRIVALS ROW
+───────────────────────────────────────────── */
+.newArrivalsRow {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.newArrivalCard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+}
+.newArrivalCard:hover .newArrivalImage { transform: scale(1.04); }
+
+.newArrivalImageWrap {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  background: #111;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.newArrivalImage {
+  object-fit: cover;
+  transition: transform 500ms ease;
+}
+
+.newBadge {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background: var(--color-white);
+  color: var(--color-black);
+  font-family: var(--font-heading);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  padding: 3px 7px;
+}
+
+.newArrivalInfo { padding: 0 2px; }
+
+.newArrivalCategory {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-white-40);
+  margin-bottom: 4px;
+}
+
+.newArrivalName {
+  font-family: var(--font-heading);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+
+.newArrivalPrice {
+  font-family: var(--font-heading);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-white-60);
+}
+
+/* ─────────────────────────────────────────────
+   BRAND STRIP
+───────────────────────────────────────────── */
+.brandStrip {
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding: 48px 20px;
+  background: var(--color-off-black);
+}
+
+.brandStripGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 32px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.brandStripItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.brandStripIcon {
+  font-size: 22px;
+  opacity: 0.5;
+  margin-bottom: 4px;
+}
+
+.brandStripLabel {
+  font-family: var(--font-heading);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.brandStripSub {
+  font-size: 12px;
+  color: var(--color-white-40);
+  line-height: 1.5;
+}
+
+/* ─────────────────────────────────────────────
+   DESKTOP
+───────────────────────────────────────────── */
+@media (min-width: 768px) {
+  .heroContent { padding: 0 48px 80px; }
+
+  .productGrid { grid-template-columns: repeat(4, 1fr); }
+
+  .categoryGrid { grid-template-columns: repeat(4, 1fr); }
+
+  .newArrivalsRow { grid-template-columns: repeat(4, 1fr); }
+
+  .brandStripGrid { grid-template-columns: repeat(4, 1fr); }
+
+  .section { padding: 80px 40px; }
+
+  .manifesto { height: 520px; }
+}
+
+@media (min-width: 1024px) {
+  .heroContent { padding: 0 64px 96px; }
+  .section { padding: 96px 60px; }
+}
