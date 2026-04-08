@@ -22,6 +22,19 @@ export default function CheckoutPage() {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  // All required fields must be non-empty (email is optional)
+  const isValid =
+    form.name.trim() !== "" &&
+    form.phone.trim().length >= 10 &&
+    form.pincode.trim().length === 6 &&
+    form.city.trim() !== "" &&
+    form.fullAddress.trim() !== "";
+
+  const handleProceed = () => {
+    if (!isValid) return;
+    // Razorpay payment initiation — Ticket 4
+  };
+
   if (cartCount === 0) {
     return (
       <div className={styles.empty}>
@@ -126,11 +139,7 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* Payment — placeholder for Razorpay integration (Phase 2) */}
-          <div className={styles.paymentPlaceholder}>
-            <span className={styles.paymentIcon}>🔒</span>
-            <span>Secure payment via Razorpay — coming next phase</span>
-          </div>
+          <p className={styles.secureNote}>🔒 Secure checkout · Payments powered by Razorpay</p>
         </section>
 
         {/* ── Right: Order summary ── */}
@@ -179,12 +188,13 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          <button className={styles.placeOrderBtn} disabled>
-            Proceed to Payment
+          <button
+            className={styles.placeOrderBtn}
+            onClick={handleProceed}
+            disabled={!isValid}
+          >
+            {isValid ? "Proceed to Pay →" : "Fill details to continue"}
           </button>
-          <p className={styles.paymentNote}>
-            Payment integration coming in the next phase.
-          </p>
         </section>
 
       </div>
