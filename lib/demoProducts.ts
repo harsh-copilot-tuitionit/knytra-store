@@ -53,8 +53,8 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
     price: 2499,
     originalPrice: 2999,
     images: [
-      `${U}/photo-1556821840-3a63f15732ce?w=800&h=960&fit=crop`,
-      `${U}/photo-1529374255404-311a2a4f1fd9?w=800&h=960&fit=crop`,
+      `${U}/photo-1521572163474-6864f9cf17ab?w=800&h=960&fit=crop`,
+      `${U}/photo-1542272604-787c3835535d?w=800&h=960&fit=crop`,
     ],
     sizes: ["S", "M", "L", "XL", "XXL"],
     status: "active",

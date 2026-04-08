@@ -33,7 +33,7 @@ const CATEGORIES = [
     label: "Hoodies",
     slug: "Sweater",
     image:
-      "https://images.unsplash.com/photo-1556821840-3a63f15732ce?w=600&h=750&fit=crop",
+      "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&h=750&fit=crop",
   },
   {
     label: "Bottoms",
