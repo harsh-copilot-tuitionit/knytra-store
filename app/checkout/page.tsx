@@ -1,13 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 import styles from "./checkout.module.css";
 
 export default function CheckoutPage() {
-  const { cart, cartTotal, cartCount } = useCart();
+  const { cart, cartTotal, cartCount, buyNowItem, clearBuyNow } = useCart();
+
+  // Clear buyNowItem when the user navigates away from this page
+  useEffect(() => {
+    return () => { clearBuyNow(); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Buy Now mode: single item bypasses the cart
+  const isBuyNow = buyNowItem !== null;
+  const checkoutItems = isBuyNow ? [buyNowItem] : cart;
+  const checkoutTotal = isBuyNow
+    ? buyNowItem.price * buyNowItem.quantity
+    : cartTotal;
+  const hasItems = isBuyNow ? true : cartCount > 0;
 
   const [form, setForm] = useState({
     name: "",
@@ -35,7 +49,7 @@ export default function CheckoutPage() {
     // Razorpay payment initiation — Ticket 4
   };
 
-  if (cartCount === 0) {
+  if (!hasItems) {
     return (
       <div className={styles.empty}>
         <p className={styles.emptyIcon}>🛍</p>
@@ -147,7 +161,7 @@ export default function CheckoutPage() {
           <h2 className={styles.sectionTitle}>Order Summary</h2>
 
           <div className={styles.itemsList}>
-            {cart.map((item) => (
+            {checkoutItems.map((item) => (
               <div key={item.id} className={styles.item}>
                 <div className={styles.itemImageWrap}>
                   {item.image ? (
@@ -176,7 +190,7 @@ export default function CheckoutPage() {
           <div className={styles.totalsBlock}>
             <div className={styles.totalRow}>
               <span>Subtotal</span>
-              <span>₹{cartTotal.toLocaleString("en-IN")}</span>
+              <span>₹{checkoutTotal.toLocaleString("en-IN")}</span>
             </div>
             <div className={styles.totalRow}>
               <span>Shipping</span>
@@ -184,7 +198,7 @@ export default function CheckoutPage() {
             </div>
             <div className={`${styles.totalRow} ${styles.grandTotal}`}>
               <span>Total</span>
-              <span>₹{cartTotal.toLocaleString("en-IN")}</span>
+              <span>₹{checkoutTotal.toLocaleString("en-IN")}</span>
             </div>
           </div>
 

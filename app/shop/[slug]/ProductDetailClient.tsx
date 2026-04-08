@@ -42,7 +42,7 @@ export default function ProductDetailClient() {
   const params = useParams();
   const router = useRouter();
   const slug = params?.slug as string;
-  const { addToCart } = useCart();
+  const { addToCart, triggerBuyNow } = useCart();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -107,7 +107,7 @@ export default function ProductDetailClient() {
     }
     if (!product) return;
     setSizeError(false);
-    addToCart({
+    triggerBuyNow({
       id: `${product.id}-${selectedSize}`,
       productId: product.id,
       name: product.name,

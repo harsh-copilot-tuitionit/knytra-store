@@ -23,6 +23,10 @@ interface CartContextType {
   isCartOpen: boolean;
   toggleCart: () => void;
   closeCart: () => void;
+  // Buy Now — temporary single-item checkout, bypasses cart
+  buyNowItem: CartItem | null;
+  triggerBuyNow: (item: CartItem) => void;
+  clearBuyNow: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -31,6 +35,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [buyNowItem, setBuyNowItem] = useState<CartItem | null>(null);
 
   // Load from local storage on mount
   useEffect(() => {
@@ -79,6 +84,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const toggleCart = () => setIsCartOpen((prev) => !prev);
   const closeCart = () => setIsCartOpen(false);
 
+  const triggerBuyNow = (item: CartItem) => setBuyNowItem(item);
+  const clearBuyNow = () => setBuyNowItem(null);
+
   const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
   const cartTotal = cart.reduce((total, item) => total + item.price * item.quantity, 0);
 
@@ -95,6 +103,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         isCartOpen,
         toggleCart,
         closeCart,
+        buyNowItem,
+        triggerBuyNow,
+        clearBuyNow,
       }}
     >
       {children}
