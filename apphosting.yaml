@@ -7,31 +7,31 @@ runConfig:
 env:
   # ── Public Firebase config (safe to commit)
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
-    value: "AIzaSyBZ_uh7I3rxpPqXfgFHDjJpGqDDskYCetE"
+    value: "AIzaSyDBYTSgmXEqpWY0634woxQ64ZPjt22Y2ao"
     availability: [BUILD, RUNTIME]
 
   - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-    value: "knytra-85510.firebaseapp.com"
+    value: "knytra-in.firebaseapp.com"
     availability: [BUILD, RUNTIME]
 
   - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
-    value: "knytra-85510"
+    value: "knytra-in"
     availability: [BUILD, RUNTIME]
 
   - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-    value: "knytra-85510.firebasestorage.app"
+    value: "knytra-in.firebasestorage.app"
     availability: [BUILD, RUNTIME]
 
   - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-    value: "901753801894"
+    value: "182983199953"
     availability: [BUILD, RUNTIME]
 
   - variable: NEXT_PUBLIC_FIREBASE_APP_ID
-    value: "1:901753801894:web:a2d97eed93c9e59e59f867"
+    value: "1:182983199953:web:9842ff5b229d78d01f09f0"
     availability: [BUILD, RUNTIME]
 
   - variable: NEXT_PUBLIC_SITE_URL
-    value: "https://knytra-85510.web.app"
+    value: "https://knytra-in.web.app"
     availability: [BUILD, RUNTIME]
 
   # ── Secrets (set via: npx firebase-tools apphosting:secrets:set <NAME>)

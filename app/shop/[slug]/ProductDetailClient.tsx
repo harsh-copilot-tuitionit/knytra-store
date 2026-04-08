@@ -1,27 +1,46 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useCart } from "@/context/CartContext";
+import { getDemoProduct } from "@/lib/demoProducts";
 import styles from "./productDetail.module.css";
-import { ShoppingBag, ChevronLeft, ChevronRight } from "lucide-react";
-import Link from "next/link";
 
 interface Product {
   id: string;
   name: string;
   description: string;
   price: number;
+  originalPrice?: number;
   images: string[];
   sizes: string[];
   status: string;
 }
 
+function TickerBand() {
+  const seg = "Free Shipping  \u2715  Free Shipping  \u2715  ";
+  const items = Array.from({ length: 8 }, (_, i) => (
+    <span key={i} className={styles.tickerItem}>{seg}</span>
+  ));
+  return (
+    <div className={styles.ticker} aria-hidden="true">
+      <div className={styles.tickerTrack}>
+        {items}
+        {items.map((item, i) =>
+          <span key={`d${i}`} className={styles.tickerItem}>{seg}</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function ProductDetailClient() {
   const params = useParams();
+  const router = useRouter();
   const slug = params?.slug as string;
   const { addToCart } = useCart();
 
@@ -29,18 +48,23 @@ export default function ProductDetailClient() {
   const [loading, setLoading] = useState(true);
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [selectedImage, setSelectedImage] = useState(0);
+  const [quantity, setQuantity] = useState(1);
   const [addedPulse, setAddedPulse] = useState(false);
+  const [wishlisted, setWishlisted] = useState(false);
+  const [sizeError, setSizeError] = useState(false);
 
   useEffect(() => {
     if (!slug) return;
+    const demo = getDemoProduct(slug);
+    if (demo) {
+      setProduct(demo as Product);
+      setLoading(false);
+      return;
+    }
     async function fetchProduct() {
       try {
         const snap = await getDoc(doc(db, "products", slug));
-        if (!snap.exists()) {
-          setProduct(null);
-        } else {
-          setProduct({ id: snap.id, ...snap.data() } as Product);
-        }
+        setProduct(snap.exists() ? ({ id: snap.id, ...snap.data() } as Product) : null);
       } catch (e) {
         console.error(e);
       } finally {
@@ -50,13 +74,19 @@ export default function ProductDetailClient() {
     fetchProduct();
   }, [slug]);
 
+  useEffect(() => {
+    if (product?.sizes?.length === 1 && product.sizes[0] === "One Size") {
+      setSelectedSize("One Size");
+    }
+  }, [product]);
+
   const handleAddToCart = () => {
     if (!selectedSize) {
-      alert("Please select a size.");
+      setSizeError(true);
       return;
     }
     if (!product) return;
-
+    setSizeError(false);
     addToCart({
       id: `${product.id}-${selectedSize}`,
       productId: product.id,
@@ -64,11 +94,10 @@ export default function ProductDetailClient() {
       size: selectedSize,
       price: product.price,
       image: product.images?.[0] ?? "",
-      quantity: 1,
+      quantity,
     });
-
     setAddedPulse(true);
-    setTimeout(() => setAddedPulse(false), 600);
+    setTimeout(() => setAddedPulse(false), 1200);
   };
 
   if (loading) {
@@ -83,120 +112,159 @@ export default function ProductDetailClient() {
     return (
       <div className={styles.notFound}>
         <h1>Product not found.</h1>
-        <Link href="/shop" className={styles.backLink}>← Back to Shop</Link>
+        <Link href="/shop" className={styles.backLink}>
+          \u2190 Back to Shop
+        </Link>
       </div>
     );
   }
 
   const images = product.images ?? [];
+  const showSizeSelector =
+    product.sizes && product.sizes.length > 0 && product.sizes[0] !== "One Size";
 
   return (
-    <div className={styles.container}>
-      <div className={styles.breadcrumb}>
-        <Link href="/shop">Shop</Link>
-        <span>/</span>
-        <span>{product.name}</span>
+    <div className={styles.page}>
+
+      {/* ── Header ── */}
+      <div className={styles.detailHeader}>
+        <button
+          className={styles.backBtn}
+          onClick={() => router.back()}
+          aria-label="Go back"
+        >
+          \u2190
+        </button>
+        <div className={styles.headerActions}>
+          <button
+            className={`${styles.headerIcon} ${wishlisted ? styles.wishlisted : ""}`}
+            onClick={() => setWishlisted((v) => !v)}
+            aria-label="Wishlist"
+          >
+            {wishlisted ? "\u2665" : "\u2661"}
+          </button>
+          <Link href="/shop" className={styles.headerIcon} aria-label="Back to shop">
+            \uD83D\uDECD
+          </Link>
+        </div>
       </div>
 
-      <div className={styles.productLayout}>
-        {/* Image Gallery */}
-        <div className={styles.gallery}>
-          <div className={styles.mainImage}>
-            {images.length > 0 ? (
-              <Image
-                src={images[selectedImage]}
-                alt={product.name}
-                fill
-                sizes="(max-width: 768px) 100vw, 50vw"
-                className={styles.mainImg}
-                priority
-              />
-            ) : (
-              <div className={styles.noImage} />
-            )}
-            {images.length > 1 && (
-              <>
-                <button
-                  className={`${styles.galleryArrow} ${styles.arrowLeft}`}
-                  onClick={() => setSelectedImage((i) => (i === 0 ? images.length - 1 : i - 1))}
-                >
-                  <ChevronLeft size={24} />
-                </button>
-                <button
-                  className={`${styles.galleryArrow} ${styles.arrowRight}`}
-                  onClick={() => setSelectedImage((i) => (i === images.length - 1 ? 0 : i + 1))}
-                >
-                  <ChevronRight size={24} />
-                </button>
-              </>
-            )}
-          </div>
+      {/* ── Product title ── */}
+      <h1 className={styles.productTitle}>{product.name}</h1>
 
-          {images.length > 1 && (
-            <div className={styles.thumbnails}>
-              {images.map((img, i) => (
+      {/* ── Gallery ── */}
+      <div className={styles.galleryRow}>
+        {images.length > 1 && (
+          <div className={styles.thumbStrip}>
+            {images.map((img, i) => (
+              <button
+                key={i}
+                className={`${styles.thumb} ${i === selectedImage ? styles.thumbActive : ""}`}
+                onClick={() => setSelectedImage(i)}
+                aria-label={`View image ${i + 1}`}
+              >
+                <Image src={img} alt="" fill sizes="66px" className={styles.thumbImg} />
+              </button>
+            ))}
+          </div>
+        )}
+        <div
+          className={`${styles.mainImageWrap} ${images.length <= 1 ? styles.mainImageFull : ""}`}
+        >
+          {images[0] ? (
+            <Image
+              src={images[selectedImage]}
+              alt={product.name}
+              fill
+              priority
+              sizes="(max-width: 768px) 85vw, 50vw"
+              className={styles.mainImage}
+            />
+          ) : (
+            <div className={styles.noImage} />
+          )}
+        </div>
+      </div>
+
+      {/* ── Ticker ── */}
+      <TickerBand />
+
+      {/* ── Info ── */}
+      <div className={styles.infoSection}>
+
+        {product.description && (
+          <div className={styles.block}>
+            <h3 className={styles.blockLabel}>Description</h3>
+            <p className={styles.descText}>{product.description}</p>
+          </div>
+        )}
+
+        {showSizeSelector && (
+          <div className={styles.block}>
+            <span className={styles.blockLabel}>Size :</span>
+            <div className={styles.sizeGrid}>
+              {product.sizes.map((size) => (
                 <button
-                  key={i}
-                  onClick={() => setSelectedImage(i)}
-                  className={`${styles.thumb} ${i === selectedImage ? styles.thumbActive : ""}`}
+                  key={size}
+                  className={`${styles.sizeBtn} ${selectedSize === size ? styles.sizeBtnActive : ""}`}
+                  onClick={() => { setSelectedSize(size); setSizeError(false); }}
                 >
-                  <Image src={img} alt={`View ${i + 1}`} fill sizes="80px" className={styles.thumbImg} />
+                  {size}
                 </button>
               ))}
             </div>
-          )}
-        </div>
+            {sizeError && (
+              <p className={styles.sizeError}>Please select a size to continue.</p>
+            )}
+          </div>
+        )}
 
-        {/* Product Info */}
-        <div className={styles.info}>
-          <h1 className={styles.productName}>{product.name}</h1>
-          <p className={styles.price}>₹{product.price.toLocaleString("en-IN")}</p>
-
-          <div className={styles.divider} />
-
-          {product.sizes && product.sizes.length > 0 && (
-            <div className={styles.sizeSection}>
-              <div className={styles.sizeHeader}>
-                <span className={styles.sizeLabel}>Size</span>
-                {selectedSize && (
-                  <span className={styles.selectedSizeIndicator}>{selectedSize}</span>
-                )}
-              </div>
-              <div className={styles.sizeGrid}>
-                {product.sizes.map((size) => (
-                  <button
-                    key={size}
-                    onClick={() => setSelectedSize(size)}
-                    className={`${styles.sizeBtn} ${selectedSize === size ? styles.sizeBtnActive : ""}`}
-                  >
-                    {size}
-                  </button>
-                ))}
-              </div>
+        <div className={styles.block}>
+          <span className={styles.blockLabel}>Price :</span>
+          <div className={styles.priceRow}>
+            <div className={styles.priceNumbers}>
+              {product.originalPrice && (
+                <span className={styles.originalPrice}>
+                  \u20B9{product.originalPrice.toLocaleString("en-IN")}
+                </span>
+              )}
+              <span className={styles.salePrice}>
+                \u20B9{product.price.toLocaleString("en-IN")}
+              </span>
             </div>
-          )}
-
-          <button
-            className={`${styles.addToCartBtn} ${addedPulse ? styles.addedPulse : ""}`}
-            onClick={handleAddToCart}
-          >
-            <ShoppingBag size={20} />
-            {addedPulse ? "Added!" : "Add to Cart"}
-          </button>
-
-          {product.description && (
-            <div className={styles.descriptionSection}>
-              <h3 className={styles.descLabel}>About this piece</h3>
-              <p className={styles.description}>{product.description}</p>
+            <div className={styles.qtyControl}>
+              <button
+                className={styles.qtyBtn}
+                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                aria-label="Decrease quantity"
+              >
+                \u2212
+              </button>
+              <span className={styles.qtyValue}>{quantity}</span>
+              <button
+                className={styles.qtyBtn}
+                onClick={() => setQuantity((q) => q + 1)}
+                aria-label="Increase quantity"
+              >
+                +
+              </button>
             </div>
-          )}
-
-          <div className={styles.policies}>
-            <span>🇮🇳 Made in India · Print on Demand</span>
-            <span>🚚 Ships within 5–7 business days</span>
-            <span>🔄 Easy returns within 7 days</span>
           </div>
         </div>
+
+        <button
+          className={`${styles.addToCartBtn} ${addedPulse ? styles.added : ""}`}
+          onClick={handleAddToCart}
+        >
+          {addedPulse ? "ADDED TO CART \u2713" : "ADD TO CART +"}
+        </button>
+
+        <div className={styles.policies}>
+          <span>\uD83C\uDDEE\uD83C\uDDF3 Made in India \u00B7 Print on Demand</span>
+          <span>\uD83D\uDE9A Ships within 5\u20137 business days</span>
+          <span>\uD83D\uDD04 Easy returns within 7 days</span>
+        </div>
+
       </div>
     </div>
   );

@@ -1,102 +1,172 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { collection, getDocs, query, where, orderBy } from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { DEMO_PRODUCTS, DemoProduct } from "@/lib/demoProducts";
 import styles from "./shop.module.css";
-// import { Product } from "../admin/products/page"; // We can redefine or import properly. Let's redefine for isolation.
 
 interface Product {
   id: string;
   name: string;
   price: number;
+  originalPrice?: number;
   images: string[];
   status: string;
+  category?: string;
+  tag?: string;
 }
 
+const CATEGORIES = ["All", "Tshirt", "Sweater", "Cap", "Sweat Pant"];
+const TABS = ["For You", "New Arrivals", "Best Sellers"];
+
 export default function Shop() {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeCategory, setActiveCategory] = useState("All");
+  const [activeTab, setActiveTab] = useState("For You");
+  const [wishlist, setWishlist] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    async function fetchActiveProducts() {
+    async function load() {
+      const demos: Product[] = DEMO_PRODUCTS.map((d: DemoProduct) => ({ ...d }));
       try {
-        const q = query(
-          collection(db, "products"),
-          where("status", "==", "active"),
-          // Note: requiring composite index for where + orderBy. We will just fetch 'active' and sort client-side, 
-          // or rely on Firebase default if no orderBy is used.
-        );
-        const snapshot = await getDocs(q);
-        const fetched = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Product[];
-
-        // Sort descending by created manually to avoid needing a combined index right now
-        // fetched.sort((a, b) => b.createdAt - a.createdAt);
-
-        setProducts(fetched);
-      } catch (error) {
-        console.error("Error fetching products:", error);
+        const q = query(collection(db, "products"), where("status", "==", "active"));
+        const snap = await getDocs(q);
+        const fb = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Product[];
+        const fbIds = new Set(fb.map((p) => p.id));
+        const mergedDemos = demos.filter((d) => !fbIds.has(d.id));
+        setAllProducts([...fb, ...mergedDemos]);
+      } catch {
+        setAllProducts(demos);
       } finally {
         setLoading(false);
       }
     }
-    fetchActiveProducts();
+    load();
   }, []);
 
-  return (
-    <div className={styles.container}>
-      <header className={styles.shopHeader}>
-        <h1 className={styles.title}>LATEST DROPS</h1>
-        <p className={styles.subtitle}>RAW & UNAPOLOGETIC.</p>
-      </header>
+  const toggleWishlist = (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setWishlist((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
 
-      {loading ? (
-        <div className={styles.loadingState}>
-          <div className={styles.spinner} />
-          <p>Loading collection...</p>
-        </div>
-      ) : products.length === 0 ? (
-        <div className={styles.emptyState}>
-          <h2>NOTHING HERE YET.</h2>
-          <p>Check back later for new drops.</p>
-        </div>
-      ) : (
-        <div className={styles.productGrid}>
-          {products.map(product => (
-            <Link href={`/shop/${product.id}`} key={product.id} className={styles.productCard}>
-              <div className={styles.imageWrapper}>
-                {product.images && product.images.length > 0 ? (
-                  <Image 
-                    src={product.images[0]} 
-                    alt={product.name} 
-                    fill 
-                    className={styles.productImage}
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  />
-                ) : (
-                  <div className={styles.placeholderImg}>No Image</div>
-                )}
-                {/* Optional hover overlay */}
-                <div className={styles.imageOverlay}>
-                  <span>QUICK VIEW</span>
-                </div>
-              </div>
-              
-              <div className={styles.productInfo}>
-                <h3 className={styles.productName}>{product.name}</h3>
-                <span className={styles.productPrice}>
-                  ₹{product.price.toLocaleString("en-IN")}
-                </span>
-              </div>
-            </Link>
+  const filtered = allProducts.filter((p) => {
+    const catMatch = activeCategory === "All" || p.category === activeCategory;
+    const tabMatch =
+      activeTab === "For You" ||
+      (activeTab === "New Arrivals" && p.tag === "new") ||
+      (activeTab === "Best Sellers" && p.tag === "bestseller");
+    return catMatch && tabMatch;
+  });
+
+  return (
+    <div className={styles.pageWrapper}>
+
+      {/* ── Tab bar ── */}
+      <div className={styles.tabsBar} role="tablist">
+        {TABS.map((tab) => (
+          <button
+            key={tab}
+            role="tab"
+            aria-selected={activeTab === tab}
+            className={`${styles.tab} ${activeTab === tab ? styles.tabActive : ""}`}
+            onClick={() => setActiveTab(tab)}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Shell ── */}
+      <div className={styles.shell}>
+
+        {/* Sidebar */}
+        <aside className={styles.sidebar} aria-label="Filter by category">
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              className={`${styles.sidebarItem} ${activeCategory === cat ? styles.sidebarItemActive : ""}`}
+              onClick={() => setActiveCategory(cat)}
+              aria-pressed={activeCategory === cat}
+            >
+              {cat}
+            </button>
           ))}
-        </div>
-      )}
+        </aside>
+
+        {/* Products */}
+        <main className={styles.main}>
+          {loading ? (
+            <div className={styles.loadingState}>
+              <div className={styles.spinner} />
+              <p>Loading collection...</p>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className={styles.emptyState}>
+              <h2>NOTHING HERE YET.</h2>
+              <p>Check back later for new drops.</p>
+            </div>
+          ) : (
+            <div className={styles.productGrid}>
+              {filtered.map((product) => (
+                <Link href={`/shop/${product.id}`} key={product.id} className={styles.card}>
+                  <div className={styles.imageWrap}>
+                    {product.images?.[0] ? (
+                      <Image
+                        src={product.images[0]}
+                        alt={product.name}
+                        fill
+                        className={styles.productImage}
+                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                      />
+                    ) : (
+                      <div className={styles.placeholderImg} />
+                    )}
+                    <div className={styles.imageActions}>
+                      <button
+                        className={styles.actionBtn}
+                        onClick={(e) => e.preventDefault()}
+                        aria-label="Quick view"
+                      >
+                        +
+                      </button>
+                      <button
+                        className={`${styles.actionBtn} ${wishlist.has(product.id) ? styles.wishlisted : ""}`}
+                        onClick={(e) => toggleWishlist(e, product.id)}
+                        aria-label="Add to wishlist"
+                      >
+                        {wishlist.has(product.id) ? "♥" : "♡"}
+                      </button>
+                    </div>
+                  </div>
+                  <div className={styles.cardBody}>
+                    <p className={styles.productName}>{product.name}</p>
+                    <div className={styles.priceRow}>
+                      {product.tag && (
+                        <span className={styles.tagBadge}>
+                          {product.tag === "new" ? "NEW" : "TOP"}
+                        </span>
+                      )}
+                      <span className={styles.priceBadge}>
+                        ₹{product.price.toLocaleString("en-IN")}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </main>
+
+      </div>
     </div>
   );
 }
