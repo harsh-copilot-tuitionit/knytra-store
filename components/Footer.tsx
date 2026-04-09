@@ -30,9 +30,9 @@ export default function Footer() {
             
             <div className={styles.linkGroup}>
               <h3>Support</h3>
-              <Link href="/faq">FAQ</Link>
-              <Link href="/shipping">Shipping & Returns</Link>
               <Link href="/contact">Contact Us</Link>
+              <Link href="/shipping">Shipping Policy</Link>
+              <Link href="/track-order">Track Order</Link>
             </div>
 
             <div className={styles.linkGroup}>

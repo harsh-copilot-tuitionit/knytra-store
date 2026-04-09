@@ -1,0 +1,244 @@
+/* ============================================
+   KNYTRA — Legal Pages (shared)
+   ============================================ */
+
+.page {
+  background: #fff;
+  color: #000;
+  min-height: 100vh;
+}
+
+/* ── Hero strip ── */
+.hero {
+  background: #000;
+  color: #fff;
+  padding: 48px 24px 40px;
+  border-bottom: 1.5px solid #000;
+}
+
+@media (min-width: 768px) {
+  .hero {
+    padding: 64px 48px 56px;
+  }
+}
+
+.eyebrow {
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 12px;
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-size: clamp(28px, 5vw, 48px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin-bottom: 16px;
+}
+
+.meta {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: var(--font-body);
+}
+
+/* ── Content ── */
+.content {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 48px 24px 80px;
+}
+
+@media (min-width: 768px) {
+  .content {
+    padding: 64px 48px 100px;
+  }
+}
+
+/* ── Section ── */
+.section {
+  margin-bottom: 48px;
+}
+
+.sectionTitle {
+  font-family: var(--font-heading);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1.5px solid #000;
+}
+
+.body {
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.8;
+  color: #222;
+}
+
+.body p {
+  margin-bottom: 14px;
+}
+
+.body p:last-child {
+  margin-bottom: 0;
+}
+
+.body a {
+  color: #000;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.body a:hover {
+  opacity: 0.6;
+}
+
+/* ── Ordered / unordered list ── */
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 14px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.list li {
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.7;
+  color: #222;
+  padding-left: 20px;
+  position: relative;
+}
+
+.list li::before {
+  content: "—";
+  position: absolute;
+  left: 0;
+  color: #aaa;
+}
+
+/* Numbered list variant */
+.listNum {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 14px 0;
+  counter-reset: item;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.listNum li {
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.7;
+  color: #222;
+  padding-left: 28px;
+  position: relative;
+  counter-increment: item;
+}
+
+.listNum li::before {
+  content: counter(item) ".";
+  position: absolute;
+  left: 0;
+  font-weight: 700;
+  color: #000;
+}
+
+/* ── Callout box ── */
+.callout {
+  background: #f4f4f4;
+  border-left: 3px solid #000;
+  padding: 16px 20px;
+  margin: 20px 0;
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.7;
+  color: #333;
+}
+
+.calloutStrong {
+  background: #000;
+  color: #fff;
+  padding: 16px 20px;
+  margin: 20px 0;
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  line-height: 1.6;
+}
+
+/* ── Contact card (contact page) ── */
+.contactGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  margin-top: 16px;
+}
+
+@media (min-width: 600px) {
+  .contactGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.contactCard {
+  border: 1.5px solid #e0e0e0;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.contactCardLabel {
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #888;
+}
+
+.contactCardValue {
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 600;
+  color: #000;
+  word-break: break-all;
+}
+
+.contactCardSub {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: #888;
+}
+
+.hoursTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+}
+
+.hoursTable td {
+  font-family: var(--font-body);
+  font-size: 13px;
+  padding: 6px 0;
+  border-bottom: 1px solid #e8e8e8;
+  color: #333;
+}
+
+.hoursTable td:last-child {
+  text-align: right;
+  font-weight: 500;
+}
