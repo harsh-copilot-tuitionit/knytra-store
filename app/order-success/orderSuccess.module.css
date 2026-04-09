@@ -1,0 +1,215 @@
+/* ============================================
+   KNYTRA — Order Success
+   ============================================ */
+
+.page {
+  background: #fff;
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 60px 24px 80px;
+}
+
+.card {
+  max-width: 560px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+/* ── Header */
+.checkmark {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: #000;
+  color: #fff;
+  font-size: 32px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #000;
+  text-align: center;
+  margin: 0;
+}
+
+.sub {
+  font-size: 15px;
+  color: #555;
+  text-align: center;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ── Order ref pill */
+.refBox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  padding: 10px 18px;
+  width: 100%;
+  justify-content: space-between;
+}
+
+.refLabel {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #888;
+}
+
+.refValue {
+  font-size: 14px;
+  font-weight: 700;
+  font-family: monospace;
+  color: #000;
+  letter-spacing: 0.1em;
+}
+
+/* ── Items list */
+.items {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid #e8e8e8;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.sectionTitle {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #888;
+  padding: 14px 16px 10px;
+  margin: 0;
+  border-bottom: 1px solid #e8e8e8;
+  background: #fafafa;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.item:last-child {
+  border-bottom: none;
+}
+
+.itemImage {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #f0f0f0;
+}
+
+.itemInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.itemName {
+  font-size: 14px;
+  font-weight: 600;
+  color: #000;
+}
+
+.itemMeta {
+  font-size: 12px;
+  color: #888;
+}
+
+.itemPrice {
+  font-size: 14px;
+  font-weight: 700;
+  color: #000;
+  white-space: nowrap;
+}
+
+/* ── Total */
+.totalRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 14px 0;
+  border-top: 2px solid #000;
+  font-size: 15px;
+  font-weight: 600;
+  color: #000;
+}
+
+.totalAmount {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+/* ── Payment ID */
+.paymentId {
+  font-size: 12px;
+  color: #aaa;
+  text-align: center;
+  word-break: break-all;
+}
+
+.paymentId span {
+  color: #777;
+  font-family: monospace;
+}
+
+/* ── CTA */
+.cta {
+  display: inline-block;
+  background: #000;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 14px 36px;
+  border-radius: 4px;
+  text-decoration: none;
+  margin-top: 4px;
+  transition: background 0.2s;
+}
+
+.cta:hover {
+  background: #222;
+}
+
+/* ── Loading spinner */
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid #e0e0e0;
+  border-top-color: #000;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }

@@ -1,7 +1,6 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import styles from "./orderConfirmation.module.css";
 
@@ -9,6 +8,7 @@ type VerifyStatus = "verifying" | "success" | "failed";
 
 function OrderConfirmationContent() {
   const params = useSearchParams();
+  const router = useRouter();
   const paymentId = params.get("payment_id") ?? "";
   const orderId   = params.get("order_id") ?? "";
   const signature = params.get("signature") ?? "";
@@ -32,20 +32,15 @@ function OrderConfirmationContent() {
         firestore_order_id:  docId,
       }),
     })
-      .then((res) => setStatus(res.ok ? "success" : "failed"))
+      .then((res) => {
+        if (res.ok) {
+          router.replace(`/order-success?doc_id=${docId}&payment_id=${paymentId}`);
+        } else {
+          setStatus("failed");
+        }
+      })
       .catch(() => setStatus("failed"));
-  }, [paymentId, orderId, signature, docId]);
-
-  if (status === "verifying") {
-    return (
-      <div className={styles.page}>
-        <div className={styles.card}>
-          <div className={styles.spinner} />
-          <p className={styles.sub}>Verifying your payment…</p>
-        </div>
-      </div>
-    );
-  }
+  }, [paymentId, orderId, signature, docId, router]);
 
   if (status === "failed") {
     return (
@@ -56,7 +51,7 @@ function OrderConfirmationContent() {
           <p className={styles.sub}>
             Something went wrong with your payment. No money has been charged. Please try again.
           </p>
-          <Link href="/checkout" className={styles.shopBtn}>Try Again</Link>
+          <a href="/checkout" className={styles.shopBtn}>Try Again</a>
         </div>
       </div>
     );
@@ -65,24 +60,8 @@ function OrderConfirmationContent() {
   return (
     <div className={styles.page}>
       <div className={styles.card}>
-        <div className={styles.checkmark}>✓</div>
-        <h1 className={styles.title}>Order Confirmed!</h1>
-        <p className={styles.sub}>
-          Thanks for shopping with KNYTRA. Your order is confirmed and will ship in 5–7 business days.
-        </p>
-
-        <div className={styles.details}>
-          <div className={styles.detailRow}>
-            <span className={styles.detailLabel}>Payment ID</span>
-            <span className={styles.detailValue}>{paymentId}</span>
-          </div>
-          <div className={styles.detailRow}>
-            <span className={styles.detailLabel}>Order ID</span>
-            <span className={styles.detailValue}>{orderId}</span>
-          </div>
-        </div>
-
-        <Link href="/shop" className={styles.shopBtn}>Continue Shopping</Link>
+        <div className={styles.spinner} />
+        <p className={styles.sub}>Verifying your payment…</p>
       </div>
     </div>
   );
