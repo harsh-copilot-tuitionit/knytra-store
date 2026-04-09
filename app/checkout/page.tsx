@@ -334,18 +334,35 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          <button
-            className={styles.placeOrderBtn}
-            onClick={handleProceed}
-            disabled={!isValid || paying}
-          >
-            {paying ? "Opening payment…" : isValid ? "Proceed to Pay →" : "Fill details to continue"}
-          </button>
-          {paymentError && (
-            <p className={styles.paymentError}>{paymentError}</p>
-          )}
+          {/* Desktop pay button — hidden on mobile */}
+          <div className={styles.desktopPayBtn}>
+            <button
+              className={styles.placeOrderBtn}
+              onClick={handleProceed}
+              disabled={!isValid || paying}
+            >
+              {paying ? "Opening payment…" : isValid ? "Proceed to Pay →" : "Fill details to continue"}
+            </button>
+            {paymentError && (
+              <p className={styles.paymentError}>{paymentError}</p>
+            )}
+          </div>
         </section>
 
+      </div>
+
+      {/* ── Sticky pay bar — mobile only ── */}
+      <div className={styles.stickyPayBar}>
+        {paymentError && (
+          <p className={styles.paymentError}>{paymentError}</p>
+        )}
+        <button
+          className={styles.placeOrderBtn}
+          onClick={handleProceed}
+          disabled={!isValid || paying}
+        >
+          {paying ? "Opening payment…" : isValid ? "Proceed to Pay →" : "Fill details to continue"}
+        </button>
       </div>
     </div>
   );
