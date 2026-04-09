@@ -389,6 +389,102 @@
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ── Skeleton ── */
+.skeletonPage {
+  background: #fff;
+  min-height: 100vh;
+  max-width: 680px;
+  margin: 0 auto;
+  padding-bottom: 100px;
+}
+
+.skeletonHeader {
+  height: 50px;
+  border-bottom: 1.5px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 12px;
+}
+
+.skeletonBackBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+.skeletonTitle {
+  height: 18px;
+  width: 55%;
+  margin: 18px 20px 12px;
+  border-radius: 4px;
+}
+
+.skeletonGallery {
+  display: flex;
+  gap: 10px;
+  padding: 0 20px;
+}
+
+.skeletonThumbStrip {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeletonThumb {
+  width: 60px;
+  height: 60px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.skeletonMainImg {
+  flex: 1;
+  aspect-ratio: 3 / 4;
+  border-radius: 6px;
+}
+
+.skeletonInfoBlock {
+  padding: 20px 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.skeletonLabel {
+  height: 11px;
+  width: 80px;
+  border-radius: 4px;
+}
+
+.skeletonLine {
+  height: 13px;
+  border-radius: 4px;
+}
+
+.skeletonShort { width: 40%; }
+.skeletonMid   { width: 65%; }
+.skeletonLong  { width: 90%; }
+
+.skeletonSizes {
+  display: flex;
+  gap: 8px;
+  padding: 8px 20px 0;
+}
+
+.skeletonSizeChip {
+  width: 44px;
+  height: 44px;
+  border-radius: 4px;
+}
+
+.skeletonATC {
+  height: 52px;
+  margin: 24px 20px 0;
+  border-radius: 4px;
+}
+
 .notFound {
   display: flex;
   flex-direction: column;

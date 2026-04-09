@@ -121,8 +121,39 @@ export default function ProductDetailClient() {
 
   if (loading) {
     return (
-      <div className={styles.loadingContainer}>
-        <div className={styles.spinner} />
+      <div className={styles.skeletonPage}>
+        {/* fake header */}
+        <div className={styles.skeletonHeader}>
+          <div className={`${styles.skeletonBackBtn} skeleton`} />
+        </div>
+        {/* fake title */}
+        <div className={`${styles.skeletonTitle} skeleton`} />
+        {/* fake gallery */}
+        <div className={styles.skeletonGallery}>
+          <div className={styles.skeletonThumbStrip}>
+            {[0, 1, 2].map((i) => (
+              <div key={i} className={`${styles.skeletonThumb} skeleton`} />
+            ))}
+          </div>
+          <div className={`${styles.skeletonMainImg} skeleton`} />
+        </div>
+        {/* fake info */}
+        <div className={styles.skeletonInfoBlock}>
+          <div className={`${styles.skeletonLabel} skeleton`} />
+          <div className={`${styles.skeletonLine} ${styles.skeletonLong} skeleton`} />
+          <div className={`${styles.skeletonLine} ${styles.skeletonMid} skeleton`} />
+        </div>
+        {/* fake sizes */}
+        <div className={styles.skeletonSizes}>
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className={`${styles.skeletonSizeChip} skeleton`} />
+          ))}
+        </div>
+        {/* fake price + ATC */}
+        <div className={styles.skeletonInfoBlock}>
+          <div className={`${styles.skeletonLine} ${styles.skeletonShort} skeleton`} />
+        </div>
+        <div className={`${styles.skeletonATC} skeleton`} />
       </div>
     );
   }

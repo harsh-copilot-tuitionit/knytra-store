@@ -268,6 +268,47 @@
   to { transform: rotate(360deg); }
 }
 
+/* ── Skeleton grid ── */
+.skeletonGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1px;
+  background: #e8e8e8;
+}
+
+@media (min-width: 640px) {
+  .skeletonGrid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (min-width: 1024px) {
+  .skeletonGrid { grid-template-columns: repeat(4, 1fr); }
+}
+
+.skeletonCard {
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 0 14px;
+}
+
+.skeletonImg {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+}
+
+.skeletonName {
+  height: 14px;
+  width: 70%;
+  margin: 0 12px;
+}
+
+.skeletonPrice {
+  height: 12px;
+  width: 40%;
+  margin: 0 12px;
+}
+
 .emptyState h2 {
   font-family: var(--font-heading);
   font-size: 22px;

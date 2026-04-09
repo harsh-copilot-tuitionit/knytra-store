@@ -105,9 +105,14 @@ export default function Shop() {
         {/* Products */}
         <main className={styles.main}>
           {loading ? (
-            <div className={styles.loadingState}>
-              <div className={styles.spinner} />
-              <p>Loading collection...</p>
+            <div className={styles.skeletonGrid}>
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className={styles.skeletonCard}>
+                  <div className={`${styles.skeletonImg} skeleton`} />
+                  <div className={`${styles.skeletonName} skeleton`} />
+                  <div className={`${styles.skeletonPrice} skeleton`} />
+                </div>
+              ))}
             </div>
           ) : filtered.length === 0 ? (
             <div className={styles.emptyState}>
