@@ -1,10 +1,8 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect } from "react";
 import styles from "./orderConfirmation.module.css";
-
-type VerifyStatus = "verifying" | "success" | "failed";
 
 function OrderConfirmationContent() {
   const params = useSearchParams();
@@ -14,11 +12,9 @@ function OrderConfirmationContent() {
   const signature = params.get("signature") ?? "";
   const docId     = params.get("doc_id") ?? "";
 
-  const [status, setStatus] = useState<VerifyStatus>("verifying");
-
   useEffect(() => {
     if (!paymentId || !orderId || !signature || !docId) {
-      setStatus("failed");
+      router.replace("/order-failed");
       return;
     }
 
@@ -36,26 +32,11 @@ function OrderConfirmationContent() {
         if (res.ok) {
           router.replace(`/order-success?doc_id=${docId}&payment_id=${paymentId}`);
         } else {
-          setStatus("failed");
+          router.replace("/order-failed");
         }
       })
-      .catch(() => setStatus("failed"));
+      .catch(() => router.replace("/order-failed"));
   }, [paymentId, orderId, signature, docId, router]);
-
-  if (status === "failed") {
-    return (
-      <div className={styles.page}>
-        <div className={styles.card}>
-          <div className={`${styles.checkmark} ${styles.failed}`}>✕</div>
-          <h1 className={styles.title}>Payment Failed</h1>
-          <p className={styles.sub}>
-            Something went wrong with your payment. No money has been charged. Please try again.
-          </p>
-          <a href="/checkout" className={styles.shopBtn}>Try Again</a>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className={styles.page}>
