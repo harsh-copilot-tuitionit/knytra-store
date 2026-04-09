@@ -12,7 +12,8 @@ import {
   updateProfile,
   AuthError,
 } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { auth, db } from "@/lib/firebase";
 
 // ── Error messages ────────────────────────────────────────────────────────────
 
@@ -36,7 +37,8 @@ export function getAuthErrorMessage(error: unknown): string {
 // ── signUp ────────────────────────────────────────────────────────────────────
 
 /**
- * Creates a new Firebase Auth user with email/password and sets their display name.
+ * Creates a new Firebase Auth user with email/password, sets their display name,
+ * and writes their profile document to Firestore (users/{uid}).
  * Throws with a user-friendly message string on failure.
  */
 export async function signUp(
@@ -47,6 +49,12 @@ export async function signUp(
   try {
     const cred = await createUserWithEmailAndPassword(auth, email.trim(), password);
     await updateProfile(cred.user, { displayName: displayName.trim() });
+    await setDoc(doc(db, "users", cred.user.uid), {
+      id: cred.user.uid,
+      name: displayName.trim(),
+      email: email.trim().toLowerCase(),
+      createdAt: serverTimestamp(),
+    });
   } catch (err) {
     throw new Error(getAuthErrorMessage(err));
   }

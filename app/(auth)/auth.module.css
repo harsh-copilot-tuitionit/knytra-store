@@ -1,0 +1,183 @@
+/* ============================================
+   KNYTRA — Signup / Login (shared auth styles)
+   ============================================ */
+
+.page {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  padding: 40px 16px 64px;
+}
+
+/* ── Card ── */
+.card {
+  width: 100%;
+  max-width: 440px;
+}
+
+/* ── Brand header ── */
+.brandRow {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.brand {
+  font-family: var(--font-heading);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  color: #000;
+}
+
+.brandSub {
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #aaa;
+  margin-top: 4px;
+}
+
+/* ── Form ── */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #555;
+}
+
+.input {
+  width: 100%;
+  padding: 13px 14px;
+  border: 1.5px solid #d0d0d0;
+  background: #fff;
+  color: #000;
+  font-family: var(--font-body);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 150ms ease;
+  box-sizing: border-box;
+}
+
+.input:focus {
+  border-color: #000;
+}
+
+.input::placeholder {
+  color: #bbb;
+}
+
+/* ── Password hint ── */
+.hint {
+  font-size: 11px;
+  color: #aaa;
+  margin-top: 2px;
+}
+
+/* ── Error ── */
+.error {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: #c00;
+  background: #fff5f5;
+  border: 1px solid #fcc;
+  padding: 10px 14px;
+  margin-top: -4px;
+}
+
+/* ── Submit button ── */
+.submitBtn {
+  width: 100%;
+  padding: 15px;
+  background: #000;
+  color: #fff;
+  border: none;
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 200ms ease;
+  margin-top: 4px;
+}
+
+.submitBtn:hover:not(:disabled) {
+  opacity: 0.82;
+}
+
+.submitBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Divider ── */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 4px 0;
+}
+
+.dividerLine {
+  flex: 1;
+  height: 1px;
+  background: #e8e8e8;
+}
+
+.dividerText {
+  font-size: 12px;
+  color: #bbb;
+  font-family: var(--font-body);
+  white-space: nowrap;
+}
+
+/* ── Footer link ── */
+.footerNote {
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: #888;
+}
+
+.footerNote a {
+  color: #000;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.footerNote a:hover {
+  opacity: 0.6;
+}
+
+/* ── Terms note ── */
+.termsNote {
+  font-size: 11px;
+  color: #aaa;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.termsNote a {
+  color: #888;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
