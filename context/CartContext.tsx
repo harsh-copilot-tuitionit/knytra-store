@@ -16,6 +16,7 @@ interface CartContextType {
   cart: CartItem[];
   cartCount: number;
   cartTotal: number;
+  isHydrated: boolean; // true once localStorage has been read
   addToCart: (item: CartItem) => void;
   removeFromCart: (id: string) => void;
   updateQuantity: (id: string, qty: number) => void;
@@ -96,6 +97,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         cart,
         cartCount,
         cartTotal,
+        isHydrated: isMounted,
         addToCart,
         removeFromCart,
         updateQuantity,

@@ -46,7 +46,7 @@ function loadRazorpayScript(): Promise<boolean> {
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { cart, cartTotal, cartCount, buyNowItem, clearBuyNow, clearCart } = useCart();
+  const { cart, cartTotal, cartCount, buyNowItem, clearBuyNow, clearCart, isHydrated } = useCart();
 
   // Clear buyNowItem when the user navigates away from this page
   useEffect(() => {
@@ -61,6 +61,13 @@ export default function CheckoutPage() {
     ? buyNowItem.price * buyNowItem.quantity
     : cartTotal;
   const hasItems = isBuyNow ? true : cartCount > 0;
+
+  // Redirect to shop when cart is confirmed empty (after hydration)
+  useEffect(() => {
+    if (isHydrated && !hasItems) {
+      router.replace("/shop");
+    }
+  }, [isHydrated, hasItems, router]);
 
   const [form, setForm] = useState({
     name: "",
@@ -136,7 +143,8 @@ export default function CheckoutPage() {
     }
 
     // 3. Open Razorpay modal
-    const rzp = new window.Razorpay({
+    try {
+      const rzp = new window.Razorpay({
       key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
       amount: orderAmount,
       currency: "INR",
@@ -171,19 +179,18 @@ export default function CheckoutPage() {
       },
     });
 
-    rzp.open();
+      rzp.open();
+    } catch {
+      setPaymentError("Failed to open payment modal. Please try again.");
+      setPaying(false);
+    }
   };
 
-  if (!hasItems) {
-    return (
-      <div className={styles.empty}>
-        <p className={styles.emptyIcon}>🛍</p>
-        <h2 className={styles.emptyTitle}>Your cart is empty.</h2>
-        <p className={styles.emptySub}>Add some pieces before checking out.</p>
-        <Link href="/shop" className={styles.shopBtn}>Browse the Shop</Link>
-      </div>
-    );
-  }
+  // Show nothing while cart is loading from localStorage
+  if (!isHydrated) return null;
+
+  // Redirect to shop is handled by the useEffect above — show nothing while it fires
+  if (!hasItems) return null;
 
   return (
     <div className={styles.page}>
