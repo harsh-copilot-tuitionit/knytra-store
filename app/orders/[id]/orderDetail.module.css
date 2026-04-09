@@ -286,10 +286,16 @@
   word-break: break-all;
 }
 
-/* ── CTA */
+/* ── CTA row */
+.ctaRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
 .cta {
   display: inline-block;
-  align-self: flex-start;
   background: #000;
   color: #fff;
   font-size: 13px;
@@ -303,3 +309,23 @@
 }
 
 .cta:hover { background: #222; }
+
+.invoiceBtn {
+  display: inline-block;
+  border: 1.5px solid #000;
+  color: #000;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 12px 28px;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s;
+}
+
+.invoiceBtn:hover {
+  background: #000;
+  color: #fff;
+}

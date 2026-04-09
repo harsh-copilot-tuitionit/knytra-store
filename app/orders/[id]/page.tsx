@@ -191,7 +191,16 @@ export default async function OrderDetailPage({
 
         </div>
 
-        <Link href="/shop" className={styles.cta}>Continue Shopping</Link>
+        <div className={styles.ctaRow}>
+          <a
+            href={`/api/orders/${order.id}/invoice`}
+            download
+            className={styles.invoiceBtn}
+          >
+            ↓ Download Invoice
+          </a>
+          <Link href="/shop" className={styles.cta}>Continue Shopping</Link>
+        </div>
 
       </div>
     </div>
