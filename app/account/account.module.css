@@ -1,0 +1,251 @@
+/* ============================================
+   KNYTRA — Account Dashboard
+   ============================================ */
+
+.page {
+  flex: 1;
+  background: #fff;
+  color: #000;
+}
+
+/* ── Hero ── */
+.hero {
+  background: #000;
+  color: #fff;
+  padding: 40px 24px 36px;
+}
+
+@media (min-width: 768px) {
+  .hero {
+    padding: 56px 48px 48px;
+  }
+}
+
+.heroInner {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Initials avatar */
+.avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #fff;
+  color: #000;
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+
+.heroText {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.heroName {
+  font-family: var(--font-heading);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.heroEmail {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.55);
+  font-family: var(--font-body);
+}
+
+/* ── Body ── */
+.body {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 24px 72px;
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+@media (min-width: 768px) {
+  .body {
+    padding: 48px 48px 80px;
+  }
+}
+
+/* ── Section ── */
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1.5px solid #000;
+}
+
+.sectionTitle {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.sectionLink {
+  font-family: var(--font-heading);
+  font-size: 12px;
+  font-weight: 600;
+  color: #000;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: opacity 150ms ease;
+}
+.sectionLink:hover { opacity: 0.55; }
+
+/* ── Nav cards ── */
+.navGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+@media (min-width: 480px) {
+  .navGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.navCard {
+  border: 1.5px solid #e0e0e0;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: #000;
+  transition: border-color 150ms ease, background 150ms ease;
+  cursor: pointer;
+  background: #fff;
+  text-align: center;
+}
+
+.navCard:hover {
+  border-color: #000;
+  background: #f8f8f8;
+}
+
+.navCardIcon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.navCardLabel {
+  font-family: var(--font-heading);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Logout card variant */
+.navCardDanger {
+  border-color: #e0e0e0;
+  color: #c00;
+}
+.navCardDanger:hover {
+  border-color: #c00;
+  background: #fff5f5;
+}
+
+/* ── Recent orders ── */
+.ordersList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.orderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border: 1.5px solid #e8e8e8;
+  text-decoration: none;
+  color: #000;
+  transition: border-color 150ms ease;
+  gap: 12px;
+}
+
+.orderRow:hover { border-color: #000; }
+
+.orderLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.orderRef {
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.orderMeta {
+  font-size: 12px;
+  color: #888;
+  font-family: var(--font-body);
+}
+
+.orderRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.orderAmount {
+  font-family: var(--font-heading);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 10px;
+  font-family: var(--font-heading);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+}
+
+.badgePlaced    { color: #1a6ab5; }
+.badgeShipped   { color: #b57a00; }
+.badgeDelivered { color: #1a8a3a; }
+.badgeFallback  { color: #888; }
+
+/* ── Empty state ── */
+.emptyState {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: #999;
+  padding: 24px 0;
+}
+
+/* ── Skeleton ── */
+.skeletonRow {
+  height: 72px;
+  border: 1.5px solid #f0f0f0;
+}
