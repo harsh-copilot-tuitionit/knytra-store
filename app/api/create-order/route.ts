@@ -11,7 +11,7 @@ const razorpay = new Razorpay({
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { amount, items, user, address } = body;
+    const { amount, items, user, address, userId } = body;
 
     // Validate: amount must be a positive integer (paise)
     if (
@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
     const orderRef = await db.collection("orders").add({
       items: items ?? [],
       totalAmount: amount / 100, // back to ₹
+      userId: userId ?? null,    // uid of the logged-in buyer; null for guests
       user: user ?? {},
       address: address ?? {},
       payment: {

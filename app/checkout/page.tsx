@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 import styles from "./checkout.module.css";
 
 // Minimal Razorpay window type
@@ -47,6 +48,7 @@ function loadRazorpayScript(): Promise<boolean> {
 export default function CheckoutPage() {
   const router = useRouter();
   const { cart, cartTotal, cartCount, buyNowItem, clearBuyNow, clearCart, isHydrated } = useCart();
+  const { user } = useAuth();
 
   // Clear buyNowItem when the user navigates away from this page
   useEffect(() => {
@@ -117,6 +119,7 @@ export default function CheckoutPage() {
         body: JSON.stringify({
           amount: checkoutTotal * 100, // paise
           items: checkoutItems,
+          userId: user?.uid ?? null,
           user: {
             name: form.name,
             email: form.email,
