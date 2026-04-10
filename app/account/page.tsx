@@ -64,21 +64,28 @@ export default function AccountPage() {
   }, [user, loading, router]);
 
   /**
-   * Fetch the 3 most recent orders for this user by email.
+   * Fetch the 3 most recent orders for this user.
    *
-   * PRIMARY query: uses a composite index on (user.email ASC, createdAt DESC).
-   * If that index is missing, Firestore throws a "requires an index" error
-   * (code 9 / FAILED_PRECONDITION). In that case we fall back to a
-   * simple equality-only query and sort client-side.
+   * Strategy (in order):
+   *   1. Query by `userId` (Firebase UID) — fast, secure, for logged-in users.
+   *      Requires composite index: orders → userId ASC, createdAt DESC
+   *   2. Fallback to `user.email` — covers legacy orders created before userId
+   *      was stored, and preserves backward compatibility.
    *
-   * To create the required index, open Firebase Console →
-   * Firestore → Indexes → Add composite index:
-   *   Collection: orders
-   *   Fields:     user.email (Ascending), createdAt (Descending)
+   * Each query path follows the same pattern:
+   *   - Try the indexed (orderBy) query first.
+   *   - On index-missing errors (code "failed-precondition"), fall back to an
+   *     equality-only query and sort client-side.
+   *   - On any other error, surface it immediately (no further fallback).
+   *
+   * To create composite indexes in Firebase Console → Firestore → Indexes:
+   *   • userId ASC, createdAt DESC   (collection: orders)
+   *   • user.email ASC, createdAt DESC (collection: orders)
    */
   useEffect(() => {
     if (!user?.email) return;
 
+    const uid   = user.uid;
     const email = user.email;
 
     function mapDoc(doc: import("firebase/firestore").QueryDocumentSnapshot): RecentOrder {
@@ -92,59 +99,79 @@ export default function AccountPage() {
       };
     }
 
-    async function fetchOrders() {
-      // ── Primary: indexed query (sorted server-side) ──────────────────────
+    function isIndexError(error: any): boolean {
+      return (
+        error?.code === "failed-precondition" ||
+        error?.message?.toLowerCase().includes("index")
+      );
+    }
+
+    function clientSort(rows: RecentOrder[]): RecentOrder[] {
+      return rows
+        .sort((a, b) => {
+          const aMs = (a.createdAt as any)?.toMillis?.() ?? 0;
+          const bMs = (b.createdAt as any)?.toMillis?.() ?? 0;
+          return bMs - aMs;
+        })
+        .slice(0, 3);
+    }
+
+    /** Run an indexed query; on index error fall back to equality-only + client sort.
+     *  Returns the result rows, or throws if a non-index error occurs. */
+    async function runQuery(
+      filterField: string,
+      filterValue: string,
+      label: string
+    ): Promise<RecentOrder[]> {
+      // ── Indexed path ─────────────────────────────────────────────────────
       try {
         const q = query(
           collection(db, "orders"),
-          where("user.email", "==", email),
+          where(filterField, "==", filterValue),
           orderBy("createdAt", "desc"),
           limit(3)
         );
         const snap = await getDocs(q);
-        setOrders(snap.docs.map(mapDoc));
-        setOrdersLoading(false);
-        return;
-      } catch (error: any) {
-        const isIndexError =
-          error.code === "failed-precondition" ||
-          error.message?.toLowerCase().includes("index");
-
-        if (!isIndexError) {
-          // Real error (permissions, network, auth) — surface it, don't fallback
-          console.error("[Account] Orders fetch failed:", error);
-          setOrdersError(true);
-          setOrdersLoading(false);
-          return;
+        return snap.docs.map(mapDoc);
+      } catch (err: any) {
+        if (!isIndexError(err)) {
+          // Real error — bubble up so the caller can surface it
+          throw err;
         }
-
-        // Index missing — warn and fall through to fallback
         console.warn(
-          "[Account] Composite Firestore index missing for orders query. "
-          + "Create index: orders → user.email ASC, createdAt DESC. "
-          + "Falling back to client-side sort."
+          `[Account] Missing composite index for orders (${label}). ` +
+          `Create index: orders → ${filterField} ASC, createdAt DESC. ` +
+          `Falling back to client-side sort.`
         );
       }
 
-      // ── Fallback: equality-only query, sort client-side ──────────────────
-      // Only reached when the primary query failed due to a missing index.
+      // ── Equality-only fallback (no orderBy) ───────────────────────────────
+      const fallback = query(
+        collection(db, "orders"),
+        where(filterField, "==", filterValue)
+      );
+      const snap = await getDocs(fallback);
+      return clientSort(snap.docs.map(mapDoc));
+    }
+
+    async function fetchOrders() {
+      // ── 1. Primary: query by userId (fast, indexed) ───────────────────────
       try {
-        const fallback = query(
-          collection(db, "orders"),
-          where("user.email", "==", email)
-        );
-        const snap = await getDocs(fallback);
-        const rows = snap.docs
-          .map(mapDoc)
-          .sort((a, b) => {
-            const aMs = (a.createdAt as any)?.toMillis?.() ?? 0;
-            const bMs = (b.createdAt as any)?.toMillis?.() ?? 0;
-            return bMs - aMs;
-          })
-          .slice(0, 3);
+        const rows = await runQuery("userId", uid, "userId");
         setOrders(rows);
-      } catch (fallbackErr: unknown) {
-        console.error("[Account] Fallback orders query also failed:", fallbackErr);
+        setOrdersLoading(false);
+        return;
+      } catch (err: any) {
+        console.error("[Account] userId orders query failed:", err);
+        // Don't give up yet — try the email fallback for legacy orders
+      }
+
+      // ── 2. Legacy fallback: query by user.email ───────────────────────────
+      try {
+        const rows = await runQuery("user.email", email, "user.email");
+        setOrders(rows);
+      } catch (err: any) {
+        console.error("[Account] Email orders query also failed:", err);
         setOrdersError(true);
       } finally {
         setOrdersLoading(false);
