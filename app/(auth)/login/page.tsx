@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import styles from "../auth.module.css";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, loading, login } = useAuth();
@@ -47,75 +47,84 @@ export default function LoginPage() {
   if (user) return null;
 
   return (
-    <div className={styles.page}>
-      <div className={styles.card}>
+    <div className={styles.card}>
 
-        {/* Brand header */}
-        <div className={styles.brandRow}>
-          <p className={styles.brand}>KNYTRA</p>
-          <p className={styles.brandSub}>Sign in to your account</p>
+      {/* Brand header */}
+      <div className={styles.brandRow}>
+        <p className={styles.brand}>KNYTRA</p>
+        <p className={styles.brandSub}>Sign in to your account</p>
+      </div>
+
+      <form onSubmit={handleSubmit} className={styles.form} noValidate>
+
+        {/* Email */}
+        <div className={styles.field}>
+          <label htmlFor="email" className={styles.label}>Email</label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            className={styles.input}
+            value={form.email}
+            onChange={handleChange}
+            placeholder="you@example.com"
+            autoComplete="email"
+            required
+          />
         </div>
 
-        <form onSubmit={handleSubmit} className={styles.form} noValidate>
+        {/* Password */}
+        <div className={styles.field}>
+          <label htmlFor="password" className={styles.label}>Password</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            className={styles.input}
+            value={form.password}
+            onChange={handleChange}
+            placeholder="Your password"
+            autoComplete="current-password"
+            required
+          />
+        </div>
 
-          {/* Email */}
-          <div className={styles.field}>
-            <label htmlFor="email" className={styles.label}>Email</label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              className={styles.input}
-              value={form.email}
-              onChange={handleChange}
-              placeholder="you@example.com"
-              autoComplete="email"
-              required
-            />
-          </div>
+        {/* Error */}
+        {error && <p className={styles.error} role="alert">{error}</p>}
 
-          {/* Password */}
-          <div className={styles.field}>
-            <label htmlFor="password" className={styles.label}>Password</label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              className={styles.input}
-              value={form.password}
-              onChange={handleChange}
-              placeholder="Your password"
-              autoComplete="current-password"
-              required
-            />
-          </div>
+        {/* Submit */}
+        <button
+          type="submit"
+          className={styles.submitBtn}
+          disabled={submitting}
+        >
+          {submitting ? "Signing in…" : "Sign In"}
+        </button>
 
-          {/* Error */}
-          {error && <p className={styles.error} role="alert">{error}</p>}
+        {/* Divider */}
+        <div className={styles.divider}>
+          <span className={styles.dividerLine} />
+          <span className={styles.dividerText}>new to knytra?</span>
+          <span className={styles.dividerLine} />
+        </div>
 
-          {/* Submit */}
-          <button
-            type="submit"
-            className={styles.submitBtn}
-            disabled={submitting}
-          >
-            {submitting ? "Signing in…" : "Sign In"}
-          </button>
+        {/* Link to signup */}
+        <p className={styles.footerNote}>
+          <Link href="/signup">Create an account →</Link>
+        </p>
 
-          {/* Divider */}
-          <div className={styles.divider}>
-            <span className={styles.dividerLine} />
-            <span className={styles.dividerText}>new to knytra?</span>
-            <span className={styles.dividerLine} />
-          </div>
-
-          {/* Link to signup */}
-          <p className={styles.footerNote}>
-            <Link href="/signup">Create an account →</Link>
-          </p>
-
-        </form>
-      </div>
+      </form>
     </div>
   );
 }
+
+export default function LoginPage() {
+  return (
+    <div className={styles.page}>
+      <Suspense fallback={null}>
+        <LoginForm />
+      </Suspense>
+    </div>
+  );
+}
+
