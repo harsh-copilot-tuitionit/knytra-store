@@ -14,6 +14,7 @@ import {
 } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
+import type { UserProfile } from "@/lib/types";
 
 // ── Error messages ────────────────────────────────────────────────────────────
 
@@ -49,12 +50,15 @@ export async function signUp(
   try {
     const cred = await createUserWithEmailAndPassword(auth, email.trim(), password);
     await updateProfile(cred.user, { displayName: displayName.trim() });
-    await setDoc(doc(db, "users", cred.user.uid), {
+
+    const userDoc: Omit<UserProfile, "createdAt"> & { createdAt: unknown } = {
       id: cred.user.uid,
       name: displayName.trim(),
       email: email.trim().toLowerCase(),
+      addresses: [],
       createdAt: serverTimestamp(),
-    });
+    };
+    await setDoc(doc(db, "users", cred.user.uid), userDoc);
   } catch (err) {
     throw new Error(getAuthErrorMessage(err));
   }
