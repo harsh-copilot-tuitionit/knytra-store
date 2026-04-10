@@ -54,6 +54,7 @@ export default function AccountPage() {
 
   const [orders, setOrders] = useState<RecentOrder[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
+  const [ordersError, setOrdersError] = useState(false);
 
   // Guard — redirect unauthenticated users
   useEffect(() => {
@@ -62,33 +63,83 @@ export default function AccountPage() {
     }
   }, [user, loading, router]);
 
-  // Fetch last 3 orders for this user (matched by email)
+  /**
+   * Fetch the 3 most recent orders for this user by email.
+   *
+   * PRIMARY query: uses a composite index on (user.email ASC, createdAt DESC).
+   * If that index is missing, Firestore throws a "requires an index" error
+   * (code 9 / FAILED_PRECONDITION). In that case we fall back to a
+   * simple equality-only query and sort client-side.
+   *
+   * To create the required index, open Firebase Console →
+   * Firestore → Indexes → Add composite index:
+   *   Collection: orders
+   *   Fields:     user.email (Ascending), createdAt (Descending)
+   */
   useEffect(() => {
     if (!user?.email) return;
 
+    const email = user.email;
+
+    function mapDoc(doc: import("firebase/firestore").QueryDocumentSnapshot): RecentOrder {
+      const d = doc.data();
+      return {
+        id: doc.id,
+        totalAmount: d.totalAmount ?? 0,
+        status: d.status ?? "placed",
+        createdAt: d.createdAt ?? null,
+        itemCount: Array.isArray(d.items) ? d.items.length : 0,
+      };
+    }
+
     async function fetchOrders() {
+      // ── Primary: indexed query (sorted server-side) ──────────────────────
       try {
         const q = query(
           collection(db, "orders"),
-          where("user.email", "==", user!.email),
+          where("user.email", "==", email),
           orderBy("createdAt", "desc"),
           limit(3)
         );
         const snap = await getDocs(q);
-        const rows: RecentOrder[] = snap.docs.map((doc) => {
-          const d = doc.data();
-          return {
-            id: doc.id,
-            totalAmount: d.totalAmount ?? 0,
-            status: d.status ?? "placed",
-            createdAt: d.createdAt ?? null,
-            itemCount: Array.isArray(d.items) ? d.items.length : 0,
-          };
-        });
+        setOrders(snap.docs.map(mapDoc));
+        setOrdersLoading(false);
+        return;
+      } catch (primaryErr: unknown) {
+        const isIndexError =
+          (primaryErr as { code?: number })?.code === 9 ||
+          String(primaryErr).toLowerCase().includes("index");
+
+        if (isIndexError) {
+          console.warn(
+            "[Account] Composite Firestore index missing for orders query. "
+            + "Create index: orders → user.email ASC, createdAt DESC. "
+            + "Falling back to client-side sort."
+          );
+        } else {
+          console.error("[Account] Primary orders query failed:", primaryErr);
+        }
+      }
+
+      // ── Fallback: equality-only query, sort client-side ──────────────────
+      try {
+        const fallback = query(
+          collection(db, "orders"),
+          where("user.email", "==", email)
+        );
+        const snap = await getDocs(fallback);
+        const rows = snap.docs
+          .map(mapDoc)
+          .sort((a, b) => {
+            const aS = a.createdAt?.seconds ?? 0;
+            const bS = b.createdAt?.seconds ?? 0;
+            return bS - aS;
+          })
+          .slice(0, 3);
         setOrders(rows);
-      } catch {
-        // Index may not exist yet — silently show empty state
-        setOrders([]);
+      } catch (fallbackErr: unknown) {
+        console.error("[Account] Fallback orders query also failed:", fallbackErr);
+        setOrdersError(true);
       } finally {
         setOrdersLoading(false);
       }
@@ -169,6 +220,10 @@ export default function AccountPage() {
                 <div key={i} className={`${styles.skeletonRow} skeleton`} />
               ))}
             </div>
+          ) : ordersError ? (
+            <p className={styles.errorState}>
+              Something went wrong loading your orders. Please try again.
+            </p>
           ) : orders.length === 0 ? (
             <p className={styles.emptyState}>
               No orders yet.{" "}
