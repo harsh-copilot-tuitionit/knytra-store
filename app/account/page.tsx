@@ -105,23 +105,29 @@ export default function AccountPage() {
         setOrders(snap.docs.map(mapDoc));
         setOrdersLoading(false);
         return;
-      } catch (primaryErr: unknown) {
+      } catch (error: any) {
         const isIndexError =
-          (primaryErr as { code?: number })?.code === 9 ||
-          String(primaryErr).toLowerCase().includes("index");
+          error.code === "failed-precondition" ||
+          error.message?.toLowerCase().includes("index");
 
-        if (isIndexError) {
-          console.warn(
-            "[Account] Composite Firestore index missing for orders query. "
-            + "Create index: orders → user.email ASC, createdAt DESC. "
-            + "Falling back to client-side sort."
-          );
-        } else {
-          console.error("[Account] Primary orders query failed:", primaryErr);
+        if (!isIndexError) {
+          // Real error (permissions, network, auth) — surface it, don't fallback
+          console.error("[Account] Orders fetch failed:", error);
+          setOrdersError(true);
+          setOrdersLoading(false);
+          return;
         }
+
+        // Index missing — warn and fall through to fallback
+        console.warn(
+          "[Account] Composite Firestore index missing for orders query. "
+          + "Create index: orders → user.email ASC, createdAt DESC. "
+          + "Falling back to client-side sort."
+        );
       }
 
       // ── Fallback: equality-only query, sort client-side ──────────────────
+      // Only reached when the primary query failed due to a missing index.
       try {
         const fallback = query(
           collection(db, "orders"),
@@ -131,9 +137,9 @@ export default function AccountPage() {
         const rows = snap.docs
           .map(mapDoc)
           .sort((a, b) => {
-            const aS = a.createdAt?.seconds ?? 0;
-            const bS = b.createdAt?.seconds ?? 0;
-            return bS - aS;
+            const aMs = (a.createdAt as any)?.toMillis?.() ?? 0;
+            const bMs = (b.createdAt as any)?.toMillis?.() ?? 0;
+            return bMs - aMs;
           })
           .slice(0, 3);
         setOrders(rows);
