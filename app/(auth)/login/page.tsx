@@ -13,6 +13,21 @@ function safeNext(raw: string | null): string {
   return raw;
 }
 
+function getLoginErrorMessage(err: unknown): string {
+  const m = (err as Error)?.message?.toLowerCase?.() ?? "";
+  if (
+    m.includes("incorrect email or password") ||
+    m.includes("no account found") ||
+    m.includes("incorrect password")
+  ) {
+    return "Invalid email or password";
+  }
+  if (m.includes("network")) {
+    return "Something went wrong. Please try again.";
+  }
+  return "Something went wrong. Please try again.";
+}
+
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -44,7 +59,7 @@ function LoginForm() {
       const next = safeNext(searchParams.get("next"));
       router.replace(next);
     } catch (err: unknown) {
-      setError((err as Error).message);
+      setError(getLoginErrorMessage(err));
     } finally {
       setSubmitting(false);
     }

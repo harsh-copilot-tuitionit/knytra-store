@@ -107,6 +107,8 @@ export default function CheckoutPage() {
   const [saveNewAddress,   setSaveNewAddress]   = useState(false);
   const [savingAddress,    setSavingAddress]    = useState(false);
   const [addressSaveInfo,  setAddressSaveInfo]  = useState("");
+  const [savedAddrError,   setSavedAddrError]   = useState("");
+  const [savedAddrReload,  setSavedAddrReload]  = useState(0);
   const addressActionsLocked = paying || savingAddress || addressesLoading;
 
   // Fetch saved addresses when a logged-in user lands on checkout
@@ -116,12 +118,23 @@ export default function CheckoutPage() {
 
     async function fetchSavedAddresses() {
       setAddressesLoading(true);
+      setSavedAddrError("");
       try {
         const token = await user!.getIdToken();
         const res   = await fetch("/api/addresses", {
           headers: { Authorization: `Bearer ${token}` },
         });
-        if (cancelled || !res.ok) return;
+        if (cancelled) return;
+
+        if (res.status === 401) {
+          router.replace("/login?next=/checkout");
+          return;
+        }
+
+        if (!res.ok) {
+          throw new Error("Failed to load saved addresses.");
+        }
+
         const data = await res.json();
         const list: SavedAddress[] = data.addresses ?? [];
         setSavedAddresses(list);
@@ -145,7 +158,9 @@ export default function CheckoutPage() {
           track("address_selected", { source: "checkout", mode: "new" });
         }
       } catch {
-        // Silent — user can still enter manually
+        if (!cancelled) {
+          setSavedAddrError("Could not load saved addresses. You can enter a new address.");
+        }
       } finally {
         if (!cancelled) setAddressesLoading(false);
       }
@@ -154,7 +169,7 @@ export default function CheckoutPage() {
     fetchSavedAddresses();
     return () => { cancelled = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user, savedAddrReload, router]);
 
   // Autofill form when user picks a different saved address
   function handleSelectAddress(addr: SavedAddress | "new") {
@@ -402,8 +417,32 @@ export default function CheckoutPage() {
           {/* ── Saved addresses (logged-in users only) ── */}
           {user && (
             <div className={styles.savedSection}>
+              {savedAddrError && (
+                <div className={styles.savedErrorBanner}>
+                  <span>{savedAddrError}</span>
+                  <button
+                    type="button"
+                    className={styles.retryBtn}
+                    onClick={() => setSavedAddrReload((v) => v + 1)}
+                    disabled={addressesLoading}
+                  >
+                    Retry
+                  </button>
+                </div>
+              )}
+
               {addressesLoading ? (
-                <div className={styles.addrLoading}>Loading saved addresses…</div>
+                <div className={styles.addrList}>
+                  {Array.from({ length: 2 }).map((_, i) => (
+                    <div key={i} className={styles.addrOption} aria-hidden="true">
+                      <div className={`${styles.addrRadioSkeleton} skeleton`} />
+                      <div className={styles.addrOptionBody}>
+                        <div className={`${styles.addrLineSkeletonShort} skeleton`} />
+                        <div className={`${styles.addrLineSkeletonLong} skeleton`} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
               ) : savedAddresses.length > 0 ? (
                 <>
                   <p className={styles.savedLabel}>Saved Addresses</p>
@@ -630,7 +669,7 @@ export default function CheckoutPage() {
             <button
               className={styles.placeOrderBtn}
               onClick={handleProceed}
-              disabled={!isValid || paying}
+              disabled={!isValid || paying || (!!user && addressesLoading)}
             >
               {paying ? "Opening payment…" : isValid ? "Proceed to Pay →" : "Fill details to continue"}
             </button>
@@ -650,7 +689,7 @@ export default function CheckoutPage() {
         <button
           className={styles.placeOrderBtn}
           onClick={handleProceed}
-          disabled={!isValid || paying}
+          disabled={!isValid || paying || (!!user && addressesLoading)}
         >
           {paying ? "Opening payment…" : isValid ? "Proceed to Pay →" : "Fill details to continue"}
         </button>

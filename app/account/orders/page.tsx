@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   collection,
   query,
@@ -16,6 +15,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
+import OrderCardSkeleton from "@/components/OrderCardSkeleton";
 import styles from "./orders.module.css";
 
 const PAGE_SIZE = 10;
@@ -139,7 +139,6 @@ async function runQuery(
 }
 
 export default function OrderHistoryPage() {
-  const router = useRouter();
   const { user, loading } = useAuth();
 
   const [orders, setOrders] = useState<Order[]>([]);
@@ -257,8 +256,8 @@ export default function OrderHistoryPage() {
         {/* ── Loading skeletons (initial) ── */}
         {ordersLoading && (
           <div className={styles.list}>
-            {Array.from({ length: PAGE_SIZE }).map((_, i) => (
-              <div key={i} className={`${styles.skeletonRow} skeleton`} />
+            {Array.from({ length: 5 }).map((_, i) => (
+              <OrderCardSkeleton key={i} />
             ))}
           </div>
         )}
@@ -267,6 +266,9 @@ export default function OrderHistoryPage() {
         {!ordersLoading && ordersError && (
           <p className={styles.errorState}>
             Something went wrong loading your orders. Please try again.
+            <button className={styles.retryBtn} onClick={() => fetchPage(true)}>
+              Retry
+            </button>
           </p>
         )}
 

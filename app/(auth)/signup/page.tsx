@@ -6,6 +6,17 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import styles from "../auth.module.css";
 
+function getSignupErrorMessage(err: unknown): string {
+  const m = (err as Error)?.message?.toLowerCase?.() ?? "";
+  if (m.includes("already exists") || m.includes("already in use")) {
+    return "Account already exists";
+  }
+  if (m.includes("at least 6 characters") || m.includes("weak password")) {
+    return "Password should be at least 6 characters";
+  }
+  return "Something went wrong. Please try again.";
+}
+
 export default function SignupPage() {
   const router = useRouter();
   const { user, loading, signUp } = useAuth();
@@ -54,7 +65,7 @@ export default function SignupPage() {
       await signUp(form.email.trim(), form.password, form.name.trim());
       router.replace("/account");
     } catch (err: unknown) {
-      setError((err as Error).message);
+      setError(getSignupErrorMessage(err));
     } finally {
       setSubmitting(false);
     }

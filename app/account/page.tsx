@@ -15,6 +15,8 @@ import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
+import AccountSkeleton from "@/components/AccountSkeleton";
+import OrderCardSkeleton from "@/components/OrderCardSkeleton";
 import styles from "./account.module.css";
 
 interface RecentOrder {
@@ -59,6 +61,7 @@ export default function AccountPage() {
   const [orders, setOrders] = useState<RecentOrder[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [ordersError, setOrdersError] = useState(false);
+  const [reloadTick, setReloadTick] = useState(0);
   const fetchIdRef = useRef(0);
 
   /**
@@ -170,7 +173,7 @@ export default function AccountPage() {
     }
 
     fetchOrders();
-  }, [user]);
+  }, [user, reloadTick]);
 
   async function handleLogout() {
     await logout();
@@ -184,19 +187,27 @@ export default function AccountPage() {
 
   const displayName = user.displayName ?? user.email ?? "User";
 
+  const showAccountSkeleton = ordersLoading;
+
   return (
     <div className={styles.page}>
 
       {/* ── Hero ── */}
-      <div className={styles.hero}>
-        <div className={styles.heroInner}>
-          <div className={styles.avatar}>{initials(displayName)}</div>
-          <div className={styles.heroText}>
-            <p className={styles.heroName}>{displayName}</p>
-            <p className={styles.heroEmail}>{user.email}</p>
+      {showAccountSkeleton ? (
+        <div className={styles.heroSkeletonWrap}>
+          <AccountSkeleton />
+        </div>
+      ) : (
+        <div className={styles.hero}>
+          <div className={styles.heroInner}>
+            <div className={styles.avatar}>{initials(displayName)}</div>
+            <div className={styles.heroText}>
+              <p className={styles.heroName}>{displayName}</p>
+              <p className={styles.heroEmail}>{user.email}</p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <div className={styles.body}>
 
@@ -243,16 +254,24 @@ export default function AccountPage() {
 
           {ordersLoading ? (
             <div className={styles.ordersList}>
-              {[0, 1, 2].map((i) => (
-                <div key={i} className={`${styles.skeletonRow} skeleton`} />
-              ))}
+              <OrderCardSkeleton />
+              <OrderCardSkeleton />
+              <OrderCardSkeleton />
             </div>
           ) : ordersError ? (
             <p className={styles.errorState}>
               Something went wrong. Please try again.
+              <button
+                className={styles.retryBtn}
+                onClick={() => setReloadTick((v) => v + 1)}
+              >
+                Retry
+              </button>
             </p>
           ) : orders.length === 0 ? (
-            <p className={styles.emptyState}>No orders yet</p>
+            <p className={styles.emptyState}>
+              No orders yet. <Link href="/shop" className={styles.emptyCta}>Start shopping</Link>
+            </p>
           ) : (
             <div className={styles.ordersList}>
               {orders.map((order) => (

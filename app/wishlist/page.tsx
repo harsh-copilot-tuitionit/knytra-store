@@ -25,12 +25,6 @@ export default function WishlistPage() {
   const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user) {
-      void refreshWishlist();
-    }
-  }, [user, refreshWishlist]);
-
-  useEffect(() => {
     if (!toast) return;
     const timer = setTimeout(() => setToast(null), 1800);
     return () => clearTimeout(timer);
@@ -91,13 +85,27 @@ export default function WishlistPage() {
         {(error || pageError) && (
           <div className={styles.errorBanner}>
             {pageError ?? error ?? "Something went wrong. Please try again."}
+            <button
+              className={styles.retryBtn}
+              onClick={() => void refreshWishlist()}
+            >
+              Retry
+            </button>
           </div>
         )}
 
         {loading ? (
           <div className={styles.grid}>
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className={`${styles.skeletonCard} skeleton`} />
+              <div key={i} className={styles.skeletonCard}>
+                <div className={`${styles.skeletonImage} skeleton`} />
+                <div className={styles.skeletonBody}>
+                  <div className={`${styles.skeletonTitle} skeleton`} />
+                  <div className={`${styles.skeletonPrice} skeleton`} />
+                  <div className={`${styles.skeletonBtn} skeleton`} />
+                  <div className={`${styles.skeletonBtn} skeleton`} />
+                </div>
+              </div>
             ))}
           </div>
         ) : wishlistItems.length === 0 ? (

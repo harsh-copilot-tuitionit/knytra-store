@@ -336,6 +336,30 @@
   margin: 0;
 }
 
+.savedErrorBanner {
+  border: 1px solid #fca5a5;
+  background: #fff5f5;
+  color: #b91c1c;
+  padding: 8px 10px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.retryBtn {
+  border: 1px solid #b91c1c;
+  color: #b91c1c;
+  background: #fff;
+  padding: 5px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
 .addrLoading {
   font-family: var(--font-body);
   font-size: 13px;
@@ -371,6 +395,25 @@
   width: 15px;
   height: 15px;
   cursor: pointer;
+}
+
+.addrRadioSkeleton {
+  width: 15px;
+  height: 15px;
+  border-radius: 999px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.addrLineSkeletonShort {
+  height: 12px;
+  width: 130px;
+}
+
+.addrLineSkeletonLong {
+  height: 11px;
+  width: 220px;
+  max-width: 65vw;
 }
 
 .addrOptionBody {

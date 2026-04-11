@@ -29,6 +29,7 @@ export default function Shop() {
   const [activeCategory, setActiveCategory] = useState("All");
   const [activeTab, setActiveTab] = useState("For You");
   const { isInWishlist, isToggling, toggleWishlist } = useWishlist();
+  const [wishlistToast, setWishlistToast] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -49,12 +50,19 @@ export default function Shop() {
     load();
   }, []);
 
+  useEffect(() => {
+    if (!wishlistToast) return;
+    const t = setTimeout(() => setWishlistToast(null), 1600);
+    return () => clearTimeout(t);
+  }, [wishlistToast]);
+
   const onToggleWishlist = async (e: React.MouseEvent, product: Product) => {
     e.preventDefault();
     e.stopPropagation();
 
     if (isToggling(product.id)) return;
 
+    const wasInWishlist = isInWishlist(product.id);
     try {
       await toggleWishlist(
         {
@@ -65,8 +73,9 @@ export default function Shop() {
         },
         "plp",
       );
+      setWishlistToast(wasInWishlist ? "Removed from wishlist" : "Added to wishlist");
     } catch {
-      // Context handles optimistic rollback + error state.
+      setWishlistToast("Failed to update wishlist. Try again");
     }
   };
 
@@ -185,6 +194,8 @@ export default function Shop() {
         </main>
 
       </div>
+
+      {wishlistToast && <div className={styles.toast}>{wishlistToast}</div>}
     </div>
   );
 }

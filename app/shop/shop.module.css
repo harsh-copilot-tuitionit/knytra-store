@@ -260,6 +260,20 @@
   padding: 40px;
 }
 
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 40;
+  background: #000;
+  color: #fff;
+  padding: 9px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-family: var(--font-body);
+}
+
 .spinner {
   width: 36px;
   height: 36px;

@@ -54,6 +54,22 @@
   padding: 10px 12px;
   font-size: 13px;
   margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.retryBtn {
+  border: 1px solid #b91c1c;
+  color: #b91c1c;
+  background: #fff;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
 }
 
 .grid {
@@ -171,8 +187,38 @@
 }
 
 .skeletonCard {
-  height: 280px;
+  min-height: 340px;
   border: 1px solid #ebebeb;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+}
+
+.skeletonImage {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+}
+
+.skeletonBody {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeletonTitle {
+  height: 15px;
+  width: 90%;
+}
+
+.skeletonPrice {
+  height: 16px;
+  width: 42%;
+}
+
+.skeletonBtn {
+  height: 34px;
+  width: 100%;
 }
 
 .toast {

@@ -52,6 +52,7 @@ export default function ProductDetailClient() {
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [addedPulse, setAddedPulse] = useState(false);
+  const [wishlistToast, setWishlistToast] = useState<string | null>(null);
   const [sizeError, setSizeError] = useState(false);
 
   useEffect(() => {
@@ -80,6 +81,12 @@ export default function ProductDetailClient() {
       setSelectedSize("One Size");
     }
   }, [product]);
+
+  useEffect(() => {
+    if (!wishlistToast) return;
+    const t = setTimeout(() => setWishlistToast(null), 1600);
+    return () => clearTimeout(t);
+  }, [wishlistToast]);
 
   const handleAddToCart = () => {
     if (!selectedSize) {
@@ -123,6 +130,8 @@ export default function ProductDetailClient() {
   const handleWishlistToggle = async () => {
     if (!product || isToggling(product.id)) return;
 
+    const wasInWishlist = isInWishlist(product.id);
+
     try {
       await toggleWishlist(
         {
@@ -133,8 +142,9 @@ export default function ProductDetailClient() {
         },
         "pdp",
       );
+      setWishlistToast(wasInWishlist ? "Removed from wishlist" : "Added to wishlist");
     } catch {
-      // Context handles optimistic rollback + error state.
+      setWishlistToast("Failed to update wishlist. Try again");
     }
   };
 
@@ -352,6 +362,8 @@ export default function ProductDetailClient() {
         </div>
 
       </div>
+
+      {wishlistToast && <div className={styles.toast}>{wishlistToast}</div>}
     </div>
   );
 }

@@ -370,6 +370,20 @@
   line-height: 1.6;
 }
 
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 50;
+  background: #000;
+  color: #fff;
+  padding: 9px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-family: var(--font-body);
+}
+
 /* ── Loading / Not Found ── */
 .loadingContainer {
   display: flex;

@@ -370,7 +370,16 @@ export default function AddressesPage() {
 
           {/* ── Error banner ── */}
           {pageError && (
-            <div className={styles.errorBanner}>{pageError}</div>
+            <div className={styles.errorBanner}>
+              <span>{pageError}</span>
+              <button
+                className={styles.retryBtn}
+                onClick={() => void fetchAddresses()}
+                disabled={pageLoading}
+              >
+                Retry
+              </button>
+            </div>
           )}
 
           {/* ── Top bar ── */}
@@ -402,13 +411,13 @@ export default function AddressesPage() {
           {!pageLoading && addresses.length === 0 && (
             <div className={styles.emptyState}>
               <div className={styles.emptyIcon} aria-hidden="true">📍</div>
-              <p>No saved addresses yet.</p>
+              <p>No saved addresses.</p>
               <button
                 className={styles.addBtn}
                 onClick={openAdd}
                 disabled={anyActionLoading || showModal}
               >
-                + Add Your First Address
+                + Add address
               </button>
             </div>
           )}
