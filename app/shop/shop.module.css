@@ -188,6 +188,11 @@
   color: #fff;
 }
 
+.actionBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .wishlisted {
   color: #000;
   background: #f0f0f0;

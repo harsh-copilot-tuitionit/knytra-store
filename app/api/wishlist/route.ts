@@ -1,0 +1,197 @@
+import { NextRequest } from "next/server";
+import { Timestamp } from "firebase-admin/firestore";
+import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
+import { isValidWishlistProductId } from "@/lib/wishlist";
+
+const MAX_WISHLIST_ITEMS = 100;
+
+interface WishlistItemDoc {
+  productId: string;
+  name: string;
+  price: number;
+  image: string;
+  addedAt: Timestamp;
+}
+
+interface WishlistItemResponse {
+  productId: string;
+  name: string;
+  price: number;
+  image: string;
+  addedAt: number;
+}
+
+interface WishlistDoc {
+  userId: string;
+  items: WishlistItemDoc[];
+  updatedAt: Timestamp;
+}
+
+interface AddWishlistBody {
+  productId: string;
+  name: string;
+  price: number;
+  image: string;
+}
+
+async function requireAuth(req: NextRequest): Promise<{ uid: string } | Response> {
+  const h = req.headers.get("authorization") ?? "";
+  if (!h.startsWith("Bearer ")) {
+    return Response.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  try {
+    const decoded = await getAdminAuth().verifyIdToken(h.slice(7));
+    return { uid: decoded.uid };
+  } catch {
+    return Response.json({ error: "Invalid or expired token." }, { status: 401 });
+  }
+}
+
+function validateAddBody(body: unknown): { data: AddWishlistBody } | { error: string } {
+  if (!body || typeof body !== "object") return { error: "Invalid request body." };
+  const b = body as Record<string, unknown>;
+
+  const productId = typeof b.productId === "string" ? b.productId.trim() : "";
+  const name = typeof b.name === "string" ? b.name.trim() : "";
+  const price = typeof b.price === "number" ? b.price : Number(b.price);
+  const image = typeof b.image === "string" ? b.image.trim() : "";
+
+  if (!isValidWishlistProductId(productId)) {
+    return { error: "Invalid productId." };
+  }
+  if (!name || name.length > 200) {
+    return { error: "Valid product name is required (max 200 chars)." };
+  }
+  if (!Number.isFinite(price) || price < 0) {
+    return { error: "Valid price is required." };
+  }
+  if (!image || image.length > 1200) {
+    return { error: "Valid product image is required." };
+  }
+
+  return {
+    data: {
+      productId,
+      name,
+      price,
+      image,
+    },
+  };
+}
+
+function getAddedAtMs(raw: unknown): number {
+  const ts = raw as { toMillis?: () => number; seconds?: number } | null;
+  if (!ts) return 0;
+  if (typeof ts.toMillis === "function") return ts.toMillis();
+  if (typeof ts.seconds === "number") return ts.seconds * 1000;
+  return 0;
+}
+
+function serialiseItems(items: unknown): WishlistItemResponse[] {
+  const list = Array.isArray(items) ? (items as Record<string, unknown>[]) : [];
+  return list
+    .map((item) => ({
+      productId: typeof item.productId === "string" ? item.productId : "",
+      name: typeof item.name === "string" ? item.name : "",
+      price: typeof item.price === "number" ? item.price : 0,
+      image: typeof item.image === "string" ? item.image : "",
+      addedAt: getAddedAtMs(item.addedAt),
+    }))
+    .filter((item) => item.productId)
+    .sort((a, b) => b.addedAt - a.addedAt);
+}
+
+export async function GET(req: NextRequest) {
+  const auth = await requireAuth(req);
+  if (auth instanceof Response) return auth;
+
+  const { uid } = auth;
+
+  try {
+    const docRef = getAdminDb().collection("wishlists").doc(uid);
+    const snap = await docRef.get();
+
+    if (!snap.exists) {
+      return Response.json({ items: [] });
+    }
+
+    const data = snap.data() as WishlistDoc;
+    return Response.json({ items: serialiseItems(data.items) });
+  } catch (err) {
+    console.error("[GET /api/wishlist]", err);
+    return Response.json({ error: "Failed to fetch wishlist." }, { status: 500 });
+  }
+}
+
+export async function POST(req: NextRequest) {
+  const auth = await requireAuth(req);
+  if (auth instanceof Response) return auth;
+
+  const { uid } = auth;
+
+  let raw: unknown;
+  try {
+    raw = await req.json();
+  } catch {
+    return Response.json({ error: "Invalid request body." }, { status: 400 });
+  }
+
+  const validated = validateAddBody(raw);
+  if ("error" in validated) {
+    return Response.json({ error: validated.error }, { status: 400 });
+  }
+
+  const { productId, name, price, image } = validated.data;
+
+  try {
+    const docRef = getAdminDb().collection("wishlists").doc(uid);
+
+    let existsAlready = false;
+    try {
+      await getAdminDb().runTransaction(async (tx) => {
+        const snap = await tx.get(docRef);
+        const now = Timestamp.now();
+        const current = (snap.data()?.items ?? []) as WishlistItemDoc[];
+
+        if (current.some((item) => item.productId === productId)) {
+          existsAlready = true;
+          return;
+        }
+
+        if (current.length >= MAX_WISHLIST_ITEMS) {
+          throw Object.assign(new Error("Wishlist limit reached (max 100 items)."), {
+            code: "MAX_LIMIT",
+          });
+        }
+
+        const nextItem: WishlistItemDoc = {
+          productId,
+          name,
+          price,
+          image,
+          addedAt: now,
+        };
+
+        const nextDoc: WishlistDoc = {
+          userId: uid,
+          items: [...current, nextItem],
+          updatedAt: now,
+        };
+
+        tx.set(docRef, nextDoc, { merge: true });
+      });
+    } catch (err: unknown) {
+      const e = err as { code?: string; message?: string };
+      if (e?.code === "MAX_LIMIT") {
+        return Response.json({ error: e.message }, { status: 400 });
+      }
+      throw err;
+    }
+
+    return Response.json({ ok: true, inWishlist: true, exists: existsAlready });
+  } catch (err) {
+    console.error("[POST /api/wishlist]", err);
+    return Response.json({ error: "Failed to add wishlist item." }, { status: 500 });
+  }
+}

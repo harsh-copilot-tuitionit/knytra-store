@@ -217,7 +217,7 @@ export default function AccountPage() {
               <span className={styles.navCardLabel}>Addresses</span>
             </Link>
 
-            <Link href="/account/wishlist" className={styles.navCard}>
+            <Link href="/wishlist" className={styles.navCard}>
               <span className={styles.navCardIcon}>♡</span>
               <span className={styles.navCardLabel}>Wishlist</span>
             </Link>

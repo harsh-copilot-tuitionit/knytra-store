@@ -3,6 +3,7 @@ import { Space_Grotesk, Inter } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
 import { AuthProvider } from "@/context/AuthContext";
+import { WishlistProvider } from "@/context/WishlistContext";
 import CartSidebar from "@/components/CartSidebar";
 // ...existing code...
 
@@ -68,10 +69,12 @@ export default function RootLayout({
     >
       <body>
         <AuthProvider>
-          <CartProvider>
-            <CartSidebar />
-            {children}
-          </CartProvider>
+          <WishlistProvider>
+            <CartProvider>
+              <CartSidebar />
+              {children}
+            </CartProvider>
+          </WishlistProvider>
         </AuthProvider>
       </body>
     </html>

@@ -53,6 +53,7 @@
   text-decoration: none;
 }
 .headerIcon:hover { opacity: 0.55; }
+.headerIcon:disabled { opacity: 0.45; cursor: not-allowed; }
 .wishlisted { opacity: 1; }
 
 /* ── Title ── */

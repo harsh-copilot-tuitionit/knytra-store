@@ -7,6 +7,7 @@ import Link from "next/link";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useCart } from "@/context/CartContext";
+import { useWishlist } from "@/context/WishlistContext";
 import { getDemoProduct } from "@/lib/demoProducts";
 import styles from "./productDetail.module.css";
 
@@ -43,6 +44,7 @@ export default function ProductDetailClient() {
   const router = useRouter();
   const slug = params?.slug as string;
   const { addToCart, triggerBuyNow } = useCart();
+  const { isInWishlist, isToggling, toggleWishlist } = useWishlist();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -50,7 +52,6 @@ export default function ProductDetailClient() {
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [addedPulse, setAddedPulse] = useState(false);
-  const [wishlisted, setWishlisted] = useState(false);
   const [sizeError, setSizeError] = useState(false);
 
   useEffect(() => {
@@ -117,6 +118,24 @@ export default function ProductDetailClient() {
       quantity,
     });
     router.push("/checkout");
+  };
+
+  const handleWishlistToggle = async () => {
+    if (!product || isToggling(product.id)) return;
+
+    try {
+      await toggleWishlist(
+        {
+          productId: product.id,
+          name: product.name,
+          price: product.price,
+          image: product.images?.[0] ?? "",
+        },
+        "pdp",
+      );
+    } catch {
+      // Context handles optimistic rollback + error state.
+    }
   };
 
   if (loading) {
@@ -187,11 +206,12 @@ export default function ProductDetailClient() {
         </button>
         <div className={styles.headerActions}>
           <button
-            className={`${styles.headerIcon} ${wishlisted ? styles.wishlisted : ""}`}
-            onClick={() => setWishlisted((v) => !v)}
+            className={`${styles.headerIcon} ${isInWishlist(product.id) ? styles.wishlisted : ""}`}
+            onClick={() => void handleWishlistToggle()}
             aria-label="Wishlist"
+            disabled={isToggling(product.id)}
           >
-            {wishlisted ? "\u2665" : "\u2661"}
+            {isInWishlist(product.id) ? "\u2665" : "\u2661"}
           </button>
           <Link href="/shop" className={styles.headerIcon} aria-label="Back to shop">
             🛍

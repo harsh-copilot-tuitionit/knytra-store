@@ -6,6 +6,7 @@ import Link from "next/link";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { DEMO_PRODUCTS, DemoProduct } from "@/lib/demoProducts";
+import { useWishlist } from "@/context/WishlistContext";
 import styles from "./shop.module.css";
 
 interface Product {
@@ -27,7 +28,7 @@ export default function Shop() {
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState("All");
   const [activeTab, setActiveTab] = useState("For You");
-  const [wishlist, setWishlist] = useState<Set<string>>(new Set());
+  const { isInWishlist, isToggling, toggleWishlist } = useWishlist();
 
   useEffect(() => {
     async function load() {
@@ -48,14 +49,25 @@ export default function Shop() {
     load();
   }, []);
 
-  const toggleWishlist = (e: React.MouseEvent, id: string) => {
+  const onToggleWishlist = async (e: React.MouseEvent, product: Product) => {
     e.preventDefault();
     e.stopPropagation();
-    setWishlist((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
+
+    if (isToggling(product.id)) return;
+
+    try {
+      await toggleWishlist(
+        {
+          productId: product.id,
+          name: product.name,
+          price: product.price,
+          image: product.images?.[0] ?? "",
+        },
+        "plp",
+      );
+    } catch {
+      // Context handles optimistic rollback + error state.
+    }
   };
 
   const filtered = allProducts.filter((p) => {
@@ -144,11 +156,12 @@ export default function Shop() {
                         +
                       </button>
                       <button
-                        className={`${styles.actionBtn} ${wishlist.has(product.id) ? styles.wishlisted : ""}`}
-                        onClick={(e) => toggleWishlist(e, product.id)}
+                        className={`${styles.actionBtn} ${isInWishlist(product.id) ? styles.wishlisted : ""}`}
+                        onClick={(e) => void onToggleWishlist(e, product)}
                         aria-label="Add to wishlist"
+                        disabled={isToggling(product.id)}
                       >
-                        {wishlist.has(product.id) ? "♥" : "♡"}
+                        {isInWishlist(product.id) ? "♥" : "♡"}
                       </button>
                     </div>
                   </div>
