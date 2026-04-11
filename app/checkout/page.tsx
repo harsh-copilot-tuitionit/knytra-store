@@ -107,6 +107,7 @@ export default function CheckoutPage() {
   const [saveNewAddress,   setSaveNewAddress]   = useState(false);
   const [savingAddress,    setSavingAddress]    = useState(false);
   const [addressSaveInfo,  setAddressSaveInfo]  = useState("");
+  const addressActionsLocked = paying || savingAddress || addressesLoading;
 
   // Fetch saved addresses when a logged-in user lands on checkout
   useEffect(() => {
@@ -157,6 +158,8 @@ export default function CheckoutPage() {
 
   // Autofill form when user picks a different saved address
   function handleSelectAddress(addr: SavedAddress | "new") {
+    if (addressActionsLocked) return;
+
     if (addr === "new") {
       setSelectedAddrId("new");
       setForm(prev => ({ ...prev, name: "", phone: "", fullAddress: "", city: "", state: "", pincode: "" }));
@@ -179,6 +182,8 @@ export default function CheckoutPage() {
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    if (addressActionsLocked) return;
+
     const { name, value } = e.target;
     const nextValue =
       name === "phone"
@@ -415,6 +420,7 @@ export default function CheckoutPage() {
                           checked={selectedAddrId === addr.id}
                           onChange={() => handleSelectAddress(addr)}
                           className={styles.addrRadio}
+                          disabled={addressActionsLocked}
                         />
                         <div className={styles.addrOptionBody}>
                           <span className={styles.addrOptionName}>
@@ -442,6 +448,7 @@ export default function CheckoutPage() {
                         checked={selectedAddrId === "new"}
                         onChange={() => handleSelectAddress("new")}
                         className={styles.addrRadio}
+                        disabled={addressActionsLocked}
                       />
                       <div className={styles.addrOptionBody}>
                         <span className={styles.addrOptionName}>Enter new address</span>
@@ -462,6 +469,7 @@ export default function CheckoutPage() {
               onChange={handleChange}
               placeholder="First Name Last Name"
               autoComplete="name"
+              disabled={addressActionsLocked}
             />
           </div>
 
@@ -477,6 +485,7 @@ export default function CheckoutPage() {
                 readOnly={!!user}
                 placeholder="yourmail@mail.com"
                 autoComplete="email"
+                disabled={addressActionsLocked}
                 style={user ? { background: "#f5f5f5", color: "#888", cursor: "not-allowed" } : undefined}
               />
             </div>
@@ -490,6 +499,7 @@ export default function CheckoutPage() {
                 onChange={handleChange}
                 placeholder="9876543210"
                 autoComplete="tel"
+                disabled={addressActionsLocked}
               />
             </div>
           </div>
@@ -504,6 +514,7 @@ export default function CheckoutPage() {
               placeholder="House/Flat no., Street, Area"
               rows={3}
               autoComplete="street-address"
+              disabled={addressActionsLocked}
             />
           </div>
 
@@ -517,6 +528,7 @@ export default function CheckoutPage() {
                 onChange={handleChange}
                 placeholder="New Delhi"
                 autoComplete="address-level2"
+                disabled={addressActionsLocked}
               />
             </div>
             <div className={styles.fieldGroup}>
@@ -529,6 +541,7 @@ export default function CheckoutPage() {
                 placeholder="110001"
                 autoComplete="postal-code"
                 maxLength={6}
+                disabled={addressActionsLocked}
               />
             </div>
           </div>
@@ -542,6 +555,7 @@ export default function CheckoutPage() {
               onChange={handleChange}
               placeholder="Delhi"
               autoComplete="address-level1"
+              disabled={addressActionsLocked}
             />
           </div>
 
@@ -552,7 +566,7 @@ export default function CheckoutPage() {
                 type="checkbox"
                 checked={saveNewAddress}
                 onChange={e => setSaveNewAddress(e.target.checked)}
-                disabled={paying || savingAddress}
+                disabled={addressActionsLocked}
               />
               <span>Save this address to my account</span>
             </label>
