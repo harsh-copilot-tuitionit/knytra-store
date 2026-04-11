@@ -75,6 +75,23 @@ const sortDesc = (rows: Order[]): Order[] =>
   [...rows].sort((a, b) => getTime(b) - getTime(a));
 
 /**
+ * Merge two already-sorted (DESC) arrays without a full re-sort.
+ * O(n + m) instead of O((n+m) log(n+m)).
+ */
+function mergeSorted(existing: Order[], incoming: Order[]): Order[] {
+  const result: Order[] = [];
+  let i = 0, j = 0;
+  while (i < existing.length && j < incoming.length) {
+    if (getTime(existing[i]) >= getTime(incoming[j])) {
+      result.push(existing[i++]);
+    } else {
+      result.push(incoming[j++]);
+    }
+  }
+  return [...result, ...existing.slice(i), ...incoming.slice(j)];
+}
+
+/**
  * Run a paginated, indexed query.
  * On index-missing errors, falls back to an equality-only query (no further
  * pagination possible — sets hasMore: false).
@@ -231,7 +248,12 @@ export default function OrderHistoryPage() {
       newRows.forEach(o => seenIdsRef.current.add(o.id));
 
       if (fetchIdRef.current !== currentFetchId) return;
-      setOrders(prev => sortDesc(isInitial ? newRows : [...prev, ...newRows]));
+      // Initial load: sort the merged first-page batch.
+      // Subsequent pages: both `prev` and `newRows` are already sorted —
+      // merge in O(n + m) instead of re-sorting the whole list.
+      setOrders(prev =>
+        isInitial ? sortDesc(newRows) : mergeSorted(prev, sortDesc(newRows))
+      );
       setHasMore(hasMoreByIdRef.current || hasMoreByEmailRef.current);
     } finally {
       if (fetchIdRef.current === currentFetchId) {
