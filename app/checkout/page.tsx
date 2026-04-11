@@ -33,6 +33,18 @@ export interface RazorpaySuccessResponse {
   razorpay_signature: string;
 }
 
+interface SavedAddress {
+  id: string;
+  name: string;
+  phone: string;
+  line1: string;
+  line2: string;
+  city: string;
+  state: string;
+  pincode: string;
+  isDefault: boolean;
+}
+
 function loadRazorpayScript(): Promise<boolean> {
   return new Promise((resolve) => {
     if (document.getElementById("razorpay-script")) { resolve(true); return; }
@@ -77,22 +89,95 @@ export default function CheckoutPage() {
     phone: "",
     pincode: "",
     city: "",
+    state: "",
     fullAddress: "",
   });
   const [paying, setPaying] = useState(false);
   const [paymentError, setPaymentError] = useState("");
+
+  // ── Saved addresses ──────────────────────────────────────────────────────
+  const [savedAddresses,   setSavedAddresses]   = useState<SavedAddress[]>([]);
+  const [selectedAddrId,   setSelectedAddrId]   = useState<string>("new");
+  const [addressesLoading, setAddressesLoading] = useState(false);
+  const [saveNewAddress,   setSaveNewAddress]   = useState(false);
+  const [savingAddress,    setSavingAddress]    = useState(false);
+
+  // Fetch saved addresses when a logged-in user lands on checkout
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+
+    async function fetchSavedAddresses() {
+      setAddressesLoading(true);
+      try {
+        const token = await user!.getIdToken();
+        const res   = await fetch("/api/addresses", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (cancelled || !res.ok) return;
+        const data = await res.json();
+        const list: SavedAddress[] = data.addresses ?? [];
+        setSavedAddresses(list);
+
+        // Pre-select default address and autofill the form
+        const def = list.find(a => a.isDefault) ?? list[0] ?? null;
+        if (def) {
+          setSelectedAddrId(def.id);
+          setForm(prev => ({
+            ...prev,
+            name:        def.name,
+            phone:       def.phone,
+            fullAddress: [def.line1, def.line2].filter(Boolean).join("\n"),
+            city:        def.city,
+            state:       def.state,
+            pincode:     def.pincode,
+          }));
+        } else {
+          setSelectedAddrId("new");
+        }
+      } catch {
+        // Silent — user can still enter manually
+      } finally {
+        if (!cancelled) setAddressesLoading(false);
+      }
+    }
+
+    fetchSavedAddresses();
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
+  // Autofill form when user picks a different saved address
+  function handleSelectAddress(addr: SavedAddress | "new") {
+    if (addr === "new") {
+      setSelectedAddrId("new");
+      setForm(prev => ({ ...prev, name: "", phone: "", fullAddress: "", city: "", state: "", pincode: "" }));
+    } else {
+      setSelectedAddrId(addr.id);
+      setForm(prev => ({
+        ...prev,
+        name:        addr.name,
+        phone:       addr.phone,
+        fullAddress: [addr.line1, addr.line2].filter(Boolean).join("\n"),
+        city:        addr.city,
+        state:       addr.state,
+        pincode:     addr.pincode,
+      }));
+    }
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
     setPaymentError("");
   };
 
-  // All required fields must be non-empty (email is optional)
+  // All required fields must be non-empty (email is optional for guests)
   const isValid =
     form.name.trim() !== "" &&
     form.phone.trim().length >= 10 &&
     form.pincode.trim().length === 6 &&
     form.city.trim() !== "" &&
+    form.state.trim() !== "" &&
     form.fullAddress.trim() !== "";
 
   const handleProceed = async () => {
@@ -137,10 +222,11 @@ export default function CheckoutPage() {
             phone: form.phone,
           },
           address: {
-            name: form.name,
-            phone: form.phone,
-            pincode: form.pincode,
-            city: form.city,
+            name:        form.name,
+            phone:       form.phone,
+            pincode:     form.pincode,
+            city:        form.city,
+            state:       form.state,
             fullAddress: form.fullAddress,
           },
         }),
@@ -163,6 +249,36 @@ export default function CheckoutPage() {
       setPaymentError("Could not initiate payment. Please try again.");
       setPaying(false);
       return;
+    }
+
+    // 2b. Optionally save the address to the user's address book
+    if (user && saveNewAddress && selectedAddrId === "new") {
+      setSavingAddress(true);
+      try {
+        const token = await user.getIdToken();
+        await fetch("/api/addresses", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            name:      form.name,
+            phone:     form.phone,
+            line1:     form.fullAddress.split("\n")[0] ?? form.fullAddress,
+            line2:     form.fullAddress.split("\n").slice(1).join(", ") ?? "",
+            city:      form.city,
+            state:     form.state,
+            pincode:   form.pincode,
+            isDefault: savedAddresses.length === 0, // default if first
+          }),
+        });
+      } catch {
+        // Non-fatal — order is already created; failure here is silent
+        console.warn("[checkout] Failed to save address to address book.");
+      } finally {
+        setSavingAddress(false);
+      }
     }
 
     // 3. Open Razorpay modal
@@ -229,6 +345,65 @@ export default function CheckoutPage() {
         {/* ── Left: Address form ── */}
         <section className={styles.formSection}>
           <h2 className={styles.sectionTitle}>Delivery Details</h2>
+
+          {/* ── Saved addresses (logged-in users only) ── */}
+          {user && (
+            <div className={styles.savedSection}>
+              {addressesLoading ? (
+                <div className={styles.addrLoading}>Loading saved addresses…</div>
+              ) : savedAddresses.length > 0 ? (
+                <>
+                  <p className={styles.savedLabel}>Saved Addresses</p>
+                  <div className={styles.addrList}>
+                    {savedAddresses.map(addr => (
+                      <label
+                        key={addr.id}
+                        className={`${styles.addrOption} ${selectedAddrId === addr.id ? styles.addrOptionSelected : ""}`}
+                      >
+                        <input
+                          type="radio"
+                          name="savedAddress"
+                          value={addr.id}
+                          checked={selectedAddrId === addr.id}
+                          onChange={() => handleSelectAddress(addr)}
+                          className={styles.addrRadio}
+                        />
+                        <div className={styles.addrOptionBody}>
+                          <span className={styles.addrOptionName}>
+                            {addr.name}
+                            {addr.isDefault && (
+                              <span className={styles.addrDefaultTag}> · Default</span>
+                            )}
+                          </span>
+                          <span className={styles.addrOptionDetail}>
+                            {[addr.line1, addr.line2, addr.city, addr.state, addr.pincode]
+                              .filter(Boolean)
+                              .join(", ")}
+                          </span>
+                        </div>
+                      </label>
+                    ))}
+
+                    <label
+                      className={`${styles.addrOption} ${selectedAddrId === "new" ? styles.addrOptionSelected : ""}`}
+                    >
+                      <input
+                        type="radio"
+                        name="savedAddress"
+                        value="new"
+                        checked={selectedAddrId === "new"}
+                        onChange={() => handleSelectAddress("new")}
+                        className={styles.addrRadio}
+                      />
+                      <div className={styles.addrOptionBody}>
+                        <span className={styles.addrOptionName}>Enter new address</span>
+                      </div>
+                    </label>
+                  </div>
+                </>
+              ) : null}
+            </div>
+          )}
 
           <div className={styles.fieldGroup}>
             <label className={styles.label}>Full Name</label>
@@ -309,6 +484,31 @@ export default function CheckoutPage() {
               />
             </div>
           </div>
+
+          <div className={styles.fieldGroup}>
+            <label className={styles.label}>State</label>
+            <input
+              className={styles.input}
+              name="state"
+              value={form.state}
+              onChange={handleChange}
+              placeholder="Delhi"
+              autoComplete="address-level1"
+            />
+          </div>
+
+          {/* Save address checkbox — only for logged-in users entering a new address */}
+          {user && selectedAddrId === "new" && (
+            <label className={styles.saveAddrRow}>
+              <input
+                type="checkbox"
+                checked={saveNewAddress}
+                onChange={e => setSaveNewAddress(e.target.checked)}
+                disabled={paying || savingAddress}
+              />
+              <span>Save this address to my account</span>
+            </label>
+          )}
 
           <p className={styles.secureNote}>🔒 Secure checkout · Payments powered by Razorpay</p>
         </section>

@@ -36,6 +36,15 @@ service cloud.firestore {
     match /users/{userId} {
       allow read, write: if request.auth != null
                          && request.auth.uid == userId;
+
+      // ── Addresses (subcollection) ─────────────────────────────────────────
+      // All writes go through the server-side API (Admin SDK).
+      // This rule is a client-side safety net — no other user can read or
+      // write another user's addresses.
+      match /addresses/{addressId} {
+        allow read, write: if request.auth != null
+                           && request.auth.uid == userId;
+      }
     }
 
     // ── Wishlist ─────────────────────────────────────────────────────────────
