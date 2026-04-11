@@ -32,6 +32,7 @@ interface QueryResult {
   rows: Order[];
   lastDoc: QueryDocumentSnapshot | null;
   hasMore: boolean;
+  indexFallback: boolean;
 }
 
 function badgeClass(status: string): string {
@@ -102,6 +103,7 @@ async function runQuery(
       rows: snap.docs.map(mapDoc),
       lastDoc: snap.docs[snap.docs.length - 1] ?? null,
       hasMore: snap.docs.length === PAGE_SIZE,
+      indexFallback: false,
     };
   } catch (err: any) {
     if (!isIndexError(err)) throw err;
@@ -116,7 +118,7 @@ async function runQuery(
   const snap = await getDocs(
     query(collection(db, "orders"), where(filterField, "==", filterValue))
   );
-  return { rows: snap.docs.map(mapDoc), lastDoc: null, hasMore: false };
+  return { rows: snap.docs.map(mapDoc), lastDoc: null, hasMore: false, indexFallback: true };
 }
 
 export default function OrderHistoryPage() {
@@ -129,6 +131,7 @@ export default function OrderHistoryPage() {
   const [ordersError, setOrdersError] = useState(false);
   const [ordersPartial, setOrdersPartial] = useState(false);
   const [hasMore, setHasMore] = useState(false);
+  const [indexFallback, setIndexFallback] = useState(false);
 
   // Race condition guard
   const fetchIdRef = useRef(0);
@@ -163,6 +166,7 @@ export default function OrderHistoryPage() {
       setOrdersError(false);
       setOrdersPartial(false);
       setHasMore(false);
+      setIndexFallback(false);
       cursorByIdRef.current    = null;
       cursorByEmailRef.current = null;
       hasMoreByIdRef.current    = true;
@@ -183,6 +187,11 @@ export default function OrderHistoryPage() {
           newByIdRows               = result.rows;
           cursorByIdRef.current     = result.lastDoc;
           hasMoreByIdRef.current    = result.hasMore;
+          if (result.indexFallback) {
+            // Index-less: all docs fetched in one shot — disable pagination
+            hasMoreByIdRef.current = false;
+            if (fetchIdRef.current === currentFetchId) setIndexFallback(true);
+          }
         } catch (err: any) {
           console.error("[OrderHistory] userId query failed:", err);
           hasMoreByIdRef.current = false;
@@ -197,6 +206,10 @@ export default function OrderHistoryPage() {
           newByEmailRows             = result.rows;
           cursorByEmailRef.current   = result.lastDoc;
           hasMoreByEmailRef.current  = result.hasMore;
+          if (result.indexFallback) {
+            hasMoreByEmailRef.current = false;
+            if (fetchIdRef.current === currentFetchId) setIndexFallback(true);
+          }
         } catch (err: any) {
           hasMoreByEmailRef.current = false;
           // Fatal only on the initial page when userId also returned nothing
@@ -306,8 +319,8 @@ export default function OrderHistoryPage() {
               ))}
             </div>
 
-            {/* ── Load More ── */}
-            {hasMore && (
+            {/* ── Load More (hidden in index-fallback mode) ── */}
+            {hasMore && !indexFallback && (
               <button
                 onClick={() => fetchPage(false)}
                 disabled={loadingMore}
@@ -317,6 +330,13 @@ export default function OrderHistoryPage() {
               </button>
             )}
           </>
+        )}
+
+        {/* ── Index-fallback notice ── */}
+        {indexFallback && !ordersLoading && (
+          <p className={styles.partialNotice}>
+            Showing all orders (limited performance mode — create a Firestore index to enable pagination).
+          </p>
         )}
 
         {/* ── Partial notice ── */}
