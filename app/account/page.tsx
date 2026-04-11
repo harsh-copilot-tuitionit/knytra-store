@@ -8,7 +8,6 @@ import {
   query,
   where,
   orderBy,
-  limit,
   getDocs,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -106,18 +105,23 @@ export default function AccountPage() {
       );
     }
 
-    function clientSort(rows: RecentOrder[]): RecentOrder[] {
-      return rows
+    /** Sort by createdAt DESC and cap at `n` items. Does not mutate input. */
+    function sortAndLimit(rows: RecentOrder[], n = 3): RecentOrder[] {
+      return [...rows]
         .sort((a, b) => {
           const aMs = (a.createdAt as any)?.toMillis?.() ?? 0;
           const bMs = (b.createdAt as any)?.toMillis?.() ?? 0;
           return bMs - aMs;
         })
-        .slice(0, 3);
+        .slice(0, n);
     }
 
-    /** Run an indexed query; on index error fall back to equality-only + client sort.
-     *  Returns the result rows, or throws if a non-index error occurs. */
+    /**
+     * Run an indexed query; on index-missing error fall back to equality-only
+     * + client-side sort. Throws on any non-index error.
+     * NOTE: always fetches without a server-side limit so the caller can
+     * deduplicate across both queries before slicing.
+     */
     async function runQuery(
       filterField: string,
       filterValue: string,
@@ -128,16 +132,12 @@ export default function AccountPage() {
         const q = query(
           collection(db, "orders"),
           where(filterField, "==", filterValue),
-          orderBy("createdAt", "desc"),
-          limit(3)
+          orderBy("createdAt", "desc")
         );
         const snap = await getDocs(q);
         return snap.docs.map(mapDoc);
       } catch (err: any) {
-        if (!isIndexError(err)) {
-          // Real error — bubble up so the caller can surface it
-          throw err;
-        }
+        if (!isIndexError(err)) throw err;
         console.warn(
           `[Account] Missing composite index for orders (${label}). ` +
           `Create index: orders → ${filterField} ASC, createdAt DESC. ` +
@@ -151,31 +151,43 @@ export default function AccountPage() {
         where(filterField, "==", filterValue)
       );
       const snap = await getDocs(fallback);
-      return clientSort(snap.docs.map(mapDoc));
+      return snap.docs.map(mapDoc);
     }
 
     async function fetchOrders() {
-      // ── 1. Primary: query by userId (fast, indexed) ───────────────────────
+      let userIdOrders: RecentOrder[] = [];
+
+      // ── 1. Primary: query by userId ───────────────────────────────────────
       try {
-        const rows = await runQuery("userId", uid, "userId");
-        setOrders(rows);
-        setOrdersLoading(false);
-        return;
+        userIdOrders = await runQuery("userId", uid, "userId");
       } catch (err: any) {
         console.error("[Account] userId orders query failed:", err);
-        // Don't give up yet — try the email fallback for legacy orders
+        // Non-index error on primary — skip to email-only path
       }
 
-      // ── 2. Legacy fallback: query by user.email ───────────────────────────
-      try {
-        const rows = await runQuery("user.email", email, "user.email");
-        setOrders(rows);
-      } catch (err: any) {
-        console.error("[Account] Email orders query also failed:", err);
-        setOrdersError(true);
-      } finally {
-        setOrdersLoading(false);
+      // ── 2. Email fallback: only if we don't have enough results yet ───────
+      //    Skipped when userId query returned ≥ 3 orders (avoids extra read).
+      let emailOrders: RecentOrder[] = [];
+      if (userIdOrders.length < 3) {
+        try {
+          emailOrders = await runQuery("user.email", email, "user.email");
+        } catch (err: any) {
+          // Only fatal if the userId query also returned nothing
+          if (userIdOrders.length === 0) {
+            console.error("[Account] Email orders query failed:", err);
+            setOrdersError(true);
+            setOrdersLoading(false);
+            return;
+          }
+          console.warn("[Account] Email orders query failed (ignored — userId results available):", err);
+        }
       }
+
+      // ── 3. Merge, deduplicate by id, sort, limit ─────────────────────────
+      const merged = [...userIdOrders, ...emailOrders];
+      const unique = Array.from(new Map(merged.map(o => [o.id, o])).values());
+      setOrders(sortAndLimit(unique, 3));
+      setOrdersLoading(false);
     }
 
     fetchOrders();
