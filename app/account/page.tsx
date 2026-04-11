@@ -158,41 +158,45 @@ export default function AccountPage() {
       setOrdersPartial(false);
       let userIdOrders: RecentOrder[] = [];
 
-      // ── 1. Primary: query by userId ───────────────────────────────────────
       try {
-        userIdOrders = await runQuery("userId", uid, "userId");
-      } catch (err: any) {
-        console.error("[Account] userId orders query failed:", err);
-        // Non-index error on primary — skip to email-only path
-      }
-
-      // ── 2. Email fallback: only if we don't have enough results yet ───────
-      //    Skipped when userId query returned ≥ 3 orders (avoids extra read).
-      let emailOrders: RecentOrder[] = [];
-      if (userIdOrders.length < 3) {
+        // ── 1. Primary: query by userId ─────────────────────────────────────
         try {
-          emailOrders = await runQuery("user.email", email, "user.email");
+          userIdOrders = await runQuery("userId", uid, "userId");
         } catch (err: any) {
-          // Only fatal if the userId query also returned nothing
-          if (userIdOrders.length === 0) {
-            console.error("[Account] Email orders query failed:", err);
+          console.error("[Account] userId orders query failed:", err);
+          // Non-index error on primary — skip to email-only path
+        }
+
+        // ── 2. Email fallback: only if we don't have enough results yet ─────
+        //    Skipped when userId query returned ≥ 3 orders (avoids extra read).
+        let emailOrders: RecentOrder[] = [];
+        if (userIdOrders.length < 3) {
+          try {
+            emailOrders = await runQuery("user.email", email, "user.email");
+          } catch (err: any) {
+            // Only fatal if the userId query also returned nothing
+            if (userIdOrders.length === 0) {
+              console.error("[Account] Email orders query failed:", err);
+              if (fetchIdRef.current !== currentFetchId) return;
+              setOrdersError(true);
+              return;
+            }
+            console.warn("[Account] Email orders query failed (ignored — userId results available):", err);
             if (fetchIdRef.current !== currentFetchId) return;
-            setOrdersError(true);
-            setOrdersLoading(false);
-            return;
+            setOrdersPartial(true);
           }
-          console.warn("[Account] Email orders query failed (ignored — userId results available):", err);
-          if (fetchIdRef.current !== currentFetchId) return;
-          setOrdersPartial(true);
+        }
+
+        // ── 3. Merge, deduplicate by id, sort, limit ───────────────────────
+        const merged = [...userIdOrders, ...emailOrders].filter(o => !!o.id);
+        const unique = Array.from(new Map(merged.map(o => [o.id, o])).values());
+        if (fetchIdRef.current !== currentFetchId) return;
+        setOrders(sortAndLimit(unique, 3));
+      } finally {
+        if (fetchIdRef.current === currentFetchId) {
+          setOrdersLoading(false);
         }
       }
-
-      // ── 3. Merge, deduplicate by id, sort, limit ─────────────────────────
-      const merged = [...userIdOrders, ...emailOrders].filter(o => !!o.id);
-      const unique = Array.from(new Map(merged.map(o => [o.id, o])).values());
-      if (fetchIdRef.current !== currentFetchId) return;
-      setOrders(sortAndLimit(unique, 3));
-      setOrdersLoading(false);
     }
 
     fetchOrders();
