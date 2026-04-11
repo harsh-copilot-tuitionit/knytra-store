@@ -113,15 +113,26 @@ export default function CheckoutPage() {
     let orderAmount: number;
     let firestoreOrderId: string;
     try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+
+      if (user) {
+        // Send a fresh ID token so the server can derive userId and canonical
+        // email from the verified token — the body values are not trusted.
+        const idToken = await user.getIdToken();
+        headers["Authorization"] = `Bearer ${idToken}`;
+      }
+
       const res = await fetch("/api/create-order", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({
           amount: checkoutTotal * 100, // paise
           items: checkoutItems,
-          userId: user?.uid ?? null,
+          // userId is intentionally absent — derived server-side from the token
           user: {
             name: form.name,
+            // For auth users the server will override this with auth.email;
+            // included here only for guest orders.
             email: form.email,
             phone: form.phone,
           },
@@ -229,10 +240,12 @@ export default function CheckoutPage() {
                 className={styles.input}
                 name="email"
                 type="email"
-                value={form.email}
-                onChange={handleChange}
+                value={user ? (user.email ?? "") : form.email}
+                onChange={user ? undefined : handleChange}
+                readOnly={!!user}
                 placeholder="yourmail@mail.com"
                 autoComplete="email"
+                style={user ? { background: "#f5f5f5", color: "#888", cursor: "not-allowed" } : undefined}
               />
             </div>
             <div className={styles.fieldGroup}>
