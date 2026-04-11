@@ -6,6 +6,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import styles from "../auth.module.css";
 
+function safeNext(raw: string | null): string {
+  if (!raw || !raw.startsWith("/")) return "/account";
+  if (raw.startsWith("//")) return "/account";
+  if (raw.startsWith("/login") || raw.startsWith("/signup")) return "/account";
+  return raw;
+}
+
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -18,7 +25,7 @@ function LoginForm() {
   // Redirect already-logged-in users
   useEffect(() => {
     if (!loading && user) {
-      const next = searchParams.get("next") ?? "/account";
+      const next = safeNext(searchParams.get("next"));
       router.replace(next);
     }
   }, [user, loading, router, searchParams]);
@@ -34,7 +41,7 @@ function LoginForm() {
     setSubmitting(true);
     try {
       await login(form.email.trim(), form.password);
-      const next = searchParams.get("next") ?? "/account";
+      const next = safeNext(searchParams.get("next"));
       router.replace(next);
     } catch (err: unknown) {
       setError((err as Error).message);

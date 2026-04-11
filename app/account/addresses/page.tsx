@@ -78,13 +78,6 @@ export default function AddressesPage() {
 
   const fetchIdRef = useRef(0);
 
-  // ── Auth guard ─────────────────────────────────────────────────────────
-  useEffect(() => {
-    if (!loading && !user) {
-      router.replace("/login?next=/account/addresses");
-    }
-  }, [user, loading, router]);
-
   // ── Fetch addresses ────────────────────────────────────────────────────
   const fetchAddresses = useCallback(async () => {
     if (!user) return;

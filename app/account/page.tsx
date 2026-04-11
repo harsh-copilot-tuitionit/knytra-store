@@ -13,6 +13,8 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
+import { useCart } from "@/context/CartContext";
+import { useWishlist } from "@/context/WishlistContext";
 import styles from "./account.module.css";
 
 interface RecentOrder {
@@ -51,18 +53,13 @@ function formatDate(ts: { seconds: number } | null): string {
 export default function AccountPage() {
   const router = useRouter();
   const { user, loading, logout } = useAuth();
+  const { clearCart, clearBuyNow } = useCart();
+  const { resetWishlist } = useWishlist();
 
   const [orders, setOrders] = useState<RecentOrder[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [ordersError, setOrdersError] = useState(false);
   const fetchIdRef = useRef(0);
-
-  // Guard — redirect unauthenticated users
-  useEffect(() => {
-    if (!loading && !user) {
-      router.replace("/login?next=/account");
-    }
-  }, [user, loading, router]);
 
   /**
    * Fetch the 3 most recent orders for this user.
@@ -177,6 +174,9 @@ export default function AccountPage() {
 
   async function handleLogout() {
     await logout();
+    resetWishlist();
+    clearCart();
+    clearBuyNow();
     router.replace("/");
   }
 

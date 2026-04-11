@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
@@ -11,8 +10,7 @@ import { track } from "@/lib/analytics";
 import styles from "./wishlist.module.css";
 
 export default function WishlistPage() {
-  const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user } = useAuth();
   const { addToCart } = useCart();
   const {
     wishlistItems,
@@ -27,12 +25,6 @@ export default function WishlistPage() {
   const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      router.replace("/login?next=/wishlist");
-    }
-  }, [authLoading, user, router]);
-
-  useEffect(() => {
     if (user) {
       void refreshWishlist();
     }
@@ -44,7 +36,7 @@ export default function WishlistPage() {
     return () => clearTimeout(timer);
   }, [toast]);
 
-  if (authLoading || !user) return null;
+  if (!user) return null;
 
   const removeItem = async (productId: string) => {
     setPageError(null);

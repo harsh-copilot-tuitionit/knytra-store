@@ -4,9 +4,25 @@ import Link from "next/link";
 import { ShoppingCart, Menu, Search } from "lucide-react";
 import styles from "./Navbar.module.css";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
+import { useWishlist } from "@/context/WishlistContext";
 
 export default function Navbar() {
-  const { cartCount, toggleCart } = useCart();
+  const { cartCount, toggleCart, clearCart, clearBuyNow } = useCart();
+  const { user, loading, logout } = useAuth();
+  const { resetWishlist } = useWishlist();
+
+  async function handleLogout() {
+    try {
+      await logout();
+      resetWishlist();
+      clearCart();
+      clearBuyNow();
+      window.location.href = "/";
+    } catch (err) {
+      console.error("[Navbar] Logout failed", err);
+    }
+  }
 
   return (
     <nav className={styles.navbar}>
@@ -29,7 +45,17 @@ export default function Navbar() {
         <div className={styles.navLinks}>
           <Link href="/shop" className={styles.link}>Shop</Link>
           <Link href="/shop/collections" className={styles.link}>Collections</Link>
-          <Link href="/account" className={styles.link}>Account</Link>
+          {!loading && user ? (
+            <>
+              <Link href="/account" className={styles.link}>Account</Link>
+              <Link href="/wishlist" className={styles.link}>Wishlist</Link>
+              <button className={styles.logoutBtn} onClick={() => void handleLogout()}>
+                Logout
+              </button>
+            </>
+          ) : (
+            <Link href="/login" className={styles.link}>Login</Link>
+          )}
         </div>
 
         {/* Right - Actions */}

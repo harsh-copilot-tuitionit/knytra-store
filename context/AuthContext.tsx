@@ -1,7 +1,12 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { onAuthStateChanged, User } from "firebase/auth";
+import {
+  browserLocalPersistence,
+  onAuthStateChanged,
+  setPersistence,
+  User,
+} from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import {
   signUp as authSignUp,
@@ -33,11 +38,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => {
-      setUser(u);
-      setLoading(false);
-    });
-    return unsub;
+    let unsub: (() => void) | null = null;
+    let active = true;
+
+    async function initAuth() {
+      try {
+        // Keep auth session across refresh/reopen.
+        await setPersistence(auth, browserLocalPersistence);
+      } catch (err) {
+        console.error("[AuthContext] Failed to set local persistence", err);
+      }
+
+      if (!active) return;
+
+      unsub = onAuthStateChanged(auth, (u) => {
+        if (!active) return;
+        setUser(u);
+        setLoading(false);
+      });
+    }
+
+    void initAuth();
+
+    return () => {
+      active = false;
+      if (unsub) unsub();
+    };
   }, []);
 
   return (
@@ -56,7 +82,5 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function useAuth() {
-  return useContext(AuthContext);
-}
+export const useAuth = () => useContext(AuthContext);
 

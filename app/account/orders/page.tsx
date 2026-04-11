@@ -160,13 +160,6 @@ export default function OrderHistoryPage() {
   // Global dedup set — grows across pages to prevent cross-page duplicates
   const seenIdsRef = useRef(new Set<string>());
 
-  // Auth guard
-  useEffect(() => {
-    if (!loading && !user) {
-      router.replace("/login?next=/account/orders");
-    }
-  }, [user, loading, router]);
-
   const fetchPage = useCallback(async (isInitial: boolean) => {
     if (!user?.uid) return;
 

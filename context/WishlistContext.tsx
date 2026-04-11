@@ -19,6 +19,7 @@ interface WishlistContextType {
   isInWishlist: (productId: string) => boolean;
   isToggling: (productId: string) => boolean;
   refreshWishlist: () => Promise<void>;
+  resetWishlist: () => void;
   toggleWishlist: (product: WishlistProductInput, source: WishlistSource) => Promise<void>;
   removeFromWishlist: (productId: string, source?: WishlistSource) => Promise<void>;
 }
@@ -56,6 +57,10 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     setPendingIds(new Set());
     setLoading(false);
   }, []);
+
+  const resetWishlist = useCallback(() => {
+    clearForSignedOut();
+  }, [clearForSignedOut]);
 
   const refreshWishlist = useCallback(async () => {
     if (!user) {
@@ -258,6 +263,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         isInWishlist,
         isToggling,
         refreshWishlist,
+        resetWishlist,
         toggleWishlist,
         removeFromWishlist,
       }}

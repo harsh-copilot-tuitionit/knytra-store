@@ -1,9 +1,9 @@
+import React from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AuthGuard from "@/components/AuthGuard";
-import React from "react";
 
-export default function AccountLayout({ children }: { children: React.ReactNode }) {
+export default function WishlistLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthGuard>
       <Navbar />
