@@ -54,6 +54,7 @@ export default function AccountPage() {
   const [orders, setOrders] = useState<RecentOrder[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [ordersError, setOrdersError] = useState(false);
+  const [ordersPartial, setOrdersPartial] = useState(false);
 
   // Guard — redirect unauthenticated users
   useEffect(() => {
@@ -177,6 +178,7 @@ export default function AccountPage() {
             return;
           }
           console.warn("[Account] Email orders query failed (ignored — userId results available):", err);
+          setOrdersPartial(true);
         }
       }
 
@@ -301,6 +303,12 @@ export default function AccountPage() {
                 </Link>
               ))}
             </div>
+          )}
+
+          {ordersPartial && (
+            <p className={styles.partialNotice}>
+              Some older orders may not be visible right now.
+            </p>
           )}
         </section>
 

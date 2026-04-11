@@ -256,6 +256,14 @@
   margin: 8px 0;
 }
 
+/* ── Partial data notice (non-blocking) ── */
+.partialNotice {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: #999;
+  margin-top: 10px;
+}
+
 /* ── Skeleton ── */
 .skeletonRow {
   height: 72px;
