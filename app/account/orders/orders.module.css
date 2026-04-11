@@ -161,3 +161,31 @@
   height: 72px;
   border: 1.5px solid #f0f0f0;
 }
+
+/* ── Load More button ── */
+.loadMoreBtn {
+  display: block;
+  width: 100%;
+  margin-top: 16px;
+  padding: 14px;
+  background: #fff;
+  color: #000;
+  font-family: var(--font-heading);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1.5px solid #000;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.loadMoreBtn:hover:not(:disabled) {
+  background: #000;
+  color: #fff;
+}
+
+.loadMoreBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

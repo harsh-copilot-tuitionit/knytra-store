@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -8,11 +8,17 @@ import {
   query,
   where,
   orderBy,
+  limit,
+  startAfter,
   getDocs,
+  QueryDocumentSnapshot,
+  QueryConstraint,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import styles from "./orders.module.css";
+
+const PAGE_SIZE = 10;
 
 interface Order {
   id: string;
@@ -20,6 +26,12 @@ interface Order {
   status: string;
   createdAt: any;
   itemCount: number;
+}
+
+interface QueryResult {
+  rows: Order[];
+  lastDoc: QueryDocumentSnapshot | null;
+  hasMore: boolean;
 }
 
 function badgeClass(status: string): string {
@@ -46,15 +58,90 @@ function isIndexError(err: any): boolean {
   );
 }
 
+function mapDoc(doc: QueryDocumentSnapshot): Order {
+  const d = doc.data();
+  return {
+    id: doc.id,
+    totalAmount: d.totalAmount ?? 0,
+    status: d.status ?? "placed",
+    createdAt: d.createdAt ?? null,
+    itemCount: Array.isArray(d.items) ? d.items.length : 0,
+  };
+}
+
+const getTime = (o: Order): number => o.createdAt?.toMillis?.() ?? 0;
+const sortDesc = (rows: Order[]): Order[] =>
+  [...rows].sort((a, b) => getTime(b) - getTime(a));
+
+/**
+ * Run a paginated, indexed query.
+ * On index-missing errors, falls back to an equality-only query (no further
+ * pagination possible — sets hasMore: false).
+ * Throws on any other error.
+ *
+ * Composite indexes required:
+ *   orders → userId ASC, createdAt DESC
+ *   orders → user.email ASC, createdAt DESC
+ */
+async function runQuery(
+  filterField: string,
+  filterValue: string,
+  label: string,
+  cursor: QueryDocumentSnapshot | null
+): Promise<QueryResult> {
+  const constraints: QueryConstraint[] = [
+    where(filterField, "==", filterValue),
+    orderBy("createdAt", "desc"),
+    limit(PAGE_SIZE),
+    ...(cursor ? [startAfter(cursor)] : []),
+  ];
+
+  try {
+    const snap = await getDocs(query(collection(db, "orders"), ...constraints));
+    return {
+      rows: snap.docs.map(mapDoc),
+      lastDoc: snap.docs[snap.docs.length - 1] ?? null,
+      hasMore: snap.docs.length === PAGE_SIZE,
+    };
+  } catch (err: any) {
+    if (!isIndexError(err)) throw err;
+    console.warn(
+      `[OrderHistory] Missing composite index (${label}). ` +
+      `Create index: orders → ${filterField} ASC, createdAt DESC. ` +
+      `Fetching all and disabling server-side pagination.`
+    );
+  }
+
+  // Equality-only fallback — fetches all remaining, no further pagination
+  const snap = await getDocs(
+    query(collection(db, "orders"), where(filterField, "==", filterValue))
+  );
+  return { rows: snap.docs.map(mapDoc), lastDoc: null, hasMore: false };
+}
+
 export default function OrderHistoryPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [ordersError, setOrdersError] = useState(false);
   const [ordersPartial, setOrdersPartial] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+
+  // Race condition guard
   const fetchIdRef = useRef(0);
+
+  // Independent cursors + exhaustion state for each query stream.
+  // Stored in refs so updates don't trigger re-renders.
+  const cursorByIdRef    = useRef<QueryDocumentSnapshot | null>(null);
+  const cursorByEmailRef = useRef<QueryDocumentSnapshot | null>(null);
+  const hasMoreByIdRef    = useRef(true);
+  const hasMoreByEmailRef = useRef(true);
+
+  // Global dedup set — grows across pages to prevent cross-page duplicates
+  const seenIdsRef = useRef(new Set<string>());
 
   // Auth guard
   useEffect(() => {
@@ -63,92 +150,56 @@ export default function OrderHistoryPage() {
     }
   }, [user, loading, router]);
 
-  /**
-   * Fetch ALL orders for this user (no limit — full history).
-   *
-   * Strategy:
-   *   1. Query by userId (indexed). Composite index required:
-   *      orders → userId ASC, createdAt DESC
-   *   2. Legacy fallback: query by user.email for orders without userId.
-   *      Composite index required:
-   *      orders → user.email ASC, createdAt DESC
-   *
-   * On index-missing errors, retries with equality-only query + client sort.
-   * On other errors, surfaces the error state without fallback.
-   */
-  useEffect(() => {
+  const fetchPage = useCallback(async (isInitial: boolean) => {
     if (!user?.email) return;
 
     const uid   = user.uid;
     const email = user.email;
+    const currentFetchId = ++fetchIdRef.current;
 
-    function mapDoc(doc: import("firebase/firestore").QueryDocumentSnapshot): Order {
-      const d = doc.data();
-      return {
-        id: doc.id,
-        totalAmount: d.totalAmount ?? 0,
-        status: d.status ?? "placed",
-        createdAt: d.createdAt ?? null,
-        itemCount: Array.isArray(d.items) ? d.items.length : 0,
-      };
-    }
-
-    const getTime = (o: Order): number => o.createdAt?.toMillis?.() ?? 0;
-
-    function sortDesc(rows: Order[]): Order[] {
-      return [...rows].sort((a, b) => getTime(b) - getTime(a));
-    }
-
-    /**
-     * Run an indexed query; on index-missing error fall back to equality-only
-     * + client-side sort. Throws on any non-index error.
-     */
-    async function runQuery(
-      filterField: string,
-      filterValue: string,
-      label: string
-    ): Promise<Order[]> {
-      try {
-        const q = query(
-          collection(db, "orders"),
-          where(filterField, "==", filterValue),
-          orderBy("createdAt", "desc")
-        );
-        const snap = await getDocs(q);
-        return snap.docs.map(mapDoc);
-      } catch (err: any) {
-        if (!isIndexError(err)) throw err;
-        console.warn(
-          `[OrderHistory] Missing composite index (${label}). ` +
-          `Create index: orders → ${filterField} ASC, createdAt DESC.`
-        );
-      }
-      // Equality-only fallback
-      const snap = await getDocs(
-        query(collection(db, "orders"), where(filterField, "==", filterValue))
-      );
-      return snap.docs.map(mapDoc);
-    }
-
-    async function fetchOrders() {
-      const currentFetchId = ++fetchIdRef.current;
+    if (isInitial) {
+      // Reset all state for a fresh load
+      setOrdersLoading(true);
+      setOrdersError(false);
       setOrdersPartial(false);
-      let userIdOrders: Order[] = [];
+      setHasMore(false);
+      cursorByIdRef.current    = null;
+      cursorByEmailRef.current = null;
+      hasMoreByIdRef.current    = true;
+      hasMoreByEmailRef.current = true;
+      seenIdsRef.current = new Set();
+    } else {
+      setLoadingMore(true);
+    }
 
-      try {
-        // ── 1. Primary: userId query ────────────────────────────────────────
+    let newByIdRows: Order[]    = [];
+    let newByEmailRows: Order[] = [];
+
+    try {
+      // ── 1. userId query (if not exhausted) ───────────────────────────────
+      if (hasMoreByIdRef.current) {
         try {
-          userIdOrders = await runQuery("userId", uid, "userId");
+          const result = await runQuery("userId", uid, "userId", cursorByIdRef.current);
+          newByIdRows               = result.rows;
+          cursorByIdRef.current     = result.lastDoc;
+          hasMoreByIdRef.current    = result.hasMore;
         } catch (err: any) {
           console.error("[OrderHistory] userId query failed:", err);
+          hasMoreByIdRef.current = false;
         }
+      }
 
-        // ── 2. Email fallback: for legacy orders without userId ─────────────
-        let emailOrders: Order[] = [];
+      // ── 2. Email fallback (if not exhausted) ─────────────────────────────
+      if (hasMoreByEmailRef.current) {
         try {
-          emailOrders = await runQuery("user.email", email, "user.email");
+          const result = await runQuery("user.email", email, "user.email", cursorByEmailRef.current);
+          newByEmailRows             = result.rows;
+          cursorByEmailRef.current   = result.lastDoc;
+          hasMoreByEmailRef.current  = result.hasMore;
         } catch (err: any) {
-          if (userIdOrders.length === 0) {
+          hasMoreByEmailRef.current = false;
+          // Fatal only on the initial page when userId also returned nothing
+          if (isInitial && newByIdRows.length === 0) {
             console.error("[OrderHistory] Email query failed:", err);
             if (fetchIdRef.current !== currentFetchId) return;
             setOrdersError(true);
@@ -158,25 +209,30 @@ export default function OrderHistoryPage() {
           if (fetchIdRef.current !== currentFetchId) return;
           setOrdersPartial(true);
         }
+      }
 
-        // ── 3. Merge, deduplicate, sort ─────────────────────────────────────
-        const merged  = [...userIdOrders, ...emailOrders].filter(o => !!o.id);
-        const unique  = Array.from(new Map(merged.map(o => [o.id, o])).values());
-        if (fetchIdRef.current !== currentFetchId) return;
-        setOrders(sortDesc(unique));
-      } finally {
-        if (fetchIdRef.current === currentFetchId) {
-          setOrdersLoading(false);
-        }
+      // ── 3. Dedup against global seen set, sort, append ───────────────────
+      const newRows = [...newByIdRows, ...newByEmailRows]
+        .filter(o => !!o.id && !seenIdsRef.current.has(o.id));
+      newRows.forEach(o => seenIdsRef.current.add(o.id));
+
+      if (fetchIdRef.current !== currentFetchId) return;
+      setOrders(prev => sortDesc(isInitial ? newRows : [...prev, ...newRows]));
+      setHasMore(hasMoreByIdRef.current || hasMoreByEmailRef.current);
+    } finally {
+      if (fetchIdRef.current === currentFetchId) {
+        setOrdersLoading(false);
+        setLoadingMore(false);
       }
     }
-
-    fetchOrders();
   }, [user]);
 
-  if (loading || !user) return null;
+  // Initial fetch
+  useEffect(() => {
+    if (user?.email) fetchPage(true);
+  }, [user, fetchPage]);
 
-  const SKELETON_COUNT = 5;
+  if (loading || !user) return null;
 
   return (
     <div className={styles.page}>
@@ -191,10 +247,10 @@ export default function OrderHistoryPage() {
 
       <div className={styles.body}>
 
-        {/* ── Loading skeletons ── */}
+        {/* ── Loading skeletons (initial) ── */}
         {ordersLoading && (
           <div className={styles.list}>
-            {Array.from({ length: SKELETON_COUNT }).map((_, i) => (
+            {Array.from({ length: PAGE_SIZE }).map((_, i) => (
               <div key={i} className={`${styles.skeletonRow} skeleton`} />
             ))}
           </div>
@@ -219,34 +275,47 @@ export default function OrderHistoryPage() {
 
         {/* ── Order list ── */}
         {!ordersLoading && !ordersError && orders.length > 0 && (
-          <div className={styles.list}>
-            {orders.map((order) => (
-              <Link
-                key={order.id}
-                href={`/orders/${order.id}`}
-                className={styles.row}
-              >
-                <div className={styles.rowLeft}>
-                  <span className={styles.ref}>
-                    #{order.id.slice(-8).toUpperCase()}
-                  </span>
-                  <span className={styles.meta}>
-                    {formatDate(order.createdAt)} · {order.itemCount}{" "}
-                    {order.itemCount === 1 ? "item" : "items"}
-                  </span>
-                </div>
+          <>
+            <div className={styles.list}>
+              {orders.map((order) => (
+                <Link
+                  key={order.id}
+                  href={`/orders/${order.id}`}
+                  className={styles.row}
+                >
+                  <div className={styles.rowLeft}>
+                    <span className={styles.ref}>
+                      #{order.id.slice(-8).toUpperCase()}
+                    </span>
+                    <span className={styles.meta}>
+                      {formatDate(order.createdAt)} · {order.itemCount}{" "}
+                      {order.itemCount === 1 ? "item" : "items"}
+                    </span>
+                  </div>
 
-                <div className={styles.rowRight}>
-                  <span className={styles.amount}>
-                    ₹{order.totalAmount.toLocaleString("en-IN")}
-                  </span>
-                  <span className={`${styles.badge} ${badgeClass(order.status)}`}>
-                    {order.status}
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
+                  <div className={styles.rowRight}>
+                    <span className={styles.amount}>
+                      ₹{order.totalAmount.toLocaleString("en-IN")}
+                    </span>
+                    <span className={`${styles.badge} ${badgeClass(order.status)}`}>
+                      {order.status}
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            {/* ── Load More ── */}
+            {hasMore && (
+              <button
+                onClick={() => fetchPage(false)}
+                disabled={loadingMore}
+                className={styles.loadMoreBtn}
+              >
+                {loadingMore ? "Loading…" : "Load More"}
+              </button>
+            )}
+          </>
         )}
 
         {/* ── Partial notice ── */}
@@ -260,3 +329,4 @@ export default function OrderHistoryPage() {
     </div>
   );
 }
+
