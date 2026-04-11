@@ -42,10 +42,10 @@ function badgeClass(status: string): string {
 }
 
 function formatDate(ts: any): string {
-  const ms = ts?.toMillis?.() ?? (ts?.seconds ? ts.seconds * 1000 : null);
+  const ms = ts?.toMillis?.() ?? (ts?.seconds ? ts.seconds * 1000 : 0);
   if (!ms) return "—";
   return new Date(ms).toLocaleDateString("en-IN", {
-    day: "numeric",
+    day: "2-digit",
     month: "short",
     year: "numeric",
   });
