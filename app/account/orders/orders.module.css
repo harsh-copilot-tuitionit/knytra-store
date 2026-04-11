@@ -1,0 +1,163 @@
+/* ============================================
+   KNYTRA — Order History (/account/orders)
+   ============================================ */
+
+.page {
+  flex: 1;
+  background: #fff;
+  color: #000;
+}
+
+/* ── Header ── */
+.header {
+  background: #000;
+  color: #fff;
+  padding: 28px 24px;
+}
+
+@media (min-width: 768px) {
+  .header {
+    padding: 36px 48px;
+  }
+}
+
+.headerInner {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.backBtn {
+  color: rgba(255, 255, 255, 0.65);
+  text-decoration: none;
+  font-family: var(--font-body);
+  font-size: 13px;
+  transition: color 150ms ease;
+  white-space: nowrap;
+}
+.backBtn:hover { color: #fff; }
+
+.title {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+/* ── Body ── */
+.body {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 36px 24px 72px;
+}
+
+@media (min-width: 768px) {
+  .body {
+    padding: 48px 48px 80px;
+  }
+}
+
+/* ── Order list ── */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── Single order row ── */
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border: 1.5px solid #e8e8e8;
+  text-decoration: none;
+  color: #000;
+  transition: border-color 150ms ease;
+  gap: 12px;
+}
+.row:hover { border-color: #000; }
+
+.rowLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.ref {
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.meta {
+  font-size: 12px;
+  color: #888;
+  font-family: var(--font-body);
+}
+
+.rowRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.amount {
+  font-family: var(--font-heading);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* ── Status badges ── */
+.badge {
+  display: inline-block;
+  padding: 2px 10px;
+  font-family: var(--font-heading);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+}
+
+.badgePlaced    { color: #1a6ab5; }
+.badgeShipped   { color: #b57a00; }
+.badgeDelivered { color: #1a8a3a; }
+.badgeFallback  { color: #888; }
+
+/* ── States ── */
+.emptyState {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: #999;
+  padding: 32px 0;
+}
+
+.errorState {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: #b91c1c;
+  background: #fff5f5;
+  border: 1px solid #fca5a5;
+  border-radius: 6px;
+  padding: 12px 16px;
+}
+
+.partialNotice {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: #999;
+  margin-top: 14px;
+}
+
+/* ── Skeletons ── */
+.skeletonRow {
+  height: 72px;
+  border: 1.5px solid #f0f0f0;
+}
