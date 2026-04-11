@@ -153,6 +153,7 @@ export default function AccountPage() {
     }
 
     async function fetchOrders() {
+      setOrdersPartial(false);
       let userIdOrders: RecentOrder[] = [];
 
       // ── 1. Primary: query by userId ───────────────────────────────────────
