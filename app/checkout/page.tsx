@@ -169,6 +169,9 @@ export default function CheckoutPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
     setPaymentError("");
+    // Per spec: if user edits any field while a saved address is selected,
+    // treat the entry as a new address (do NOT overwrite the saved one).
+    if (selectedAddrId !== "new") setSelectedAddrId("new");
   };
 
   // All required fields must be non-empty (email is optional for guests)
@@ -292,7 +295,9 @@ export default function CheckoutPage() {
       order_id: razorpay_order_id,
       prefill: {
         name: form.name,
-        email: form.email,
+        // form.email is "" for auth users (readOnly field never fires handleChange);
+        // fall back to the Firebase user email so Razorpay modal is pre-filled.
+        email: user?.email ?? form.email,
         contact: form.phone,
       },
       theme: { color: "#000000" },

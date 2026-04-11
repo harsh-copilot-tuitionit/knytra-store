@@ -145,7 +145,7 @@ export async function PUT(
 
 // ── DELETE /api/addresses/[id] ─────────────────────────────────────────────
 // Deletes an address. If it was the default → auto-promotes the most recent
-// remaining address to default.
+// remaining address to default, atomically in the same batch.
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -170,19 +170,22 @@ export async function DELETE(
     }
 
     const wasDefault = snap.data()!.isDefault === true;
-    await docRef.delete();
+    const batch      = db.batch();
+    batch.delete(docRef);
 
     if (wasDefault) {
-      // Auto-promote most recent remaining address to default
-      const next = await colRef.orderBy("createdAt", "desc").limit(1).get();
-      if (!next.empty) {
-        await next.docs[0].ref.update({
-          isDefault: true,
-          updatedAt: Timestamp.now(),
-        });
+      // Find the most recent OTHER address to promote.
+      // Fetch limit(2) in case Firestore returns the doc being deleted;
+      // find the first result whose ID differs from the one we're removing.
+      const nextSnap = await colRef.orderBy("createdAt", "desc").limit(2).get();
+      const nextDoc  = nextSnap.docs.find(d => d.id !== id);
+      if (nextDoc) {
+        // Promote in the same batch — delete + promote are atomic.
+        batch.update(nextDoc.ref, { isDefault: true, updatedAt: Timestamp.now() });
       }
     }
 
+    await batch.commit();
     return Response.json({ ok: true });
   } catch (err) {
     console.error("[DELETE /api/addresses/:id]", err);

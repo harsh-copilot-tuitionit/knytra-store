@@ -249,6 +249,7 @@ export default function AddressesPage() {
     if (!confirmed) return;
 
     setDeletingId(addr.id);
+    setPageError(null); // clear any previous error banner
 
     try {
       const token = await user.getIdToken();
@@ -267,18 +268,19 @@ export default function AddressesPage() {
         return;
       }
 
-      // Optimistic update
-      let updated = addresses.filter(a => a.id !== addr.id);
-      if (addr.isDefault && updated.length > 0) {
-        // Promote most recent
-        const mostRecent = [...updated].sort(
-          (a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0),
-        )[0];
-        updated = updated.map(a =>
-          a.id === mostRecent.id ? { ...a, isDefault: true } : a,
-        );
-      }
-      setAddresses(updated);
+      // Functional update — avoids stale closure over `addresses`
+      setAddresses(prev => {
+        const updated = prev.filter(a => a.id !== addr.id);
+        if (addr.isDefault && updated.length > 0) {
+          const mostRecent = [...updated].sort(
+            (a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0),
+          )[0];
+          return updated.map(a =>
+            a.id === mostRecent.id ? { ...a, isDefault: true } : a,
+          );
+        }
+        return updated;
+      });
     } catch {
       setPageError("Network error. Please try again.");
     } finally {
@@ -291,6 +293,7 @@ export default function AddressesPage() {
     if (!user || defaultingId || addr.isDefault) return;
 
     setDefaultingId(addr.id);
+    setPageError(null); // clear any previous error banner
 
     try {
       const token = await user.getIdToken();

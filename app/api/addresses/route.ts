@@ -131,6 +131,7 @@ export async function GET(req: NextRequest) {
 // ── POST /api/addresses ────────────────────────────────────────────────────
 // Creates a new address. Enforces max 10. Auto-assigns default if first address.
 // If isDefault=true → atomically unsets all other defaults.
+// Uses a Firestore transaction so concurrent requests cannot bypass the 10-limit.
 export async function POST(req: NextRequest) {
   const auth = await requireAuth(req);
   if (auth instanceof Response) return auth;
@@ -150,43 +151,59 @@ export async function POST(req: NextRequest) {
   try {
     const db     = getAdminDb();
     const colRef = db.collection("users").doc(uid).collection("addresses");
-
-    // Fetch all existing — used for count check, default detection, and batch update
-    const existingSnap = await colRef.get();
-
-    if (existingSnap.size >= MAX_ADDRESSES) {
-      return Response.json(
-        { error: `Maximum of ${MAX_ADDRESSES} addresses allowed. Please delete one first.` },
-        { status: 422 },
-      );
-    }
-
-    const isFirstAddress = existingSnap.empty;
-    const makeDefault    = isDefault || isFirstAddress;
-    const now            = Timestamp.now();
-
-    const docData = {
-      name, phone, line1, line2, city, state, pincode,
-      country:   "India",
-      isDefault: makeDefault,
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    const batch  = db.batch();
+    // Allocate the new document ID outside the transaction so we can return it.
     const newRef = colRef.doc();
 
-    if (makeDefault) {
-      // Unset existing defaults atomically
-      existingSnap.docs
-        .filter(d => d.data().isDefault)
-        .forEach(d => batch.update(d.ref, { isDefault: false, updatedAt: now }));
+    // Use a Firestore transaction so the count check + write are atomic.
+    // Without this, two simultaneous POST requests can both read count < 10
+    // and both succeed, creating an 11th address.
+    type DocData = {
+      name: string; phone: string; line1: string; line2: string;
+      city: string; state: string; pincode: string; country: string;
+      isDefault: boolean; createdAt: Timestamp; updatedAt: Timestamp;
+    };
+    let docData: DocData | null = null;
+
+    try {
+      await db.runTransaction(async (tx) => {
+        const existingSnap = await tx.get(colRef);
+
+        if (existingSnap.size >= MAX_ADDRESSES) {
+          throw Object.assign(
+            new Error(`Maximum of ${MAX_ADDRESSES} addresses allowed. Please delete one first.`),
+            { code: "MAX_EXCEEDED" },
+          );
+        }
+
+        const isFirstAddress = existingSnap.empty;
+        const makeDefault    = isDefault || isFirstAddress;
+        const now            = Timestamp.now();
+
+        docData = {
+          name, phone, line1, line2, city, state, pincode,
+          country:   "India",
+          isDefault: makeDefault,
+          createdAt: now,
+          updatedAt: now,
+        };
+
+        if (makeDefault) {
+          existingSnap.docs
+            .filter(d => d.data().isDefault)
+            .forEach(d => tx.update(d.ref, { isDefault: false, updatedAt: now }));
+        }
+
+        tx.set(newRef, docData);
+      });
+    } catch (err: unknown) {
+      const e = err as { code?: string; message?: string };
+      if (e?.code === "MAX_EXCEEDED") {
+        return Response.json({ error: e.message }, { status: 422 });
+      }
+      throw err;
     }
 
-    batch.set(newRef, docData);
-    await batch.commit();
-
-    return Response.json(serialise(newRef.id, docData), { status: 201 });
+    return Response.json(serialise(newRef.id, docData!), { status: 201 });
   } catch (err) {
     console.error("[POST /api/addresses]", err);
     return Response.json({ error: "Failed to save address." }, { status: 500 });
