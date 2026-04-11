@@ -97,9 +97,9 @@ function mergeSorted(existing: Order[], incoming: Order[]): Order[] {
  * pagination possible — sets hasMore: false).
  * Throws on any other error.
  *
- * Composite indexes required:
+ * Composite index required:
  *   orders → userId ASC, createdAt DESC
- *   orders → user.email ASC, createdAt DESC
+ * (defined in firestore.indexes.json — deploy via: npx firebase deploy --only firestore:indexes)
  */
 async function runQuery(
   filterField: string,
@@ -146,19 +146,16 @@ export default function OrderHistoryPage() {
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [ordersError, setOrdersError] = useState(false);
-  const [ordersPartial, setOrdersPartial] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const [indexFallback, setIndexFallback] = useState(false);
 
   // Race condition guard
   const fetchIdRef = useRef(0);
 
-  // Independent cursors + exhaustion state for each query stream.
+  // Cursor + exhaustion state for the userId query stream.
   // Stored in refs so updates don't trigger re-renders.
-  const cursorByIdRef    = useRef<QueryDocumentSnapshot | null>(null);
-  const cursorByEmailRef = useRef<QueryDocumentSnapshot | null>(null);
-  const hasMoreByIdRef    = useRef(true);
-  const hasMoreByEmailRef = useRef(true);
+  const cursorByIdRef  = useRef<QueryDocumentSnapshot | null>(null);
+  const hasMoreByIdRef = useRef(true);
 
   // Global dedup set — grows across pages to prevent cross-page duplicates
   const seenIdsRef = useRef(new Set<string>());
@@ -171,39 +168,38 @@ export default function OrderHistoryPage() {
   }, [user, loading, router]);
 
   const fetchPage = useCallback(async (isInitial: boolean) => {
-    if (!user?.email) return;
+    if (!user?.uid) return;
 
-    const uid   = user.uid;
-    const email = user.email;
+    const uid = user.uid;
     const currentFetchId = ++fetchIdRef.current;
 
     if (isInitial) {
       // Reset all state for a fresh load
       setOrdersLoading(true);
       setOrdersError(false);
-      setOrdersPartial(false);
       setHasMore(false);
       setIndexFallback(false);
-      cursorByIdRef.current    = null;
-      cursorByEmailRef.current = null;
-      hasMoreByIdRef.current    = true;
-      hasMoreByEmailRef.current = true;
+      cursorByIdRef.current = null;
+      hasMoreByIdRef.current = true;
       seenIdsRef.current = new Set();
     } else {
       setLoadingMore(true);
     }
 
-    let newByIdRows: Order[]    = [];
-    let newByEmailRows: Order[] = [];
+    let newRows: Order[] = [];
 
     try {
-      // ── 1. userId query (if not exhausted) ───────────────────────────────
+      // ── userId query (only valid query under current security rules) ──────
+      // Security rules require resource.data.userId == request.auth.uid.
+      // Any other filter (e.g. user.email) cannot satisfy that proof and is
+      // rejected by Firestore as PERMISSION_DENIED, so the email path is
+      // intentionally absent.
       if (hasMoreByIdRef.current) {
         try {
           const result = await runQuery("userId", uid, "userId", cursorByIdRef.current);
-          newByIdRows               = result.rows;
-          cursorByIdRef.current     = result.lastDoc;
-          hasMoreByIdRef.current    = result.hasMore;
+          newRows                = result.rows;
+          cursorByIdRef.current  = result.lastDoc;
+          hasMoreByIdRef.current = result.hasMore;
           if (result.indexFallback) {
             // Index-less: all docs fetched in one shot — disable pagination
             hasMoreByIdRef.current = false;
@@ -212,43 +208,19 @@ export default function OrderHistoryPage() {
         } catch (err: any) {
           console.error("[OrderHistory] userId query failed:", err);
           hasMoreByIdRef.current = false;
-        }
-      }
-
-      // ── 2. Email fallback (if not exhausted and userId didn't fill the page) ─
-      // Skipped when userId returned a full page — avoids unnecessary reads.
-      if (hasMoreByEmailRef.current && newByIdRows.length < PAGE_SIZE) {
-        try {
-          const result = await runQuery("user.email", email, "user.email", cursorByEmailRef.current);
-          newByEmailRows             = result.rows;
-          cursorByEmailRef.current   = result.lastDoc;
-          hasMoreByEmailRef.current  = result.hasMore;
-          if (result.indexFallback) {
-            hasMoreByEmailRef.current = false;
-            if (fetchIdRef.current === currentFetchId) setIndexFallback(true);
-          }
-        } catch (err: any) {
-          hasMoreByEmailRef.current = false;
-          // Fatal only on the initial page when userId also returned nothing
-          if (isInitial && newByIdRows.length === 0) {
-            console.error("[OrderHistory] Email query failed:", err);
+          if (isInitial) {
             if (fetchIdRef.current !== currentFetchId) return;
             setOrdersError(true);
             return;
           }
-          console.warn("[OrderHistory] Email query failed (userId results available):", err);
-          if (fetchIdRef.current !== currentFetchId) return;
-          setOrdersPartial(true);
         }
       }
 
-      // ── 3. Dedup against global seen set, sort, append ───────────────────
-      const newRows = [...newByIdRows, ...newByEmailRows]
-        .filter(o => !!o.id && !seenIdsRef.current.has(o.id));
-      newRows.forEach(o => seenIdsRef.current.add(o.id));
+      // ── Dedup against global seen set, sort, append ───────────────────────
+      const fresh = newRows.filter(o => !!o.id && !seenIdsRef.current.has(o.id));
+      fresh.forEach(o => seenIdsRef.current.add(o.id));
 
-      // Cap the seen-set to the IDs of the currently loaded orders
-      // (max 500) so it never grows unboundedly for heavy users.
+      // Cap the seen-set to prevent unbounded growth for heavy users.
       const SEEN_CAP = 500;
       if (seenIdsRef.current.size > SEEN_CAP) {
         seenIdsRef.current = new Set(
@@ -257,13 +229,10 @@ export default function OrderHistoryPage() {
       }
 
       if (fetchIdRef.current !== currentFetchId) return;
-      // Initial load: sort the merged first-page batch.
-      // Subsequent pages: both `prev` and `newRows` are already sorted —
-      // merge in O(n + m) instead of re-sorting the whole list.
       setOrders(prev =>
-        isInitial ? sortDesc(newRows) : mergeSorted(prev, sortDesc(newRows))
+        isInitial ? sortDesc(fresh) : mergeSorted(prev, sortDesc(fresh))
       );
-      setHasMore(hasMoreByIdRef.current || hasMoreByEmailRef.current);
+      setHasMore(hasMoreByIdRef.current);
     } finally {
       if (fetchIdRef.current === currentFetchId) {
         setOrdersLoading(false);
@@ -274,7 +243,7 @@ export default function OrderHistoryPage() {
 
   // Initial fetch
   useEffect(() => {
-    if (user?.email) fetchPage(true);
+    if (user?.uid) fetchPage(true);
   }, [user, fetchPage]);
 
   if (loading || !user) return null;
@@ -367,13 +336,6 @@ export default function OrderHistoryPage() {
         {indexFallback && !ordersLoading && (
           <p className={styles.partialNotice}>
             Showing all orders (limited performance mode — create a Firestore index to enable pagination).
-          </p>
-        )}
-
-        {/* ── Partial notice ── */}
-        {ordersPartial && (
-          <p className={styles.partialNotice}>
-            Some older orders may not be visible right now.
           </p>
         )}
 

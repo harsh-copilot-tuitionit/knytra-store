@@ -54,7 +54,6 @@ export default function AccountPage() {
   const [orders, setOrders] = useState<RecentOrder[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [ordersError, setOrdersError] = useState(false);
-  const [ordersPartial, setOrdersPartial] = useState(false);
   const fetchIdRef = useRef(0);
 
   // Guard — redirect unauthenticated users
@@ -66,28 +65,18 @@ export default function AccountPage() {
 
   /**
    * Fetch the 3 most recent orders for this user.
+   * Queries by `userId` only — the only field allowed by Firestore security
+   * rules. Email-based queries are intentionally omitted: the rule
+   * `resource.data.userId == request.auth.uid` cannot be proven from an
+   * email filter, so Firestore rejects them as PERMISSION_DENIED.
    *
-   * Strategy (in order):
-   *   1. Query by `userId` (Firebase UID) — fast, secure, for logged-in users.
-   *      Requires composite index: orders → userId ASC, createdAt DESC
-   *   2. Fallback to `user.email` — covers legacy orders created before userId
-   *      was stored, and preserves backward compatibility.
-   *
-   * Each query path follows the same pattern:
-   *   - Try the indexed (orderBy) query first.
-   *   - On index-missing errors (code "failed-precondition"), fall back to an
-   *     equality-only query and sort client-side.
-   *   - On any other error, surface it immediately (no further fallback).
-   *
-   * To create composite indexes in Firebase Console → Firestore → Indexes:
-   *   • userId ASC, createdAt DESC   (collection: orders)
-   *   • user.email ASC, createdAt DESC (collection: orders)
+   * Requires composite index: orders → userId ASC, createdAt DESC
+   * (defined in firestore.indexes.json)
    */
   useEffect(() => {
-    if (!user?.email) return;
+    if (!user?.uid) return;
 
-    const uid   = user.uid;
-    const email = user.email;
+    const uid = user.uid;
 
     function mapDoc(doc: import("firebase/firestore").QueryDocumentSnapshot): RecentOrder {
       const d = doc.data();
@@ -107,7 +96,6 @@ export default function AccountPage() {
       );
     }
 
-    /** Sort by createdAt DESC and cap at `n` items. Does not mutate input. */
     const getTime = (o: RecentOrder): number =>
       (o.createdAt as any)?.toMillis?.() ?? 0;
 
@@ -115,83 +103,40 @@ export default function AccountPage() {
       return [...rows].sort((a, b) => getTime(b) - getTime(a)).slice(0, n);
     }
 
-    /**
-     * Run an indexed query; on index-missing error fall back to equality-only
-     * + client-side sort. Throws on any non-index error.
-     * NOTE: always fetches without a server-side limit so the caller can
-     * deduplicate across both queries before slicing.
-     */
-    async function runQuery(
-      filterField: string,
-      filterValue: string,
-      label: string
-    ): Promise<RecentOrder[]> {
-      // ── Indexed path ─────────────────────────────────────────────────────
-      try {
-        const q = query(
-          collection(db, "orders"),
-          where(filterField, "==", filterValue),
-          orderBy("createdAt", "desc")
-        );
-        const snap = await getDocs(q);
-        return snap.docs.map(mapDoc);
-      } catch (err: any) {
-        if (!isIndexError(err)) throw err;
-        console.warn(
-          `[Account] Missing composite index for orders (${label}). ` +
-          `Create index: orders → ${filterField} ASC, createdAt DESC. ` +
-          `Falling back to client-side sort.`
-        );
-      }
-
-      // ── Equality-only fallback (no orderBy) ───────────────────────────────
-      const fallback = query(
-        collection(db, "orders"),
-        where(filterField, "==", filterValue)
-      );
-      const snap = await getDocs(fallback);
-      return snap.docs.map(mapDoc);
-    }
-
     async function fetchOrders() {
       const currentFetchId = ++fetchIdRef.current;
-      setOrdersPartial(false);
-      let userIdOrders: RecentOrder[] = [];
 
       try {
-        // ── 1. Primary: query by userId ─────────────────────────────────────
+        // Indexed query: userId == uid, ordered by createdAt DESC.
+        // On index-missing error, fall back to equality-only + client sort.
+        let rows: RecentOrder[];
         try {
-          userIdOrders = await runQuery("userId", uid, "userId");
+          const snap = await getDocs(
+            query(
+              collection(db, "orders"),
+              where("userId", "==", uid),
+              orderBy("createdAt", "desc")
+            )
+          );
+          rows = snap.docs.map(mapDoc);
         } catch (err: any) {
-          console.error("[Account] userId orders query failed:", err);
-          // Non-index error on primary — skip to email-only path
+          if (!isIndexError(err)) throw err;
+          console.warn(
+            "[Account] Missing composite index for orders. " +
+            "Run: npx firebase deploy --only firestore:indexes"
+          );
+          const snap = await getDocs(
+            query(collection(db, "orders"), where("userId", "==", uid))
+          );
+          rows = snap.docs.map(mapDoc);
         }
 
-        // ── 2. Email fallback: only if we don't have enough results yet ─────
-        //    Skipped when userId query returned ≥ 3 orders (avoids extra read).
-        let emailOrders: RecentOrder[] = [];
-        if (userIdOrders.length < 3) {
-          try {
-            emailOrders = await runQuery("user.email", email, "user.email");
-          } catch (err: any) {
-            // Only fatal if the userId query also returned nothing
-            if (userIdOrders.length === 0) {
-              console.error("[Account] Email orders query failed:", err);
-              if (fetchIdRef.current !== currentFetchId) return;
-              setOrdersError(true);
-              return;
-            }
-            console.warn("[Account] Email orders query failed (ignored — userId results available):", err);
-            if (fetchIdRef.current !== currentFetchId) return;
-            setOrdersPartial(true);
-          }
-        }
-
-        // ── 3. Merge, deduplicate by id, sort, limit ───────────────────────
-        const merged = [...userIdOrders, ...emailOrders].filter(o => !!o.id);
-        const unique = Array.from(new Map(merged.map(o => [o.id, o])).values());
         if (fetchIdRef.current !== currentFetchId) return;
-        setOrders(sortAndLimit(unique, 3));
+        setOrders(sortAndLimit(rows.filter(o => !!o.id), 3));
+      } catch (err: any) {
+        console.error("[Account] Orders query failed:", err);
+        if (fetchIdRef.current !== currentFetchId) return;
+        setOrdersError(true);
       } finally {
         if (fetchIdRef.current === currentFetchId) {
           setOrdersLoading(false);
@@ -315,11 +260,6 @@ export default function AccountPage() {
             </div>
           )}
 
-          {ordersPartial && (
-            <p className={styles.partialNotice}>
-              Some older orders may not be visible right now.
-            </p>
-          )}
         </section>
 
       </div>
