@@ -1,69 +1,157 @@
 import { NextRequest } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
+import { signGuestToken } from "@/lib/guestToken";
 
-// Normalise phone: strip spaces, dashes, parentheses, leading +91
+// ── Rate limiter (in-memory, per IP × orderId) ─────────────────────────────
+// NOTE: Resets on process restart. Acceptable for basic brute-force protection
+// on a single-instance deployment. Add a distributed store (Redis/Upstash) for
+// multi-instance setups.
+const WINDOW_MS   = 15 * 60 * 1000; // 15 minutes
+const MAX_FAILURES = 5;
+
+type Bucket = { fails: number; windowStart: number };
+const rateLimitMap = new Map<string, Bucket>();
+
+// Clean up expired entries every 5 minutes to prevent unbounded growth.
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, bucket] of rateLimitMap.entries()) {
+    if (now - bucket.windowStart > WINDOW_MS) rateLimitMap.delete(key);
+  }
+}, 5 * 60 * 1000);
+
+function getIp(req: NextRequest): string {
+  return req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
+}
+
+function isRateLimited(key: string): boolean {
+  const bucket = rateLimitMap.get(key);
+  if (!bucket) return false;
+  if (Date.now() - bucket.windowStart > WINDOW_MS) {
+    rateLimitMap.delete(key);
+    return false;
+  }
+  return bucket.fails >= MAX_FAILURES;
+}
+
+function recordFailure(key: string): void {
+  const now = Date.now();
+  const bucket = rateLimitMap.get(key);
+  if (!bucket || now - bucket.windowStart > WINDOW_MS) {
+    rateLimitMap.set(key, { fails: 1, windowStart: now });
+  } else {
+    bucket.fails++;
+  }
+}
+
+function clearFailures(key: string): void {
+  rateLimitMap.delete(key);
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+
+/** Strip spaces, dashes, parentheses, and leading +91 / 91 country codes. */
 function normalisePhone(raw: string): string {
   return raw.replace(/[\s\-().]/g, "").replace(/^\+91/, "").replace(/^91(\d{10})$/, "$1");
 }
 
+// All failures return the same generic message to prevent enumeration.
+const GENERIC_ERROR = "Invalid details.";
+
+// ── Route handler ──────────────────────────────────────────────────────────
+
 export async function POST(request: NextRequest) {
-  let body: { orderId?: string; phone?: string };
+  let body: { orderId?: string; contact?: string };
   try {
     body = await request.json();
   } catch {
     return Response.json({ error: "Invalid request." }, { status: 400 });
   }
 
-  const { orderId, phone } = body;
+  const { orderId, contact } = body;
 
-  if (!orderId || !phone) {
-    return Response.json({ error: "Order ID and phone are required." }, { status: 400 });
+  if (!orderId || !contact) {
+    return Response.json(
+      { error: "Order ID and phone or email are required." },
+      { status: 400 }
+    );
   }
 
-  // Basic length guards — reject obviously invalid input early
-  if (orderId.length > 64 || phone.length > 20) {
+  const trimmedId      = orderId.trim();
+  const trimmedContact = contact.trim();
+
+  // Length guards
+  if (trimmedId.length > 64 || trimmedContact.length > 256) {
     return Response.json({ error: "Invalid input." }, { status: 400 });
   }
 
+  // Firestore auto-IDs are alphanumeric — reject anything else to guard the
+  // cookie name and prevent path-traversal in the Set-Cookie Path attribute.
+  if (!/^[a-zA-Z0-9]+$/.test(trimmedId)) {
+    return Response.json({ error: GENERIC_ERROR }, { status: 404 });
+  }
+
+  const ip            = getIp(request);
+  const rateLimitKey  = `${ip}:${trimmedId}`;
+
+  if (isRateLimited(rateLimitKey)) {
+    // Generic message — don't hint that rate limiting is involved.
+    return Response.json({ error: GENERIC_ERROR }, { status: 429 });
+  }
+
   try {
-    const db = getAdminDb();
-    const snap = await db.collection("orders").doc(orderId.trim()).get();
+    const db   = getAdminDb();
+    const snap = await db.collection("orders").doc(trimmedId).get();
 
     if (!snap.exists) {
-      // Return same error as auth failure — don't reveal whether order exists
-      return Response.json({ error: "Order not found or details do not match." }, { status: 404 });
+      recordFailure(rateLimitKey);
+      return Response.json({ error: GENERIC_ERROR }, { status: 404 });
     }
 
-    const d = snap.data()!;
-    const storedPhone: string = d.user?.phone ?? d.address?.phone ?? "";
+    const d       = snap.data()!;
+    const isEmail = trimmedContact.includes("@");
+    let verified  = false;
 
-    if (normalisePhone(storedPhone) !== normalisePhone(phone)) {
-      return Response.json({ error: "Order not found or details do not match." }, { status: 404 });
+    if (isEmail) {
+      // Email comparison is case-insensitive
+      const storedEmail: string = d.user?.email ?? "";
+      verified = storedEmail.toLowerCase() === trimmedContact.toLowerCase();
+    } else {
+      // Phone: normalise both sides before comparing
+      const storedPhone: string = d.user?.phone ?? d.address?.phone ?? "";
+      verified = normalisePhone(storedPhone) === normalisePhone(trimmedContact);
     }
 
-    // Return only the fields needed for tracking — no payment IDs, no full address details
-    return Response.json({
-      id: snap.id,
-      status:      d.status      ?? "placed",
-      totalAmount: d.totalAmount ?? 0,
-      createdAt:   d.createdAt?.toDate?.()?.toISOString() ?? null,
-      items: (d.items ?? []).map((item: Record<string, unknown>) => ({
-        name:     item.name,
-        size:     item.size,
-        quantity: item.quantity,
-        price:    item.price,
-        image:    item.image,
-      })),
-      payment: {
-        status: d.payment?.status ?? "pending",
-      },
-      address: {
-        city:    d.address?.city    ?? "",
-        pincode: d.address?.pincode ?? "",
+    if (!verified) {
+      recordFailure(rateLimitKey);
+      return Response.json({ error: GENERIC_ERROR }, { status: 404 });
+    }
+
+    // ── Verification passed ────────────────────────────────────────────────
+    clearFailures(rateLimitKey);
+
+    const token      = signGuestToken(trimmedId);
+    const cookieName = `gto_${trimmedId}`;
+    const isProduction = process.env.NODE_ENV === "production";
+
+    const cookieDirectives = [
+      `${cookieName}=${token}`,
+      `Path=/orders/${trimmedId}`,
+      `Max-Age=${60 * 60}`, // 1 hour
+      "HttpOnly",
+      "SameSite=Strict",
+      ...(isProduction ? ["Secure"] : []),
+    ].join("; ");
+
+    return new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Set-Cookie": cookieDirectives,
       },
     });
   } catch (error: unknown) {
     console.error("[track-order] Error:", error);
-    return Response.json({ error: "Failed to fetch order." }, { status: 500 });
+    return Response.json({ error: "Failed to process request." }, { status: 500 });
   }
 }

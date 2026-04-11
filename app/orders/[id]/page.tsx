@@ -1,7 +1,9 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
 import { getAdminDb } from "@/lib/firebase-admin";
+import { verifyGuestToken } from "@/lib/guestToken";
 import styles from "./orderDetail.module.css";
 
 interface OrderItem {
@@ -15,6 +17,7 @@ interface OrderItem {
 
 interface OrderData {
   id: string;
+  userId: string | null;
   items: OrderItem[];
   totalAmount: number;
   user: { name: string; phone: string; email: string };
@@ -48,6 +51,7 @@ async function fetchOrder(id: string): Promise<OrderData | null> {
     const d = snap.data()!;
     return {
       id: snap.id,
+      userId:      d.userId      ?? null,
       items:       d.items       ?? [],
       totalAmount: d.totalAmount ?? 0,
       user:        d.user        ?? {},
@@ -71,6 +75,16 @@ export default async function OrderDetailPage({
 
   if (!order) notFound();
 
+  // Guest orders (userId == null) require a valid track-order token cookie.
+  // Authenticated-user orders are accessible directly (order ID is the secret).
+  if (order.userId == null) {
+    const cookieStore = await cookies();
+    const token = cookieStore.get(`gto_${id}`)?.value ?? "";
+    if (!verifyGuestToken(id, token)) {
+      redirect(`/track-order?order=${encodeURIComponent(id)}`);
+    }
+  }
+
   const currentStep = STEP_INDEX[order.status] ?? 0;
   const placedDate = order.createdAt
     ? new Date(order.createdAt).toLocaleDateString("en-IN", {
@@ -83,7 +97,12 @@ export default async function OrderDetailPage({
       <div className={styles.container}>
 
         {/* ── Back */}
-        <Link href="/shop" className={styles.back}>← Back to Shop</Link>
+        <Link
+          href={order.userId ? "/account/orders" : "/track-order"}
+          className={styles.back}
+        >
+          ← {order.userId ? "Order History" : "Track Another Order"}
+        </Link>
 
         {/* ── Header */}
         <div className={styles.header}>
