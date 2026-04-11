@@ -8,6 +8,7 @@ import {
   query,
   where,
   orderBy,
+  limit,
   getDocs,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -65,18 +66,22 @@ export default function AccountPage() {
 
   /**
    * Fetch the 3 most recent orders for this user.
-   * Queries by `userId` only — the only field allowed by Firestore security
-   * rules. Email-based queries are intentionally omitted: the rule
-   * `resource.data.userId == request.auth.uid` cannot be proven from an
-   * email filter, so Firestore rejects them as PERMISSION_DENIED.
    *
-   * Requires composite index: orders → userId ASC, createdAt DESC
-   * (defined in firestore.indexes.json)
+   * Developer note:
+   * The primary query (`where("user.email", "==", user.email)` +
+   * `orderBy("createdAt", "desc")`) requires a Firestore composite index:
+   *   orders -> user.email ASC, createdAt DESC
+   * If missing, Firebase console will prompt index creation with a direct link.
    */
   useEffect(() => {
-    if (!user?.uid) return;
+    if (!user?.email) {
+      setOrders([]);
+      setOrdersError(false);
+      setOrdersLoading(false);
+      return;
+    }
 
-    const uid = user.uid;
+    const email = user.email;
 
     function mapDoc(doc: import("firebase/firestore").QueryDocumentSnapshot): RecentOrder {
       const d = doc.data();
@@ -89,10 +94,13 @@ export default function AccountPage() {
       };
     }
 
-    function isIndexError(error: any): boolean {
+    function isIndexError(error: unknown): boolean {
+      const e = error as { code?: string; message?: string };
+      const m = e?.message?.toLowerCase() ?? "";
       return (
-        error?.code === "failed-precondition" ||
-        error?.message?.toLowerCase().includes("index")
+        e?.code === "failed-precondition" ||
+        m.includes("requires an index") ||
+        m.includes("index")
       );
     }
 
@@ -105,37 +113,57 @@ export default function AccountPage() {
 
     async function fetchOrders() {
       const currentFetchId = ++fetchIdRef.current;
+      setOrdersLoading(true);
+      setOrdersError(false);
 
       try {
-        // Indexed query: userId == uid, ordered by createdAt DESC.
-        // On index-missing error, fall back to equality-only + client sort.
+        // Primary indexed query.
         let rows: RecentOrder[];
         try {
           const snap = await getDocs(
             query(
               collection(db, "orders"),
-              where("userId", "==", uid),
-              orderBy("createdAt", "desc")
+              where("user.email", "==", email),
+              orderBy("createdAt", "desc"),
+              limit(3),
             )
           );
           rows = snap.docs.map(mapDoc);
-        } catch (err: any) {
+        } catch (err: unknown) {
           if (!isIndexError(err)) throw err;
+
+          const e = err as { code?: string; message?: string };
           console.warn(
-            "[Account] Missing composite index for orders. " +
-            "Run: npx firebase deploy --only firestore:indexes"
+            "[Account] Missing composite index for recent orders " +
+            "(orders -> user.email ASC, createdAt DESC). Falling back to equality-only query.",
+            { code: e?.code, message: e?.message },
           );
+
+          if (process.env.NODE_ENV !== "production") {
+            console.info(
+              "[Account][dev-only] Create index in Firebase console when prompted: " +
+              "orders -> user.email ASC, createdAt DESC",
+            );
+          }
+
+          // Fallback query (no orderBy), then sort + limit client-side.
           const snap = await getDocs(
-            query(collection(db, "orders"), where("userId", "==", uid))
+            query(collection(db, "orders"), where("user.email", "==", email))
           );
           rows = snap.docs.map(mapDoc);
         }
 
         if (fetchIdRef.current !== currentFetchId) return;
         setOrders(sortAndLimit(rows.filter(o => !!o.id), 3));
-      } catch (err: any) {
-        console.error("[Account] Orders query failed:", err);
+      } catch (err: unknown) {
+        const e = err as { code?: string; message?: string };
+        console.error("[Account] Recent orders query failed", {
+          code: e?.code,
+          message: e?.message,
+          error: err,
+        });
         if (fetchIdRef.current !== currentFetchId) return;
+        setOrders([]);
         setOrdersError(true);
       } finally {
         if (fetchIdRef.current === currentFetchId) {
@@ -221,15 +249,10 @@ export default function AccountPage() {
             </div>
           ) : ordersError ? (
             <p className={styles.errorState}>
-              Something went wrong loading your orders. Please try again.
+              Something went wrong. Please try again.
             </p>
           ) : orders.length === 0 ? (
-            <p className={styles.emptyState}>
-              No orders yet.{" "}
-              <Link href="/shop" style={{ color: "#000", fontWeight: 600 }}>
-                Start shopping →
-              </Link>
-            </p>
+            <p className={styles.emptyState}>No orders yet</p>
           ) : (
             <div className={styles.ordersList}>
               {orders.map((order) => (
