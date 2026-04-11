@@ -145,7 +145,16 @@ export default function CheckoutPage() {
           },
         }),
       });
-      if (!res.ok) throw new Error("Order creation failed");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        if (res.status === 401) {
+          setPaymentError("Session expired. Please login again.");
+          setPaying(false);
+          router.replace("/login?next=/checkout");
+          return;
+        }
+        throw new Error(data.error ?? "Order creation failed");
+      }
       const data = await res.json();
       razorpay_order_id = data.razorpay_order_id;
       orderAmount = data.amount;

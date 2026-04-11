@@ -44,11 +44,15 @@ export async function POST(request: NextRequest) {
         // Always use the email from the verified token, not the form
         if (decoded.email) resolvedEmail = decoded.email;
       } catch {
-        // Token verification failed — treat as guest rather than blocking
-        // checkout entirely.  The order will have userId: null.
-        console.warn("[create-order] Invalid ID token — treating as guest.");
+        // Token present but invalid — hard failure.
+        // Never silently downgrade a logged-in user to a guest order.
+        return Response.json(
+          { error: "Authentication failed. Please login again." },
+          { status: 401 }
+        );
       }
     }
+    // No Authorization header → legitimate guest checkout (userId stays null)
 
     // 1. Create Razorpay order
     const order = await razorpay.orders.create({
