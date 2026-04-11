@@ -1,0 +1,59 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Orders ──────────────────────────────────────────────────────────────
+    match /orders/{orderId} {
+
+      // Only the authenticated owner may read their own order.
+      // Guest orders (userId == null) are intentionally unreadable from the
+      // client — they must go through a trusted server-side route.
+      allow read: if request.auth != null
+                  && resource.data.userId == request.auth.uid;
+
+      // Create is allowed when:
+      //   (a) the user is authenticated and tags the order with their own uid, OR
+      //   (b) this is a guest checkout — userId must be null (not forged).
+      allow create: if (request.auth != null
+                        && request.resource.data.userId == request.auth.uid)
+                    || request.resource.data.userId == null;
+
+      // Owners may update their order but may NEVER change the payment object,
+      // top-level amount, or userId — these are write-once after creation.
+      allow update: if request.auth != null
+                    && resource.data.userId == request.auth.uid
+                    && !request.resource.data.diff(resource.data)
+                        .affectedKeys()
+                        .hasAny(['payment', 'amount', 'userId']);
+
+      // Orders are never deleted from the client.
+      allow delete: if false;
+    }
+
+    // ── Users ────────────────────────────────────────────────────────────────
+    // Document ID == user UID. Only that user may read or write their profile.
+    match /users/{userId} {
+      allow read, write: if request.auth != null
+                         && request.auth.uid == userId;
+    }
+
+    // ── Wishlist ─────────────────────────────────────────────────────────────
+    // Each wishlist document carries a userId field.
+    // Only the owning user may access it.
+    match /wishlist/{docId} {
+      allow read, update, delete: if request.auth != null
+                                  && request.auth.uid == resource.data.userId;
+
+      allow create: if request.auth != null
+                    && request.auth.uid == request.resource.data.userId;
+    }
+
+    // ── Default ──────────────────────────────────────────────────────────────
+    // Deny everything not explicitly matched above.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+  }
+}
