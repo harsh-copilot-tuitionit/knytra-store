@@ -1,25 +1,25 @@
 "use client";
 
 import { useEffect } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
-function getNextPath(pathname: string, searchParams: URLSearchParams): string {
-  const qs = searchParams.toString();
-  return qs ? `${pathname}?${qs}` : pathname;
+function getNextPath(pathname: string): string {
+  if (typeof window === "undefined") return pathname;
+  const qs = window.location.search;
+  return qs ? `${pathname}${qs}` : pathname;
 }
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const { user, loading } = useAuth();
 
   useEffect(() => {
     if (loading || user) return;
-    const next = getNextPath(pathname || "/", searchParams);
+    const next = getNextPath(pathname || "/");
     router.replace(`/login?next=${encodeURIComponent(next)}`);
-  }, [loading, pathname, router, searchParams, user]);
+  }, [loading, pathname, router, user]);
 
   if (loading) {
     return (
