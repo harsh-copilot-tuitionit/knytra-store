@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -55,6 +55,7 @@ export default function AccountPage() {
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [ordersError, setOrdersError] = useState(false);
   const [ordersPartial, setOrdersPartial] = useState(false);
+  const fetchIdRef = useRef(0);
 
   // Guard — redirect unauthenticated users
   useEffect(() => {
@@ -153,6 +154,7 @@ export default function AccountPage() {
     }
 
     async function fetchOrders() {
+      const currentFetchId = ++fetchIdRef.current;
       setOrdersPartial(false);
       let userIdOrders: RecentOrder[] = [];
 
@@ -174,11 +176,13 @@ export default function AccountPage() {
           // Only fatal if the userId query also returned nothing
           if (userIdOrders.length === 0) {
             console.error("[Account] Email orders query failed:", err);
+            if (fetchIdRef.current !== currentFetchId) return;
             setOrdersError(true);
             setOrdersLoading(false);
             return;
           }
           console.warn("[Account] Email orders query failed (ignored — userId results available):", err);
+          if (fetchIdRef.current !== currentFetchId) return;
           setOrdersPartial(true);
         }
       }
@@ -186,6 +190,7 @@ export default function AccountPage() {
       // ── 3. Merge, deduplicate by id, sort, limit ─────────────────────────
       const merged = [...userIdOrders, ...emailOrders].filter(o => !!o.id);
       const unique = Array.from(new Map(merged.map(o => [o.id, o])).values());
+      if (fetchIdRef.current !== currentFetchId) return;
       setOrders(sortAndLimit(unique, 3));
       setOrdersLoading(false);
     }
