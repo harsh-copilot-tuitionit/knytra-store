@@ -422,3 +422,13 @@
   color: #333;
 }
 
+.addressSaveInfo {
+  margin: 10px 0 0;
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: #b45309;
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  padding: 8px 10px;
+}
+

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
+import { track } from "@/lib/analytics";
 import styles from "./checkout.module.css";
 
 // Minimal Razorpay window type
@@ -43,6 +44,10 @@ interface SavedAddress {
   state: string;
   pincode: string;
   isDefault: boolean;
+}
+
+function normalisePhoneInput(raw: string): string {
+  return raw.replace(/\D/g, "").slice(0, 10);
 }
 
 function loadRazorpayScript(): Promise<boolean> {
@@ -101,6 +106,7 @@ export default function CheckoutPage() {
   const [addressesLoading, setAddressesLoading] = useState(false);
   const [saveNewAddress,   setSaveNewAddress]   = useState(false);
   const [savingAddress,    setSavingAddress]    = useState(false);
+  const [addressSaveInfo,  setAddressSaveInfo]  = useState("");
 
   // Fetch saved addresses when a logged-in user lands on checkout
   useEffect(() => {
@@ -132,8 +138,10 @@ export default function CheckoutPage() {
             state:       def.state,
             pincode:     def.pincode,
           }));
+          track("address_selected", { source: "checkout", mode: "saved" });
         } else {
           setSelectedAddrId("new");
+          track("address_selected", { source: "checkout", mode: "new" });
         }
       } catch {
         // Silent — user can still enter manually
@@ -152,6 +160,8 @@ export default function CheckoutPage() {
     if (addr === "new") {
       setSelectedAddrId("new");
       setForm(prev => ({ ...prev, name: "", phone: "", fullAddress: "", city: "", state: "", pincode: "" }));
+      setAddressSaveInfo("");
+      track("address_selected", { source: "checkout", mode: "new" });
     } else {
       setSelectedAddrId(addr.id);
       setForm(prev => ({
@@ -163,15 +173,28 @@ export default function CheckoutPage() {
         state:       addr.state,
         pincode:     addr.pincode,
       }));
+      setAddressSaveInfo("");
+      track("address_selected", { source: "checkout", mode: "saved" });
     }
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    const nextValue =
+      name === "phone"
+        ? normalisePhoneInput(value)
+        : name === "pincode"
+          ? value.replace(/\D/g, "").slice(0, 6)
+          : value;
+    setForm((prev) => ({ ...prev, [name]: nextValue }));
     setPaymentError("");
+    setAddressSaveInfo("");
     // Per spec: if user edits any field while a saved address is selected,
     // treat the entry as a new address (do NOT overwrite the saved one).
-    if (selectedAddrId !== "new") setSelectedAddrId("new");
+    if (selectedAddrId !== "new") {
+      setSelectedAddrId("new");
+      track("address_selected", { source: "checkout", mode: "new" });
+    }
   };
 
   // All required fields must be non-empty (email is optional for guests)
@@ -186,6 +209,7 @@ export default function CheckoutPage() {
   const handleProceed = async () => {
     if (!isValid || paying) return;
     setPaymentError("");
+    setAddressSaveInfo("");
     setPaying(true);
 
     // 1. Load Razorpay SDK
@@ -257,9 +281,9 @@ export default function CheckoutPage() {
     // 2b. Optionally save the address to the user's address book
     if (user && saveNewAddress && selectedAddrId === "new") {
       setSavingAddress(true);
-      try {
+      const saveAddressPromise = (async () => {
         const token = await user.getIdToken();
-        await fetch("/api/addresses", {
+        const saveRes = await fetch("/api/addresses", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -276,12 +300,31 @@ export default function CheckoutPage() {
             isDefault: savedAddresses.length === 0, // default if first
           }),
         });
-      } catch {
-        // Non-fatal — order is already created; failure here is silent
-        console.warn("[checkout] Failed to save address to address book.");
-      } finally {
-        setSavingAddress(false);
-      }
+
+        if (!saveRes.ok) {
+          const data = await saveRes.json().catch(() => ({}));
+          throw new Error(data.error ?? "Failed to save address to address book.");
+        }
+
+        track("address_saved", {
+          source: "checkout",
+          type: "new",
+          isDefault: savedAddresses.length === 0,
+        });
+      })();
+
+      saveAddressPromise
+        .catch((err: unknown) => {
+          const message = err instanceof Error
+            ? err.message
+            : "Address could not be saved to your account. Payment can continue.";
+          setAddressSaveInfo(message);
+          // eslint-disable-next-line no-console
+          console.warn("[checkout] Failed to save address to address book.", err);
+        })
+        .finally(() => {
+          setSavingAddress(false);
+        });
     }
 
     // 3. Open Razorpay modal
@@ -513,6 +556,10 @@ export default function CheckoutPage() {
               />
               <span>Save this address to my account</span>
             </label>
+          )}
+
+          {addressSaveInfo && (
+            <p className={styles.addressSaveInfo}>{addressSaveInfo}</p>
           )}
 
           <p className={styles.secureNote}>🔒 Secure checkout · Payments powered by Razorpay</p>

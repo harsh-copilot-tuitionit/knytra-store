@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { track } from "@/lib/analytics";
 import styles from "./addresses.module.css";
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -49,6 +50,10 @@ function formatAddress(a: Address): string {
   const parts = [a.line1, a.line2, a.city, a.state, a.pincode, a.country]
     .filter(Boolean);
   return parts.join(", ");
+}
+
+function normalisePhoneInput(raw: string): string {
+  return raw.replace(/\D/g, "").slice(0, 10);
 }
 
 // ── Page ───────────────────────────────────────────────────────────────────
@@ -157,11 +162,17 @@ export default function AddressesPage() {
   ) {
     const { name, value, type } = e.target;
     setFormError(null);
+    const nextValue =
+      name === "phone"
+        ? normalisePhoneInput(value)
+        : name === "pincode"
+          ? value.replace(/\D/g, "").slice(0, 6)
+          : value;
     setForm(prev => ({
       ...prev,
       [name]: type === "checkbox"
         ? (e.target as HTMLInputElement).checked
-        : value,
+        : nextValue,
     }));
   }
 
@@ -216,6 +227,12 @@ export default function AddressesPage() {
               return (b.createdAt ?? 0) - (a.createdAt ?? 0);
             }),
         );
+
+        track("address_saved", {
+          source: "account_addresses",
+          type: "edit",
+          isDefault: form.isDefault,
+        });
       } else {
         setAddresses(prev => {
           const updated = form.isDefault
@@ -226,6 +243,12 @@ export default function AddressesPage() {
               if (a.isDefault !== b.isDefault) return a.isDefault ? -1 : 1;
               return (b.createdAt ?? 0) - (a.createdAt ?? 0);
             });
+        });
+
+        track("address_saved", {
+          source: "account_addresses",
+          type: "new",
+          isDefault: form.isDefault,
         });
       }
 
@@ -366,7 +389,7 @@ export default function AddressesPage() {
               <button
                 className={styles.addBtn}
                 onClick={openAdd}
-                disabled={addresses.length >= 10 || anyActionLoading}
+                disabled={addresses.length >= 10 || anyActionLoading || showModal}
               >
                 + Add Address
               </button>
@@ -385,8 +408,13 @@ export default function AddressesPage() {
           {/* ── Empty state ── */}
           {!pageLoading && addresses.length === 0 && (
             <div className={styles.emptyState}>
+              <div className={styles.emptyIcon} aria-hidden="true">📍</div>
               <p>No saved addresses yet.</p>
-              <button className={styles.addBtn} onClick={openAdd}>
+              <button
+                className={styles.addBtn}
+                onClick={openAdd}
+                disabled={anyActionLoading || showModal}
+              >
                 + Add Your First Address
               </button>
             </div>
@@ -417,7 +445,7 @@ export default function AddressesPage() {
                     <button
                       className={styles.actionBtn}
                       onClick={() => openEdit(addr)}
-                      disabled={anyActionLoading}
+                      disabled={anyActionLoading || showModal}
                     >
                       Edit
                     </button>
@@ -426,7 +454,7 @@ export default function AddressesPage() {
                       <button
                         className={styles.actionBtn}
                         onClick={() => handleSetDefault(addr)}
-                        disabled={anyActionLoading}
+                        disabled={anyActionLoading || showModal}
                       >
                         {defaultingId === addr.id ? "Saving…" : "Set Default"}
                       </button>
@@ -435,7 +463,7 @@ export default function AddressesPage() {
                     <button
                       className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
                       onClick={() => handleDelete(addr)}
-                      disabled={anyActionLoading}
+                      disabled={anyActionLoading || showModal}
                     >
                       {deletingId === addr.id ? "Deleting…" : "Delete"}
                     </button>

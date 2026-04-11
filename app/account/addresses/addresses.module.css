@@ -111,6 +111,11 @@
   font-size: 14px;
   border: 1.5px dashed #e0e0e0;
 }
+.emptyIcon {
+  font-size: 22px;
+  line-height: 1;
+  margin-bottom: 12px;
+}
 .emptyState p { margin: 0 0 20px; }
 
 /* ── Address grid ── */

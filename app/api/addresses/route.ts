@@ -175,6 +175,20 @@ export async function POST(req: NextRequest) {
           );
         }
 
+        // Duplicate fingerprint: same normalised line1 + pincode = same address.
+        const normLine1 = line1.toLowerCase().replace(/\s+/g, " ");
+        const duplicate = existingSnap.docs.find(d => {
+          const dl1 = (d.data().line1 as string ?? "").toLowerCase().replace(/\s+/g, " ");
+          const dp  = d.data().pincode as string ?? "";
+          return dl1 === normLine1 && dp === pincode;
+        });
+        if (duplicate) {
+          throw Object.assign(
+            new Error("This address already exists in your address book."),
+            { code: "DUPLICATE" },
+          );
+        }
+
         const isFirstAddress = existingSnap.empty;
         const makeDefault    = isDefault || isFirstAddress;
         const now            = Timestamp.now();
@@ -199,6 +213,9 @@ export async function POST(req: NextRequest) {
       const e = err as { code?: string; message?: string };
       if (e?.code === "MAX_EXCEEDED") {
         return Response.json({ error: e.message }, { status: 422 });
+      }
+      if (e?.code === "DUPLICATE") {
+        return Response.json({ error: e.message }, { status: 409 });
       }
       throw err;
     }

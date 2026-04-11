@@ -114,6 +114,21 @@ export async function PUT(
       return Response.json({ error: "Address not found." }, { status: 404 });
     }
 
+    // Duplicate check — same normalised line1 + pincode as a different address.
+    const dupSnap    = await colRef.where("pincode", "==", pincode).get();
+    const normLine1  = line1.toLowerCase().replace(/\s+/g, " ");
+    const duplicate  = dupSnap.docs.find(d => {
+      if (d.id === id) return false; // exclude self
+      const dl1 = (d.data().line1 as string ?? "").toLowerCase().replace(/\s+/g, " ");
+      return dl1 === normLine1;
+    });
+    if (duplicate) {
+      return Response.json(
+        { error: "This address already exists in your address book." },
+        { status: 409 },
+      );
+    }
+
     const now         = Timestamp.now();
     const makeDefault = isDefault === true;
     const updatedData = {
