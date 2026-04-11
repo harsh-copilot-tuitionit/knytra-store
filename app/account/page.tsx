@@ -106,14 +106,11 @@ export default function AccountPage() {
     }
 
     /** Sort by createdAt DESC and cap at `n` items. Does not mutate input. */
+    const getTime = (o: RecentOrder): number =>
+      (o.createdAt as any)?.toMillis?.() ?? 0;
+
     function sortAndLimit(rows: RecentOrder[], n = 3): RecentOrder[] {
-      return [...rows]
-        .sort((a, b) => {
-          const aMs = (a.createdAt as any)?.toMillis?.() ?? 0;
-          const bMs = (b.createdAt as any)?.toMillis?.() ?? 0;
-          return bMs - aMs;
-        })
-        .slice(0, n);
+      return [...rows].sort((a, b) => getTime(b) - getTime(a)).slice(0, n);
     }
 
     /**
