@@ -247,6 +247,15 @@ export default function OrderHistoryPage() {
         .filter(o => !!o.id && !seenIdsRef.current.has(o.id));
       newRows.forEach(o => seenIdsRef.current.add(o.id));
 
+      // Cap the seen-set to the IDs of the currently loaded orders
+      // (max 500) so it never grows unboundedly for heavy users.
+      const SEEN_CAP = 500;
+      if (seenIdsRef.current.size > SEEN_CAP) {
+        seenIdsRef.current = new Set(
+          Array.from(seenIdsRef.current).slice(-SEEN_CAP)
+        );
+      }
+
       if (fetchIdRef.current !== currentFetchId) return;
       // Initial load: sort the merged first-page batch.
       // Subsequent pages: both `prev` and `newRows` are already sorted —
