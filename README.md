@@ -34,3 +34,30 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+---
+
+## Firestore
+
+### Required Composite Indexes
+
+The following composite indexes must be deployed before the `/account` and `/account/orders` pages will paginate correctly. Without them, queries fall back to a client-side sort with no server-side pagination.
+
+| Collection | Field 1 | Field 2 | Used by |
+|------------|---------|---------|---------|
+| `orders` | `userId` ASC | `createdAt` DESC | `/account`, `/account/orders` — primary query |
+| `orders` | `user.email` ASC | `createdAt` DESC | `/account`, `/account/orders` — legacy/guest fallback |
+
+The index definitions live in [`firestore.indexes.json`](firestore.indexes.json) and are wired into [`firebase.json`](firebase.json).
+
+### Deploying Indexes
+
+```bash
+npx firebase deploy --only firestore:indexes
+```
+
+Run this once after cloning, and again whenever `firestore.indexes.json` changes.
+
+### How index errors are handled at runtime
+
+Both `runQuery()` functions detect a missing-index error (`failed-precondition` / message containing `"index"`) and automatically fall back to an equality-only query so the page still loads. A subtle notice is shown to the user and `indexFallback` disables the "Load More" button. This is a safety net only — indexes should always be deployed in production.
