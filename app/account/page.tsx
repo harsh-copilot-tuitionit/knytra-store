@@ -183,7 +183,7 @@ export default function AccountPage() {
       }
 
       // ── 3. Merge, deduplicate by id, sort, limit ─────────────────────────
-      const merged = [...userIdOrders, ...emailOrders];
+      const merged = [...userIdOrders, ...emailOrders].filter(o => !!o.id);
       const unique = Array.from(new Map(merged.map(o => [o.id, o])).values());
       setOrders(sortAndLimit(unique, 3));
       setOrdersLoading(false);
