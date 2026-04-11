@@ -189,8 +189,9 @@ export default function OrderHistoryPage() {
         }
       }
 
-      // ── 2. Email fallback (if not exhausted) ─────────────────────────────
-      if (hasMoreByEmailRef.current) {
+      // ── 2. Email fallback (if not exhausted and userId didn't fill the page) ─
+      // Skipped when userId returned a full page — avoids unnecessary reads.
+      if (hasMoreByEmailRef.current && newByIdRows.length < PAGE_SIZE) {
         try {
           const result = await runQuery("user.email", email, "user.email", cursorByEmailRef.current);
           newByEmailRows             = result.rows;
