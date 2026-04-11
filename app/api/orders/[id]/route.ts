@@ -1,39 +1,94 @@
 import { NextRequest } from "next/server";
-import { getAdminDb } from "@/lib/firebase-admin";
+import { getAdminDb, getAdminAuth } from "@/lib/firebase-admin";
+import { verifyGuestToken } from "@/lib/guestToken";
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
 
-  if (!id) {
-    return Response.json({ error: "Order ID is required." }, { status: 400 });
+  // Firestore auto-IDs are alphanumeric only — reject anything else
+  if (!id || !/^[a-zA-Z0-9]+$/.test(id)) {
+    return Response.json({ error: "Invalid order ID." }, { status: 400 });
   }
 
   try {
-    const db = getAdminDb();
+    const db   = getAdminDb();
     const snap = await db.collection("orders").doc(id).get();
 
     if (!snap.exists) {
       return Response.json({ error: "Order not found." }, { status: 404 });
     }
 
-    const data = snap.data()!;
+    const d = snap.data()!;
 
-    // Convert Firestore Timestamp to ISO string for JSON serialisation
+    // ── Authorization ──────────────────────────────────────────────────────
+    //
+    // Two valid paths:
+    //   1. Logged-in user — must supply a Firebase ID token in the
+    //      Authorization: Bearer <token> header.
+    //      The token is verified server-side; order.userId must equal the
+    //      decoded uid.
+    //
+    //   2. Guest — must supply a valid gto_<id> HttpOnly cookie issued by
+    //      /api/track-order after phone/email verification.  The browser
+    //      sends the cookie automatically on same-origin requests.
+    //
+    // Any other combination is rejected with 401 / 403.
+
+    const authHeader = request.headers.get("authorization") ?? "";
+
+    if (authHeader.startsWith("Bearer ")) {
+      const idToken = authHeader.slice(7);
+      let uid: string;
+      try {
+        const decoded = await getAdminAuth().verifyIdToken(idToken);
+        uid = decoded.uid;
+      } catch {
+        return Response.json({ error: "Invalid or expired token." }, { status: 401 });
+      }
+      if (d.userId !== uid) {
+        return Response.json({ error: "Forbidden." }, { status: 403 });
+      }
+    } else {
+      // No Bearer header — require a valid guest token cookie
+      const cookie = request.cookies.get(`gto_${id}`)?.value ?? "";
+      if (!verifyGuestToken(id, cookie)) {
+        return Response.json({ error: "Unauthorized." }, { status: 401 });
+      }
+    }
+
+    // ── Return restricted fields only (no raw user PII beyond address) ─────
     return Response.json({
-      id: snap.id,
-      items: data.items ?? [],
-      totalAmount: data.totalAmount ?? 0,
-      user: data.user ?? {},
-      address: data.address ?? {},
-      payment: data.payment ?? {},
-      status: data.status ?? "placed",
-      createdAt: data.createdAt?.toDate?.()?.toISOString() ?? null,
+      id:          snap.id,
+      userId:      d.userId      ?? null,
+      status:      d.status      ?? "placed",
+      totalAmount: d.totalAmount ?? 0,
+      createdAt:   d.createdAt?.toDate?.()?.toISOString() ?? null,
+      items: (d.items ?? []).map((item: Record<string, unknown>) => ({
+        name:     item.name     ?? "",
+        size:     item.size     ?? "",
+        quantity: item.quantity ?? 1,
+        price:    item.price    ?? 0,
+        image:    item.image    ?? "",
+      })),
+      address: {
+        name:        d.address?.name        ?? "",
+        phone:       d.address?.phone       ?? "",
+        fullAddress: d.address?.fullAddress ?? "",
+        city:        d.address?.city        ?? "",
+        pincode:     d.address?.pincode     ?? "",
+      },
+      payment: {
+        status:              d.payment?.status              ?? "pending",
+        razorpay_order_id:   d.payment?.razorpay_order_id   ?? "",
+        razorpay_payment_id: d.payment?.razorpay_payment_id ?? "",
+      },
     });
   } catch (error: unknown) {
     console.error("[api/orders] Fetch error:", error);
     return Response.json({ error: "Failed to fetch order." }, { status: 500 });
   }
 }
+

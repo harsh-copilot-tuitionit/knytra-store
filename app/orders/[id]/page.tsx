@@ -1,13 +1,13 @@
-import { notFound, redirect } from "next/navigation";
-import { cookies } from "next/headers";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { getAdminDb } from "@/lib/firebase-admin";
-import { verifyGuestToken } from "@/lib/guestToken";
+import { useAuth } from "@/context/AuthContext";
 import styles from "./orderDetail.module.css";
 
 interface OrderItem {
-  productId: string;
   name: string;
   price: number;
   quantity: number;
@@ -20,7 +20,6 @@ interface OrderData {
   userId: string | null;
   items: OrderItem[];
   totalAmount: number;
-  user: { name: string; phone: string; email: string };
   address: { name: string; phone: string; fullAddress: string; city: string; pincode: string };
   payment: { razorpay_order_id: string; razorpay_payment_id: string; status: string };
   status: "placed" | "shipped" | "delivered";
@@ -33,9 +32,7 @@ const DELIVERY_STEPS: { key: OrderData["status"]; label: string }[] = [
   { key: "delivered", label: "Delivered"     },
 ];
 
-const STEP_INDEX: Record<string, number> = {
-  placed: 0, shipped: 1, delivered: 2,
-};
+const STEP_INDEX: Record<string, number> = { placed: 0, shipped: 1, delivered: 2 };
 
 const PAYMENT_LABEL: Record<string, string> = {
   success: "Paid",
@@ -43,50 +40,104 @@ const PAYMENT_LABEL: Record<string, string> = {
   failed:  "Failed",
 };
 
-async function fetchOrder(id: string): Promise<OrderData | null> {
-  try {
-    const db = getAdminDb();
-    const snap = await db.collection("orders").doc(id).get();
-    if (!snap.exists) return null;
-    const d = snap.data()!;
-    return {
-      id: snap.id,
-      userId:      d.userId      ?? null,
-      items:       d.items       ?? [],
-      totalAmount: d.totalAmount ?? 0,
-      user:        d.user        ?? {},
-      address:     d.address     ?? {},
-      payment:     d.payment     ?? {},
-      status:      d.status      ?? "placed",
-      createdAt:   d.createdAt?.toDate?.()?.toISOString() ?? null,
-    };
-  } catch {
-    return null;
-  }
-}
+export default function OrderDetailPage() {
+  const { id } = useParams<{ id: string }>();
+  const router  = useRouter();
+  const { user, loading: authLoading } = useAuth();
 
-export default async function OrderDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-  const order = await fetchOrder(id);
+  const [order,       setOrder]       = useState<OrderData | null>(null);
+  const [pageLoading, setPageLoading] = useState(true);
+  const [error,       setError]       = useState<string | null>(null);
 
-  if (!order) notFound();
+  useEffect(() => {
+    // Wait for auth to resolve so we know whether to send a Bearer token.
+    if (authLoading) return;
 
-  // Guest orders (userId == null) require a valid track-order token cookie.
-  // Authenticated-user orders are accessible directly (order ID is the secret).
-  if (order.userId == null) {
-    const cookieStore = await cookies();
-    const token = cookieStore.get(`gto_${id}`)?.value ?? "";
-    if (!verifyGuestToken(id, token)) {
-      redirect(`/track-order?order=${encodeURIComponent(id)}`);
+    let cancelled = false;
+
+    async function fetchOrder() {
+      setPageLoading(true);
+      setError(null);
+
+      try {
+        const headers: Record<string, string> = {};
+
+        if (user) {
+          // Logged-in user: attach a Firebase ID token so the API can verify
+          // ownership (order.userId === uid).
+          const idToken = await user.getIdToken();
+          headers["Authorization"] = `Bearer ${idToken}`;
+        }
+        // Guest users: the browser automatically sends the gto_<id> HttpOnly
+        // cookie that was set by /api/track-order on successful verification.
+
+        const res = await fetch(`/api/orders/${id}`, { headers });
+
+        if (cancelled) return;
+
+        if (res.status === 401 || res.status === 403) {
+          // Not authorised — send guest to verify; auth users with wrong uid
+          // also land here (edge case: auth user viewing someone else's order).
+          router.replace(`/track-order?order=${encodeURIComponent(id)}`);
+          return;
+        }
+
+        if (res.status === 404) {
+          setError("This order could not be found.");
+          return;
+        }
+
+        if (!res.ok) {
+          setError("Failed to load order. Please try again.");
+          return;
+        }
+
+        const data = await res.json();
+        setOrder(data as OrderData);
+      } catch {
+        if (!cancelled) setError("Something went wrong. Please try again.");
+      } finally {
+        if (!cancelled) setPageLoading(false);
+      }
     }
+
+    fetchOrder();
+    return () => { cancelled = true; };
+  }, [id, user, authLoading, router]);
+
+  // ── Loading skeleton ────────────────────────────────────────────────────
+  if (pageLoading) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.container}>
+          <div className="skeleton" style={{ height: 16, width: 140, borderRadius: 4 }} />
+          <div className="skeleton" style={{ height: 76, borderRadius: 8 }} />
+          <div className="skeleton" style={{ height: 96, borderRadius: 8 }} />
+          <div className="skeleton" style={{ height: 180, borderRadius: 8 }} />
+          <div className="skeleton" style={{ height: 120, borderRadius: 8 }} />
+        </div>
+      </div>
+    );
   }
+
+  // ── Error state ─────────────────────────────────────────────────────────
+  if (error) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.container}>
+          <p style={{ color: "#cc0000", fontSize: 14, fontWeight: 600, margin: 0 }}>{error}</p>
+          <Link href="/shop" className={styles.cta} style={{ alignSelf: "flex-start" }}>
+            Back to Shop
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!order) return null;
 
   const currentStep = STEP_INDEX[order.status] ?? 0;
-  const placedDate = order.createdAt
+  const placedDate  = order.createdAt
     ? new Date(order.createdAt).toLocaleDateString("en-IN", {
         day: "numeric", month: "long", year: "numeric",
       })
@@ -225,3 +276,5 @@ export default async function OrderDetailPage({
     </div>
   );
 }
+
+
