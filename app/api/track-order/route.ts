@@ -1,51 +1,59 @@
 import { NextRequest } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { signGuestToken } from "@/lib/guestToken";
+import { Timestamp } from "firebase-admin/firestore";
 
-// ── Rate limiter (in-memory, per IP × orderId) ─────────────────────────────
-// NOTE: Resets on process restart. Acceptable for basic brute-force protection
-// on a single-instance deployment. Add a distributed store (Redis/Upstash) for
-// multi-instance setups.
-const WINDOW_MS   = 15 * 60 * 1000; // 15 minutes
+// ── Rate limiter config ────────────────────────────────────────────────────
+const WINDOW_S    = 15 * 60; // 15 minutes in seconds
 const MAX_FAILURES = 5;
-
-type Bucket = { fails: number; windowStart: number };
-const rateLimitMap = new Map<string, Bucket>();
-
-// Clean up expired entries every 5 minutes to prevent unbounded growth.
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, bucket] of rateLimitMap.entries()) {
-    if (now - bucket.windowStart > WINDOW_MS) rateLimitMap.delete(key);
-  }
-}, 5 * 60 * 1000);
+const ATTEMPTS_COLLECTION = "track_order_attempts";
 
 function getIp(req: NextRequest): string {
   return req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
 }
 
-function isRateLimited(key: string): boolean {
-  const bucket = rateLimitMap.get(key);
-  if (!bucket) return false;
-  if (Date.now() - bucket.windowStart > WINDOW_MS) {
-    rateLimitMap.delete(key);
-    return false;
-  }
-  return bucket.fails >= MAX_FAILURES;
+/**
+ * Check and increment the failure counter for a given key.
+ * Uses a Firestore document (ATTEMPTS_COLLECTION/{key}) so rate limiting
+ * persists across all serverless instances.
+ *
+ * Returns true if the request should be blocked (>= MAX_FAILURES in window).
+ * Throws on unexpected Firestore errors.
+ */
+async function checkAndIncrementFailure(key: string): Promise<boolean> {
+  const db  = getAdminDb();
+  const ref = db.collection(ATTEMPTS_COLLECTION).doc(key);
+
+  return db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    const now  = Timestamp.now();
+
+    if (!snap.exists) {
+      tx.set(ref, { attempts: 1, lastAttemptAt: now });
+      return false; // first attempt — allow
+    }
+
+    const data            = snap.data()!;
+    const lastAttemptAt   = (data.lastAttemptAt as Timestamp).seconds;
+    const windowExpiredAt = lastAttemptAt + WINDOW_S;
+    const nowSeconds      = now.seconds;
+
+    if (nowSeconds > windowExpiredAt) {
+      // Window expired — reset counter
+      tx.set(ref, { attempts: 1, lastAttemptAt: now });
+      return false;
+    }
+
+    const newAttempts = (data.attempts as number) + 1;
+    tx.update(ref, { attempts: newAttempts, lastAttemptAt: now });
+    return newAttempts > MAX_FAILURES;
+  });
 }
 
-function recordFailure(key: string): void {
-  const now = Date.now();
-  const bucket = rateLimitMap.get(key);
-  if (!bucket || now - bucket.windowStart > WINDOW_MS) {
-    rateLimitMap.set(key, { fails: 1, windowStart: now });
-  } else {
-    bucket.fails++;
-  }
-}
-
-function clearFailures(key: string): void {
-  rateLimitMap.delete(key);
+/** Delete the rate-limit document on successful verification. */
+async function clearFailures(key: string): Promise<void> {
+  const db = getAdminDb();
+  await db.collection(ATTEMPTS_COLLECTION).doc(key).delete();
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -92,19 +100,23 @@ export async function POST(request: NextRequest) {
   }
 
   const ip            = getIp(request);
-  const rateLimitKey  = `${ip}:${trimmedId}`;
-
-  if (isRateLimited(rateLimitKey)) {
-    // Generic message — don't hint that rate limiting is involved.
-    return Response.json({ error: GENERIC_ERROR }, { status: 429 });
-  }
+  // Underscore separator — safe as a Firestore document ID (no slashes)
+  const rateLimitKey  = `${ip}_${trimmedId}`;
 
   try {
     const db   = getAdminDb();
-    const snap = await db.collection("orders").doc(trimmedId).get();
+
+    // ── Fetch order + rate-limit check in parallel ─────────────────────────
+    const [blocked, snap] = await Promise.all([
+      checkAndIncrementFailure(rateLimitKey),
+      db.collection("orders").doc(trimmedId).get(),
+    ]);
+
+    if (blocked) {
+      return Response.json({ error: GENERIC_ERROR }, { status: 429 });
+    }
 
     if (!snap.exists) {
-      recordFailure(rateLimitKey);
       return Response.json({ error: GENERIC_ERROR }, { status: 404 });
     }
 
@@ -123,12 +135,12 @@ export async function POST(request: NextRequest) {
     }
 
     if (!verified) {
-      recordFailure(rateLimitKey);
+      // Counter was already incremented above; no second call needed.
       return Response.json({ error: GENERIC_ERROR }, { status: 404 });
     }
 
     // ── Verification passed ────────────────────────────────────────────────
-    clearFailures(rateLimitKey);
+    await clearFailures(rateLimitKey);
 
     const token      = signGuestToken(trimmedId);
     const cookieName = `gto_${trimmedId}`;
