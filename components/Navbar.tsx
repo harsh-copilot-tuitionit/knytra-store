@@ -9,6 +9,15 @@ import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useWishlist } from "@/context/WishlistContext";
 
+const PRIMARY_LINKS = [
+  { href: "/shop", label: "Shop" },
+  { href: "/drops", label: "Drops" },
+  { href: "/lookbook", label: "Lookbook" },
+  { href: "/about", label: "About" },
+  { href: "/faq", label: "FAQ" },
+  { href: "/contact", label: "Contact" },
+];
+
 export default function Navbar() {
   const pathname = usePathname();
   const { cartCount, toggleCart, clearCart, clearBuyNow } = useCart();
@@ -46,6 +55,14 @@ export default function Navbar() {
     }
   }
 
+  function isActivePath(href: string) {
+    if (href === "/shop") {
+      return pathname.startsWith("/shop");
+    }
+
+    return pathname === href || pathname.startsWith(`${href}/`);
+  }
+
   return (
     <>
       <nav className={`${styles.navbar} ${mobileMenuOpen ? styles.navbarMenuOpen : ""}`}>
@@ -72,18 +89,31 @@ export default function Navbar() {
 
           {/* Center - Nav Links (Desktop) */}
           <div className={styles.navLinks}>
-            <Link href="/shop" className={styles.link}>Shop</Link>
-            <Link href="/shop/collections" className={styles.link}>Collections</Link>
+            {PRIMARY_LINKS.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`${styles.link} ${isActivePath(item.href) ? styles.linkActive : ""}`}
+              >
+                {item.label}
+              </Link>
+            ))}
             {!loading && user ? (
               <>
-                <Link href="/account" className={styles.link}>Account</Link>
-                <Link href="/wishlist" className={styles.link}>Wishlist</Link>
+                <Link href="/account" className={`${styles.link} ${isActivePath("/account") ? styles.linkActive : ""}`}>
+                  Account
+                </Link>
+                <Link href="/wishlist" className={`${styles.link} ${isActivePath("/wishlist") ? styles.linkActive : ""}`}>
+                  Wishlist
+                </Link>
                 <button className={styles.logoutBtn} onClick={() => void handleLogout()}>
                   Logout
                 </button>
               </>
             ) : (
-              <Link href="/login" className={styles.link}>Login</Link>
+              <Link href="/login" className={`${styles.link} ${isActivePath("/login") ? styles.linkActive : ""}`}>
+                Login
+              </Link>
             )}
           </div>
 
@@ -114,18 +144,30 @@ export default function Navbar() {
         className={`${styles.mobilePanel} ${mobileMenuOpen ? styles.mobilePanelOpen : ""}`}
       >
         <div className={styles.mobilePanelLinks}>
-          <Link href="/shop" className={styles.mobileLink} onClick={() => setMobileMenuOpen(false)}>
-            Shop
-          </Link>
-          <Link href="/shop/collections" className={styles.mobileLink} onClick={() => setMobileMenuOpen(false)}>
-            Collections
-          </Link>
+          {PRIMARY_LINKS.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`${styles.mobileLink} ${isActivePath(item.href) ? styles.mobileLinkActive : ""}`}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              {item.label}
+            </Link>
+          ))}
           {!loading && user ? (
             <>
-              <Link href="/account" className={styles.mobileLink} onClick={() => setMobileMenuOpen(false)}>
+              <Link
+                href="/account"
+                className={`${styles.mobileLink} ${isActivePath("/account") ? styles.mobileLinkActive : ""}`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
                 Account
               </Link>
-              <Link href="/wishlist" className={styles.mobileLink} onClick={() => setMobileMenuOpen(false)}>
+              <Link
+                href="/wishlist"
+                className={`${styles.mobileLink} ${isActivePath("/wishlist") ? styles.mobileLinkActive : ""}`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
                 Wishlist
               </Link>
               <button className={styles.mobileLogoutBtn} onClick={() => void handleLogout()}>
@@ -133,7 +175,11 @@ export default function Navbar() {
               </button>
             </>
           ) : (
-            <Link href="/login" className={styles.mobileLink} onClick={() => setMobileMenuOpen(false)}>
+            <Link
+              href="/login"
+              className={`${styles.mobileLink} ${isActivePath("/login") ? styles.mobileLinkActive : ""}`}
+              onClick={() => setMobileMenuOpen(false)}
+            >
               Login
             </Link>
           )}

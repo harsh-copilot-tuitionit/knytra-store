@@ -1,153 +1,133 @@
 import type { Metadata } from "next";
-import styles from "../legal.module.css";
+import Link from "next/link";
+import styles from "../brandPages.module.css";
 
 export const metadata: Metadata = {
-  title: "Contact Us — Knytra",
-  description: "Get in touch with the Knytra support team.",
+  title: "Contact | Knytra",
+  description: "Reach Knytra support for order help, exchanges, delivery updates, and collaboration requests.",
 };
 
 export default function ContactPage() {
   return (
     <div className={styles.page}>
-      <div className={styles.hero}>
-        <p className={styles.eyebrow}>Support</p>
-        <h1 className={styles.title}>Contact Us</h1>
-        <p className={styles.meta}>
-          Knytra Streetwear (TM) &nbsp;·&nbsp; Kyraas Jewel Enterprises
-        </p>
-      </div>
+      <section className={styles.hero}>
+        <div className={styles.heroInner}>
+          <p className={styles.eyebrow}>Contact</p>
+          <h1 className={styles.title}>Talk to the team behind the drop.</h1>
+          <p className={styles.subtitle}>
+            Questions about your order, sizing, exchanges, or collaborations? Reach out and we
+            will get back as quickly as possible during support hours.
+          </p>
+          <div className={styles.heroActions}>
+            <a href="mailto:support@knytra.in" className={styles.ctaPrimary}>
+              Email Support
+            </a>
+            <a href="tel:+919105021555" className={styles.ctaGhost}>
+              Call Support
+            </a>
+          </div>
+        </div>
+      </section>
 
       <div className={styles.content}>
-
-        <div className={styles.callout}>
-          We respond to all queries within <strong>1–2 business days</strong> (Mon–Sat, 10 AM – 6 PM IST).
-          Please include your order ID in all communications for faster resolution.
-        </div>
-
-        {/* Contact cards */}
         <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>Get in Touch</h2>
-          <div className={styles.contactGrid}>
+          <div className={styles.sectionHeader}>
+            <p className={styles.sectionEyebrow}>Reach Out</p>
+            <h2 className={styles.sectionTitle}>Primary support channels.</h2>
+          </div>
 
-            <div className={styles.contactCard}>
-              <span className={styles.contactCardLabel}>Support Email</span>
-              <a
-                className={styles.contactCardValue}
-                href="mailto:support@knytra.in"
-              >
+          <div className={styles.contactGrid}>
+            <article className={styles.contactCard}>
+              <span className={styles.contactLabel}>Support Email</span>
+              <a className={styles.contactValue} href="mailto:support@knytra.in">
                 support@knytra.in
               </a>
-              <span className={styles.contactCardSub}>
-                For order issues, exchanges, and general enquiries
-              </span>
-            </div>
+              <p className={styles.contactMeta}>
+                Best channel for order issues, exchanges, and payment support.
+              </p>
+            </article>
 
-            <div className={styles.contactCard}>
-              <span className={styles.contactCardLabel}>Phone</span>
-              <a
-                className={styles.contactCardValue}
-                href="tel:+919105021555"
-              >
+            <article className={styles.contactCard}>
+              <span className={styles.contactLabel}>Phone</span>
+              <a className={styles.contactValue} href="tel:+919105021555">
                 +91 91050 21555
               </a>
-              <span className={styles.contactCardSub}>
-                Mon – Sat, 10 AM – 6 PM IST only
-              </span>
-            </div>
+              <p className={styles.contactMeta}>Mon-Sat, 10:00 AM to 6:00 PM IST.</p>
+            </article>
 
-            <div className={styles.contactCard}>
-              <span className={styles.contactCardLabel}>Instagram</span>
+            <article className={styles.contactCard}>
+              <span className={styles.contactLabel}>Instagram</span>
               <a
-                className={styles.contactCardValue}
+                className={styles.contactValue}
                 href="https://instagram.com/knytra.in"
                 target="_blank"
                 rel="noopener noreferrer"
               >
                 @knytra.in
               </a>
-              <span className={styles.contactCardSub}>
-                DMs for general queries (not for order support)
-              </span>
-            </div>
+              <p className={styles.contactMeta}>Great for general questions and updates.</p>
+            </article>
 
-            <div className={styles.contactCard}>
-              <span className={styles.contactCardLabel}>Registered Address</span>
-              <span className={styles.contactCardValue} style={{ fontSize: "13px" }}>
-                1/11822, 3rd Floor, C-23,<br />
-                Panchsheel Garden, Naveen Shahdara,<br />
-                Delhi – 110032
-              </span>
-              <span className={styles.contactCardSub}>
-                Kyraas Jewel Enterprises · GST: 07EMLPR1878A1ZS
-              </span>
-            </div>
-
+            <article className={styles.contactCard}>
+              <span className={styles.contactLabel}>Registered Office</span>
+              <p className={styles.contactMeta}>
+                Kyraas Jewel Enterprises, 1/11822, 3rd Floor, C-23, Panchsheel Garden, Naveen
+                Shahdara, Delhi - 110032.
+              </p>
+              <p className={styles.contactMeta}>GST: 07EMLPR1878A1ZS</p>
+            </article>
           </div>
         </section>
 
-        {/* Response SLA */}
         <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>Response Times</h2>
-          <div className={styles.body}>
-            <table className={styles.hoursTable}>
-              <tbody>
-                <tr>
-                  <td>Order / Payment issues</td>
-                  <td>Within 1 business day</td>
-                </tr>
-                <tr>
-                  <td>Exchange requests</td>
-                  <td>Within 3 business days</td>
-                </tr>
-                <tr>
-                  <td>Tracking enquiries</td>
-                  <td>Within 1 business day</td>
-                </tr>
-                <tr>
-                  <td>General enquiries</td>
-                  <td>Within 2 business days</td>
-                </tr>
-                <tr>
-                  <td>Support hours</td>
-                  <td>Mon – Sat, 10 AM – 6 PM IST</td>
-                </tr>
-              </tbody>
-            </table>
+          <div className={styles.sectionHeader}>
+            <p className={styles.sectionEyebrow}>Before You Message</p>
+            <h2 className={styles.sectionTitle}>Help us solve it faster.</h2>
           </div>
+          <p className={styles.sectionText}>
+            Include the details below in your first message so we can resolve your issue in one
+            pass.
+          </p>
+          <ol className={styles.contactSteps}>
+            <li>Order ID and the email used at checkout.</li>
+            <li>For delivery issues: tracking number and current status screenshot.</li>
+            <li>
+              For exchanges: unboxing video plus clear product photos as per the{" "}
+              <Link href="/refunds">Refund Policy</Link>.
+            </li>
+            <li>Preferred resolution and your best callback time.</li>
+          </ol>
         </section>
 
-        {/* Order support tips */}
         <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>Before You Contact Us</h2>
-          <div className={styles.body}>
-            <p>
-              To help us resolve your query faster, please ensure you include:
-            </p>
-            <ul className={styles.list}>
-              <li>Your <strong>Order ID</strong> (found in your confirmation email).</li>
-              <li>The email address used at checkout.</li>
-              <li>
-                For exchange requests: an unboxing video and at least 3 photographs — see our{" "}
-                <a href="/refunds">Refund &amp; Cancellation Policy</a> for full requirements.
-              </li>
-              <li>
-                For delivery issues: your courier tracking number and a screenshot of the
-                tracking status.
-              </li>
-            </ul>
-            <p>
-              Incomplete queries may result in a delayed response while we gather the required
-              information.
-            </p>
+          <div className={styles.sectionHeader}>
+            <p className={styles.sectionEyebrow}>Response Times</p>
+            <h2 className={styles.sectionTitle}>Typical turnaround.</h2>
+          </div>
+          <div className={styles.timeline}>
+            <article className={styles.timelineItem}>
+              <span className={styles.timelineStep}>01</span>
+              <div>
+                <h3 className={styles.timelineTitle}>Order and payment issues</h3>
+                <p className={styles.timelineText}>Usually within 1 business day.</p>
+              </div>
+            </article>
+            <article className={styles.timelineItem}>
+              <span className={styles.timelineStep}>02</span>
+              <div>
+                <h3 className={styles.timelineTitle}>Exchange assessments</h3>
+                <p className={styles.timelineText}>Usually within 2-3 business days.</p>
+              </div>
+            </article>
+            <article className={styles.timelineItem}>
+              <span className={styles.timelineStep}>03</span>
+              <div>
+                <h3 className={styles.timelineTitle}>General queries</h3>
+                <p className={styles.timelineText}>Usually within 1-2 business days.</p>
+              </div>
+            </article>
           </div>
         </section>
-
-        <div className={styles.calloutStrong}>
-          All formal / legal notices must be sent in writing to: support@knytra.in with the
-          subject line &quot;LEGAL NOTICE&quot;, or by registered post to Kyraas Jewel Enterprises,
-          1/11822, 3rd Floor, C-23, Panchsheel Garden, Naveen Shahdara, Delhi – 110032.
-        </div>
-
       </div>
     </div>
   );
