@@ -1,10 +1,11 @@
 .navbar {
   position: sticky;
   top: 0;
-  z-index: 500;
-  background-color: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--color-white-12);
+  z-index: 1100;
+  background-color: rgba(0, 0, 0, 0.8);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   width: 100%;
 }
 
@@ -179,7 +180,7 @@
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--ease-fast);
-  z-index: 640;
+  z-index: 1110;
 }
 
 .mobileBackdropOpen {
@@ -200,7 +201,7 @@
   opacity: 0;
   pointer-events: none;
   transition: transform var(--ease-base), opacity var(--ease-fast);
-  z-index: 650;
+  z-index: 1120;
 }
 
 .mobilePanelOpen {
