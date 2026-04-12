@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   collection,
+  doc,
+  getDoc,
   query,
   where,
   orderBy,
@@ -27,13 +29,13 @@ interface RecentOrder {
   itemCount: number;
 }
 
-function initials(name: string): string {
-  return name
-    .trim()
-    .split(/\s+/)
-    .map((w) => w[0]?.toUpperCase() ?? "")
-    .slice(0, 2)
-    .join("");
+function formatNameFromEmail(email: string | null | undefined): string {
+  if (!email || !email.includes("@")) return "";
+  return email
+    .split("@")[0]
+    .replace(/[._]/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+    .trim();
 }
 
 function badgeClass(status: string): string {
@@ -62,7 +64,46 @@ export default function AccountPage() {
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [ordersError, setOrdersError] = useState(false);
   const [reloadTick, setReloadTick] = useState(0);
+  const [userDocName, setUserDocName] = useState<string | null>(null);
   const fetchIdRef = useRef(0);
+
+  // Non-blocking user profile name fallback (used when displayName is absent)
+  useEffect(() => {
+    if (!user?.uid) {
+      setUserDocName(null);
+      return;
+    }
+
+    const uid = user.uid;
+
+    if (user.displayName?.trim()) {
+      setUserDocName(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function fetchUserName() {
+      try {
+        const snap = await getDoc(doc(db, "users", uid));
+        if (cancelled || !snap.exists()) return;
+
+        const rawName = snap.data()?.name;
+        const resolvedName =
+          typeof rawName === "string" && rawName.trim() ? rawName.trim() : null;
+
+        if (!cancelled) setUserDocName(resolvedName);
+      } catch {
+        if (!cancelled) setUserDocName(null);
+      }
+    }
+
+    fetchUserName();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.uid, user?.displayName]);
 
   /**
    * Fetch the 3 most recent orders for this user.
@@ -185,7 +226,13 @@ export default function AccountPage() {
 
   if (loading || !user) return null;
 
-  const displayName = user.displayName ?? user.email ?? "User";
+  const displayName =
+    user.displayName?.trim() ||
+    userDocName ||
+    formatNameFromEmail(user.email) ||
+    user.email ||
+    "Account";
+  const avatarInitial = displayName.charAt(0).toUpperCase() || "A";
 
   const showAccountSkeleton = ordersLoading;
 
@@ -200,7 +247,7 @@ export default function AccountPage() {
       ) : (
         <div className={styles.hero}>
           <div className={styles.heroInner}>
-            <div className={styles.avatar}>{initials(displayName)}</div>
+            <div className={styles.avatar}>{avatarInitial}</div>
             <div className={styles.heroText}>
               <p className={styles.heroName}>{displayName}</p>
               <p className={styles.heroEmail}>{user.email}</p>
