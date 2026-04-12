@@ -15,7 +15,7 @@ export default function HomePage() {
         {/* Background photo */}
         <div className={styles.heroBg} aria-hidden="true">
           <Image
-            src="https://images.unsplash.com/photo-1529374255404-311a2a4f1fd9?w=1400&h=900&fit=crop"
+            src="https://images.unsplash.com/photo-1516826957135-700dedea698c?w=1400&h=900&fit=crop"
             alt=""
             fill
             priority
@@ -51,9 +51,9 @@ export default function HomePage() {
           </div>
 
           <div className={styles.heroText}>
-            <span className={styles.heroLine}>WEAR</span>
-            <span className={styles.heroLine}>THE</span>
-            <span className={styles.heroLine}>STREETS.</span>
+            <span className={styles.heroLine}>CRAFTED</span>
+            <span className={styles.heroLine}>WITH</span>
+            <span className={styles.heroLine}>INTENT.</span>
           </div>
 
           <p className={styles.heroSub}>RAW. BOLD. UNAPOLOGETICALLY URBAN.</p>
@@ -75,7 +75,7 @@ export default function HomePage() {
                 letterSpacing="2.5"
               >
                 <textPath href="#circlePath">
-                  KNYTRA · WEAR THE STREETS · KNYTRA · WEAR THE STREETS ·
+                  KNYTRA · CRAFTED WITH INTENT · KNYTRA · CRAFTED WITH INTENT ·
                 </textPath>
               </text>
               <text

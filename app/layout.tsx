@@ -22,7 +22,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Knytra — Wear the Streets",
+  title: "Knytra — Crafted with Intent",
   description:
     "A new era of Indian streetwear is coming. Raw, bold, and unapologetically urban. Sign up to be the first to know when we drop.",
   keywords: [
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     "coming soon",
   ],
   openGraph: {
-    title: "Knytra — Wear the Streets",
+    title: "Knytra — Crafted with Intent",
     description:
       "A new era of Indian streetwear is coming. Raw, bold, and unapologetically urban.",
     url: "https://knytra.com",
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Knytra — Wear the Streets",
+    title: "Knytra — Crafted with Intent",
     description:
       "A new era of Indian streetwear is coming. Raw, bold, and unapologetically urban.",
   },

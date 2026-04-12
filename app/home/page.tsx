@@ -4,11 +4,11 @@ import { DEMO_PRODUCTS } from "@/lib/demoProducts";
 import styles from "./home.module.css";
 
 const MARQUEE_WORDS = [
-  "WEAR THE STREETS",
+  "CRAFTED WITH INTENT",
   "LIMITED DROPS",
   "MADE IN INDIA",
   "RAW · BOLD · URBAN",
-  "WEAR THE STREETS",
+  "CRAFTED WITH INTENT",
   "LIMITED DROPS",
   "MADE IN INDIA",
   "RAW · BOLD · URBAN",
@@ -59,7 +59,7 @@ export default function HomePage() {
       <section className={styles.hero}>
         <div className={styles.heroMedia}>
           <Image
-            src="https://images.unsplash.com/photo-1529374255404-311a2a4f1fd9?w=1600&h=900&fit=crop"
+            src="https://images.unsplash.com/photo-1544441893-675973e31985?w=1600&h=900&fit=crop"
             alt="Knytra hero"
             fill
             priority
@@ -72,9 +72,9 @@ export default function HomePage() {
         <div className={styles.heroContent}>
           <p className={styles.heroEyebrow}>New Season · SS26</p>
           <h1 className={styles.heroHeadline}>
-            <span>WEAR</span>
-            <span>THE</span>
-            <span>STREETS.</span>
+            <span>CRAFTED</span>
+            <span>WITH</span>
+            <span>INTENT.</span>
           </h1>
           <p className={styles.heroSub}>
             Raw streetwear. Limited drops. Built for those who move.
