@@ -7,6 +7,17 @@
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   width: 100%;
+  transform: translateY(0);
+  transition: transform 0.3s ease;
+  will-change: transform;
+}
+
+.navbarVisible {
+  transform: translateY(0);
+}
+
+.navbarHidden {
+  transform: translateY(-100%);
 }
 
 .navbarMenuOpen {
@@ -283,5 +294,11 @@
 
   .navContainer {
     padding: 0 var(--sp-10);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .navbar {
+    transition: none;
   }
 }

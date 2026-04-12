@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ShoppingCart, Menu, Search, X } from "lucide-react";
@@ -8,6 +8,10 @@ import styles from "./Navbar.module.css";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useWishlist } from "@/context/WishlistContext";
+
+const HIDE_START_Y = 50;
+const TOP_SHOW_Y = 20;
+const SCROLL_DELTA_THRESHOLD = 8;
 
 const PRIMARY_LINKS = [
   { href: "/shop", label: "Shop" },
@@ -20,15 +24,37 @@ const PRIMARY_LINKS = [
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { cartCount, toggleCart, clearCart, clearBuyNow } = useCart();
+  const { cartCount, toggleCart, clearCart, clearBuyNow, isCartOpen } = useCart();
   const { user, loading, logout } = useAuth();
   const { resetWishlist } = useWishlist();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const lastScrollYRef = useRef(0);
+  const rafPendingRef = useRef(false);
+  const isVisibleRef = useRef(true);
+
+  function setNavbarVisible(nextVisible: boolean) {
+    if (isVisibleRef.current === nextVisible) return;
+    isVisibleRef.current = nextVisible;
+    setIsVisible(nextVisible);
+  }
+
+  function hasActiveModal() {
+    return Boolean(document.querySelector('[aria-modal="true"], [role="dialog"]'));
+  }
 
   useEffect(() => {
     // Close mobile menu after route navigation.
     setMobileMenuOpen(false);
+    setNavbarVisible(true);
+    if (typeof window !== "undefined") {
+      lastScrollYRef.current = window.scrollY;
+    }
   }, [pathname]);
+
+  useEffect(() => {
+    isVisibleRef.current = isVisible;
+  }, [isVisible]);
 
   useEffect(() => {
     if (mobileMenuOpen) {
@@ -41,6 +67,80 @@ export default function Navbar() {
       document.body.style.overflow = "";
     };
   }, [mobileMenuOpen]);
+
+  useEffect(() => {
+    if (mobileMenuOpen || isCartOpen || hasActiveModal()) {
+      setNavbarVisible(true);
+    }
+  }, [mobileMenuOpen, isCartOpen]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const observer = new MutationObserver(() => {
+      if (hasActiveModal()) {
+        setNavbarVisible(true);
+      }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    let disposed = false;
+    lastScrollYRef.current = window.scrollY;
+
+    // Use requestAnimationFrame to keep scroll updates smooth and avoid main-thread thrash.
+    const onScroll = () => {
+      if (rafPendingRef.current) return;
+
+      rafPendingRef.current = true;
+      window.requestAnimationFrame(() => {
+        rafPendingRef.current = false;
+        if (disposed) return;
+
+        const currentY = window.scrollY;
+        const delta = currentY - lastScrollYRef.current;
+        const absDelta = Math.abs(delta);
+
+        if (mobileMenuOpen || isCartOpen || hasActiveModal()) {
+          setNavbarVisible(true);
+          lastScrollYRef.current = currentY;
+          return;
+        }
+
+        if (currentY < TOP_SHOW_Y) {
+          setNavbarVisible(true);
+          lastScrollYRef.current = currentY;
+          return;
+        }
+
+        if (absDelta < SCROLL_DELTA_THRESHOLD) {
+          lastScrollYRef.current = currentY;
+          return;
+        }
+
+        if (delta > 0 && currentY > HIDE_START_Y) {
+          setNavbarVisible(false);
+        } else if (delta < 0) {
+          setNavbarVisible(true);
+        }
+
+        lastScrollYRef.current = currentY;
+      });
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    return () => {
+      disposed = true;
+      window.removeEventListener("scroll", onScroll);
+      rafPendingRef.current = false;
+    };
+  }, [mobileMenuOpen, isCartOpen]);
 
   async function handleLogout() {
     try {
@@ -65,7 +165,11 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className={`${styles.navbar} ${mobileMenuOpen ? styles.navbarMenuOpen : ""}`}>
+      <nav
+        className={`${styles.navbar} ${mobileMenuOpen ? styles.navbarMenuOpen : ""} ${
+          isVisible ? styles.navbarVisible : styles.navbarHidden
+        }`}
+      >
         <div className={styles.navContainer}>
           {/* Left - Mobile Menu */}
           <div className={styles.mobileMenu}>
