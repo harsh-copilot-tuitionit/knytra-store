@@ -9,7 +9,7 @@ export default function Footer() {
         <div className={styles.topSection}>
           <div className={styles.brandCol}>
             <h2 className={styles.logo}>KNYTRA</h2>
-            <p className={styles.tagline}>WEAR THE STREETS.</p>
+            <p className={styles.tagline}>CRAFTED WITH INTENT.</p>
             <a 
               href="https://instagram.com/knytra.in" 
               target="_blank" 
