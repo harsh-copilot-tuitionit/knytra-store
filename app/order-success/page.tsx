@@ -35,6 +35,7 @@ function OrderSuccessContent() {
   const params = useSearchParams();
   const docId = params.get("doc_id") ?? "";
   const paymentId = params.get("payment_id") ?? "";
+  const isCOD = params.get("method") === "cod";
 
   const [order, setOrder] = useState<OrderData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -83,7 +84,9 @@ function OrderSuccessContent() {
         <div className={styles.checkmark}>✓</div>
         <h1 className={styles.title}>Order Confirmed!</h1>
         <p className={styles.sub}>
-          Thanks for shopping with KNYTRA. Your order will ship in 5–7 business days.
+          {isCOD
+            ? "Thanks for shopping with KNYTRA. Pay when your order arrives."
+            : "Thanks for shopping with KNYTRA. Your order will ship in 5–7 business days."}
         </p>
 
         {/* Order ref */}
@@ -129,9 +132,11 @@ function OrderSuccessContent() {
           </span>
         </div>
 
-        {/* Payment ID */}
+        {/* Payment info */}
         <div className={styles.paymentId}>
-          Payment ID: <span>{displayPaymentId}</span>
+          {isCOD
+            ? <>Payment Mode: <span>Cash on Delivery</span></>
+            : <>Payment ID: <span>{displayPaymentId}</span></>}
         </div>
 
         {/* CTA */}

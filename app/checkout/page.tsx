@@ -99,6 +99,29 @@ export default function CheckoutPage() {
   });
   const [paying, setPaying] = useState(false);
   const [paymentError, setPaymentError] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"online" | "cod">("online");
+  const [codEnabled, setCodEnabled] = useState(false);
+  const [codMaxOrder, setCodMaxOrder] = useState<number | null>(null);
+
+  // Fetch COD config from server (never exposed client-side)
+  useEffect(() => {
+    fetch("/api/checkout-config")
+      .then((r) => r.json())
+      .then((data) => {
+        setCodEnabled(data.codEnabled ?? false);
+        setCodMaxOrder(data.codMaxOrder ?? null);
+      })
+      .catch(() => { /* COD stays disabled on error */ });
+  }, []);
+
+  const codAvailable = codEnabled && (codMaxOrder === null || checkoutTotal <= codMaxOrder);
+
+  // Reset to online if COD becomes unavailable
+  useEffect(() => {
+    if (!codAvailable && paymentMethod === "cod") {
+      setPaymentMethod("online");
+    }
+  }, [codAvailable, paymentMethod]);
 
   // ── Saved addresses ──────────────────────────────────────────────────────
   const [savedAddresses,   setSavedAddresses]   = useState<SavedAddress[]>([]);
@@ -232,7 +255,106 @@ export default function CheckoutPage() {
     setAddressSaveInfo("");
     setPaying(true);
 
-    // 1. Load Razorpay SDK
+    // Shared request setup
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (user) {
+      const idToken = await user.getIdToken();
+      headers["Authorization"] = `Bearer ${idToken}`;
+    }
+
+    const orderBody = {
+      amount: checkoutTotal * 100,
+      items: checkoutItems,
+      user: {
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+      },
+      address: {
+        name:        form.name,
+        phone:       form.phone,
+        pincode:     form.pincode,
+        city:        form.city,
+        state:       form.state,
+        fullAddress: form.fullAddress,
+      },
+      ...(paymentMethod === "cod" ? { paymentMethod: "cod" } : {}),
+    };
+
+    // Optionally save address (fire-and-forget for both flows)
+    if (user && saveNewAddress && selectedAddrId === "new") {
+      setSavingAddress(true);
+      const saveAddressPromise = (async () => {
+        const token = await user.getIdToken();
+        const saveRes = await fetch("/api/addresses", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            name:      form.name,
+            phone:     form.phone,
+            line1:     form.fullAddress.split("\n")[0] ?? form.fullAddress,
+            line2:     form.fullAddress.split("\n").slice(1).join(", ") ?? "",
+            city:      form.city,
+            state:     form.state,
+            pincode:   form.pincode,
+            isDefault: savedAddresses.length === 0,
+          }),
+        });
+        if (!saveRes.ok) {
+          const data = await saveRes.json().catch(() => ({}));
+          throw new Error(data.error ?? "Failed to save address to address book.");
+        }
+        track("address_saved", {
+          source: "checkout",
+          type: "new",
+          isDefault: savedAddresses.length === 0,
+        });
+      })();
+
+      saveAddressPromise
+        .catch((err: unknown) => {
+          const message = err instanceof Error
+            ? err.message
+            : "Address could not be saved to your account. Payment can continue.";
+          setAddressSaveInfo(message);
+          console.warn("[checkout] Failed to save address.", err);
+        })
+        .finally(() => { setSavingAddress(false); });
+    }
+
+    // ── COD flow ──
+    if (paymentMethod === "cod") {
+      try {
+        const res = await fetch("/api/create-order", {
+          method: "POST",
+          headers,
+          body: JSON.stringify(orderBody),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          if (res.status === 401) {
+            setPaymentError("Session expired. Please login again.");
+            setPaying(false);
+            router.replace("/login?next=/checkout");
+            return;
+          }
+          throw new Error(data.error ?? "Order creation failed");
+        }
+        const data = await res.json();
+        clearBuyNow();
+        if (!isBuyNow) clearCart();
+        router.push(`/order-success?doc_id=${data.firestore_order_id}&method=cod`);
+      } catch {
+        setPaymentError("Could not place order. Please try again.");
+        setPaying(false);
+      }
+      return;
+    }
+
+    // ── Razorpay flow ──
     const loaded = await loadRazorpayScript();
     if (!loaded) {
       setPaymentError("Failed to load payment gateway. Please try again.");
@@ -240,43 +362,14 @@ export default function CheckoutPage() {
       return;
     }
 
-    // 2. Create Razorpay order via our backend
     let razorpay_order_id: string;
     let orderAmount: number;
     let firestoreOrderId: string;
     try {
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-
-      if (user) {
-        // Send a fresh ID token so the server can derive userId and canonical
-        // email from the verified token — the body values are not trusted.
-        const idToken = await user.getIdToken();
-        headers["Authorization"] = `Bearer ${idToken}`;
-      }
-
       const res = await fetch("/api/create-order", {
         method: "POST",
         headers,
-        body: JSON.stringify({
-          amount: checkoutTotal * 100, // paise
-          items: checkoutItems,
-          // userId is intentionally absent — derived server-side from the token
-          user: {
-            name: form.name,
-            // For auth users the server will override this with auth.email;
-            // included here only for guest orders.
-            email: form.email,
-            phone: form.phone,
-          },
-          address: {
-            name:        form.name,
-            phone:       form.phone,
-            pincode:     form.pincode,
-            city:        form.city,
-            state:       form.state,
-            fullAddress: form.fullAddress,
-          },
-        }),
+        body: JSON.stringify(orderBody),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -296,55 +389,6 @@ export default function CheckoutPage() {
       setPaymentError("Could not initiate payment. Please try again.");
       setPaying(false);
       return;
-    }
-
-    // 2b. Optionally save the address to the user's address book
-    if (user && saveNewAddress && selectedAddrId === "new") {
-      setSavingAddress(true);
-      const saveAddressPromise = (async () => {
-        const token = await user.getIdToken();
-        const saveRes = await fetch("/api/addresses", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            name:      form.name,
-            phone:     form.phone,
-            line1:     form.fullAddress.split("\n")[0] ?? form.fullAddress,
-            line2:     form.fullAddress.split("\n").slice(1).join(", ") ?? "",
-            city:      form.city,
-            state:     form.state,
-            pincode:   form.pincode,
-            isDefault: savedAddresses.length === 0, // default if first
-          }),
-        });
-
-        if (!saveRes.ok) {
-          const data = await saveRes.json().catch(() => ({}));
-          throw new Error(data.error ?? "Failed to save address to address book.");
-        }
-
-        track("address_saved", {
-          source: "checkout",
-          type: "new",
-          isDefault: savedAddresses.length === 0,
-        });
-      })();
-
-      saveAddressPromise
-        .catch((err: unknown) => {
-          const message = err instanceof Error
-            ? err.message
-            : "Address could not be saved to your account. Payment can continue.";
-          setAddressSaveInfo(message);
-          // eslint-disable-next-line no-console
-          console.warn("[checkout] Failed to save address to address book.", err);
-        })
-        .finally(() => {
-          setSavingAddress(false);
-        });
     }
 
     // 3. Open Razorpay modal
@@ -615,7 +659,50 @@ export default function CheckoutPage() {
             <p className={styles.addressSaveInfo}>{addressSaveInfo}</p>
           )}
 
-          <p className={styles.secureNote}>🔒 Secure checkout · Payments powered by Razorpay</p>
+          {/* ── Payment Method ── */}
+          <div className={styles.paymentMethodSection}>
+            <h3 className={styles.paymentMethodTitle}>Payment Method</h3>
+            <div className={styles.paymentOptions}>
+              <label className={`${styles.paymentOption} ${paymentMethod === "online" ? styles.paymentOptionActive : ""}`}>
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value="online"
+                  checked={paymentMethod === "online"}
+                  onChange={() => setPaymentMethod("online")}
+                  className={styles.paymentRadio}
+                  disabled={paying}
+                />
+                <div className={styles.paymentOptionBody}>
+                  <span className={styles.paymentOptionLabel}>Pay Online</span>
+                  <span className={styles.paymentOptionDesc}>UPI, Cards, Net Banking</span>
+                </div>
+              </label>
+              {codAvailable && (
+                <label className={`${styles.paymentOption} ${paymentMethod === "cod" ? styles.paymentOptionActive : ""}`}>
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="cod"
+                    checked={paymentMethod === "cod"}
+                    onChange={() => setPaymentMethod("cod")}
+                    className={styles.paymentRadio}
+                    disabled={paying}
+                  />
+                  <div className={styles.paymentOptionBody}>
+                    <span className={styles.paymentOptionLabel}>Cash on Delivery</span>
+                    <span className={styles.paymentOptionDesc}>Pay when you receive</span>
+                  </div>
+                </label>
+              )}
+            </div>
+          </div>
+
+          <p className={styles.secureNote}>
+            {paymentMethod === "cod"
+              ? "📦 Your order will be confirmed instantly"
+              : "🔒 Secure checkout · Payments powered by Razorpay"}
+          </p>
         </section>
 
         {/* ── Right: Order summary ── */}
@@ -671,7 +758,11 @@ export default function CheckoutPage() {
               onClick={handleProceed}
               disabled={!isValid || paying || (!!user && addressesLoading)}
             >
-              {paying ? "Opening payment…" : isValid ? "Proceed to Pay →" : "Fill details to continue"}
+              {paying
+                ? (paymentMethod === "cod" ? "Placing order…" : "Opening payment…")
+                : isValid
+                  ? (paymentMethod === "cod" ? "Place Order — COD →" : "Proceed to Pay →")
+                  : "Fill details to continue"}
             </button>
             {paymentError && (
               <p className={styles.paymentError}>{paymentError}</p>
@@ -691,7 +782,11 @@ export default function CheckoutPage() {
           onClick={handleProceed}
           disabled={!isValid || paying || (!!user && addressesLoading)}
         >
-          {paying ? "Opening payment…" : isValid ? "Proceed to Pay →" : "Fill details to continue"}
+          {paying
+            ? (paymentMethod === "cod" ? "Placing order…" : "Opening payment…")
+            : isValid
+              ? (paymentMethod === "cod" ? "Place Order — COD →" : "Proceed to Pay →")
+              : "Fill details to continue"}
         </button>
       </div>
     </div>
