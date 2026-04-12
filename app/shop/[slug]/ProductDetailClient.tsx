@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -35,6 +35,43 @@ function TickerBand() {
           <span key={`d${i}`} className={styles.tickerItem}>{seg}</span>
         )}
       </div>
+    </div>
+  );
+}
+
+function StickyMobileBar({
+  name,
+  price,
+  onAdd,
+  addedPulse,
+}: {
+  name: string;
+  price: number;
+  onAdd: () => void;
+  addedPulse: boolean;
+}) {
+  const [visible, setVisible] = useState(false);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    // Show sticky bar once the user scrolls past the CTA area (~400px)
+    const onScroll = () => setVisible(window.scrollY > 400);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  return (
+    <div className={`${styles.stickyBar} ${visible ? styles.stickyBarVisible : ""}`}>
+      <div className={styles.stickyInfo}>
+        <span className={styles.stickyName}>{name}</span>
+        <span className={styles.stickyPrice}>₹{price.toLocaleString("en-IN")}</span>
+      </div>
+      <button
+        className={`${styles.stickyAddBtn} ${addedPulse ? styles.added : ""}`}
+        onClick={onAdd}
+      >
+        {addedPulse ? "ADDED ✓" : "ADD TO CART"}
+      </button>
     </div>
   );
 }
@@ -202,6 +239,10 @@ export default function ProductDetailClient() {
   const showSizeSelector =
     product.sizes && product.sizes.length > 0 && product.sizes[0] !== "One Size";
 
+  const discount = product.originalPrice
+    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+    : 0;
+
   return (
     <div className={styles.page}>
 
@@ -272,45 +313,21 @@ export default function ProductDetailClient() {
       {/* ── Info ── */}
       <div className={styles.infoSection}>
 
-        {product.description && (
-          <div className={styles.block}>
-            <h3 className={styles.blockLabel}>Description</h3>
-            <p className={styles.descText}>{product.description}</p>
-          </div>
-        )}
-
-        {showSizeSelector && (
-          <div className={styles.block}>
-            <span className={styles.blockLabel}>Size :</span>
-            <div className={styles.sizeGrid}>
-              {product.sizes.map((size) => (
-                <button
-                  key={size}
-                  className={`${styles.sizeBtn} ${selectedSize === size ? styles.sizeBtnActive : ""}`}
-                  onClick={() => { setSelectedSize(size); setSizeError(false); }}
-                >
-                  {size}
-                </button>
-              ))}
-            </div>
-            {sizeError && (
-              <p className={styles.sizeError}>Please select a size to continue.</p>
-            )}
-          </div>
-        )}
-
+        {/* Price + Urgency */}
         <div className={styles.block}>
-          <span className={styles.blockLabel}>Price :</span>
           <div className={styles.priceRow}>
             <div className={styles.priceNumbers}>
+              <span className={styles.salePrice}>
+                ₹{product.price.toLocaleString("en-IN")}
+              </span>
               {product.originalPrice && (
                 <span className={styles.originalPrice}>
                   ₹{product.originalPrice.toLocaleString("en-IN")}
                 </span>
               )}
-              <span className={styles.salePrice}>
-                ₹{product.price.toLocaleString("en-IN")}
-              </span>
+              {discount > 0 && (
+                <span className={styles.discountBadge}>{discount}% OFF</span>
+              )}
             </div>
             <div className={styles.qtyControl}>
               <button
@@ -330,19 +347,37 @@ export default function ProductDetailClient() {
               </button>
             </div>
           </div>
+          <p className={styles.urgencyTag}>🔥 Limited stock available — Selling fast</p>
         </div>
 
-        <button
-          className={`${styles.addToCartBtn} ${addedPulse ? styles.added : ""}`}
-          onClick={handleAddToCart}
-        >
-          {addedPulse ? "ADDED TO CART ✓" : "ADD TO CART +"}
-        </button>
+        {/* Size selector */}
+        {showSizeSelector && (
+          <div className={styles.block}>
+            <div className={styles.sizeLabelRow}>
+              <span className={styles.blockLabel}>Select Size</span>
+              <span className={styles.sizeGuideLink}>Size Guide</span>
+            </div>
+            <div className={styles.sizeGrid}>
+              {product.sizes.map((size) => (
+                <button
+                  key={size}
+                  className={`${styles.sizeBtn} ${selectedSize === size ? styles.sizeBtnActive : ""}`}
+                  onClick={() => { setSelectedSize(size); setSizeError(false); }}
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
+            {sizeError && (
+              <p className={styles.sizeError}>Please select a size</p>
+            )}
+          </div>
+        )}
 
-        {/* ── Inline action buttons ── */}
+        {/* CTA buttons */}
         <div className={styles.actionRow}>
           <button
-            className={styles.inlineCartBtn}
+            className={`${styles.inlineCartBtn} ${addedPulse ? styles.added : ""}`}
             onClick={handleAddToCart}
           >
             {addedPulse ? "ADDED ✓" : "ADD TO CART"}
@@ -354,14 +389,48 @@ export default function ProductDetailClient() {
             BUY NOW
           </button>
         </div>
+        <p className={styles.ctaMicrocopy}>Secure checkout · No hidden charges</p>
 
-        <div className={styles.policies}>
-          <span>🇮🇳 Made in India · Premium Quality</span>
-          <span>🚚 Ships within 5–7 business days</span>
-          <span>🔄 Easy returns within 7 days</span>
+        {/* Delivery info */}
+        <div className={styles.deliveryStrip}>
+          <div className={styles.deliveryItem}>
+            <span className={styles.deliveryIcon}>🚚</span>
+            <span>Free delivery across India</span>
+          </div>
+          <div className={styles.deliveryItem}>
+            <span className={styles.deliveryIcon}>📦</span>
+            <span>Ships in 2–4 days</span>
+          </div>
+          <div className={styles.deliveryItem}>
+            <span className={styles.deliveryIcon}>↩️</span>
+            <span>Easy 7-day returns</span>
+          </div>
         </div>
 
+        {/* Trust badges */}
+        <div className={styles.trustStrip}>
+          <span className={styles.trustBadge}>✔ 100% Authentic</span>
+          <span className={styles.trustBadge}>✔ Premium Quality</span>
+          <span className={styles.trustBadge}>✔ Made for Streetwear</span>
+        </div>
+
+        {/* Description */}
+        {product.description && (
+          <div className={styles.block}>
+            <h3 className={styles.blockLabel}>About this product</h3>
+            <p className={styles.descText}>{product.description}</p>
+          </div>
+        )}
+
       </div>
+
+      {/* ── Sticky mobile ATC bar ── */}
+      <StickyMobileBar
+        name={product.name}
+        price={product.price}
+        onAdd={handleAddToCart}
+        addedPulse={addedPulse}
+      />
 
       {wishlistToast && <div className={styles.toast}>{wishlistToast}</div>}
     </div>
