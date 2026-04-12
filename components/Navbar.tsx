@@ -8,6 +8,7 @@ import styles from "./Navbar.module.css";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useWishlist } from "@/context/WishlistContext";
+import SearchOverlay from "./SearchOverlay";
 
 const HIDE_START_Y = 50;
 const TOP_SHOW_Y = 20;
@@ -28,6 +29,7 @@ export default function Navbar() {
   const { user, loading, logout } = useAuth();
   const { resetWishlist } = useWishlist();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const lastScrollYRef = useRef(0);
   const rafPendingRef = useRef(false);
@@ -223,7 +225,11 @@ export default function Navbar() {
 
           {/* Right - Actions */}
           <div className={styles.actions}>
-            <button className={`${styles.iconButton} ${styles.desktopSearch}`}>
+            <button
+              className={styles.iconButton}
+              onClick={() => { setIsSearchOpen(true); setMobileMenuOpen(false); }}
+              aria-label="Open search"
+            >
               <Search size={22} />
             </button>
 
@@ -242,6 +248,9 @@ export default function Navbar() {
         onClick={() => setMobileMenuOpen(false)}
         aria-hidden={!mobileMenuOpen}
       />
+
+      {/* ── Search Overlay ── */}
+      {isSearchOpen && <SearchOverlay onClose={() => setIsSearchOpen(false)} />}
 
       <div
         id="mobile-nav-menu"

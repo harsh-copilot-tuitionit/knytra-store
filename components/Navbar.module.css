@@ -180,9 +180,7 @@
   display: block;
 }
 
-.desktopSearch {
-  display: none;
-}
+/* desktopSearch class removed — search icon always visible */
 
 .mobileBackdrop {
   position: fixed;
@@ -266,10 +264,6 @@
   
   .mobileMenu {
     display: none;
-  }
-
-  .desktopSearch {
-    display: block;
   }
 
   .navContainer {
