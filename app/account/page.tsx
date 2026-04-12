@@ -68,20 +68,20 @@ export default function AccountPage() {
    * Fetch the 3 most recent orders for this user.
    *
    * Developer note:
-   * The primary query (`where("user.email", "==", user.email)` +
+   * The primary query (`where("userId", "==", user.uid)` +
    * `orderBy("createdAt", "desc")`) requires a Firestore composite index:
-   *   orders -> user.email ASC, createdAt DESC
+   *   orders -> userId ASC, createdAt DESC
    * If missing, Firebase console will prompt index creation with a direct link.
    */
   useEffect(() => {
-    if (!user?.email) {
+    if (!user?.uid) {
       setOrders([]);
       setOrdersError(false);
       setOrdersLoading(false);
       return;
     }
 
-    const email = user.email;
+    const uid = user.uid;
 
     function mapDoc(doc: import("firebase/firestore").QueryDocumentSnapshot): RecentOrder {
       const d = doc.data();
@@ -123,7 +123,7 @@ export default function AccountPage() {
           const snap = await getDocs(
             query(
               collection(db, "orders"),
-              where("user.email", "==", email),
+              where("userId", "==", uid),
               orderBy("createdAt", "desc"),
               limit(3),
             )
@@ -135,20 +135,20 @@ export default function AccountPage() {
           const e = err as { code?: string; message?: string };
           console.warn(
             "[Account] Missing composite index for recent orders " +
-            "(orders -> user.email ASC, createdAt DESC). Falling back to equality-only query.",
+            "(orders -> userId ASC, createdAt DESC). Falling back to equality-only query.",
             { code: e?.code, message: e?.message },
           );
 
           if (process.env.NODE_ENV !== "production") {
             console.info(
               "[Account][dev-only] Create index in Firebase console when prompted: " +
-              "orders -> user.email ASC, createdAt DESC",
+              "orders -> userId ASC, createdAt DESC",
             );
           }
 
           // Fallback query (no orderBy), then sort + limit client-side.
           const snap = await getDocs(
-            query(collection(db, "orders"), where("user.email", "==", email))
+            query(collection(db, "orders"), where("userId", "==", uid))
           );
           rows = snap.docs.map(mapDoc);
         }
