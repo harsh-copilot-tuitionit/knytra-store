@@ -4,12 +4,6 @@ import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
-function getNextPath(pathname: string): string {
-  if (typeof window === "undefined") return pathname;
-  const qs = window.location.search;
-  return qs ? `${pathname}${qs}` : pathname;
-}
-
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -17,8 +11,8 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (loading || user) return;
-    const next = getNextPath(pathname || "/");
-    router.replace(`/login?next=${encodeURIComponent(next)}`);
+    const next = pathname || "/";
+    router.replace(`/login?next=${next}`);
   }, [loading, pathname, router, user]);
 
   if (loading) {
