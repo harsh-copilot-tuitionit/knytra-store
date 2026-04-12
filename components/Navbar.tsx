@@ -21,6 +21,18 @@ export default function Navbar() {
     setMobileMenuOpen(false);
   }, [pathname]);
 
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+      return;
+    }
+    document.body.style.overflow = "";
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
+
   async function handleLogout() {
     try {
       await logout();
@@ -35,7 +47,7 @@ export default function Navbar() {
   }
 
   return (
-    <nav className={styles.navbar}>
+    <nav className={`${styles.navbar} ${mobileMenuOpen ? styles.navbarMenuOpen : ""}`}>
       <div className={styles.navContainer}>
         {/* Left - Mobile Menu */}
         <div className={styles.mobileMenu}>

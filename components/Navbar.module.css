@@ -1,11 +1,16 @@
 .navbar {
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 400;
   background-color: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--color-white-12);
   width: 100%;
+}
+
+.navbarMenuOpen {
+  background-color: #000;
+  backdrop-filter: none;
 }
 
 .navContainer {
@@ -162,10 +167,11 @@
 .mobileBackdrop {
   position: fixed;
   inset: 72px 0 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.72);
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--ease-fast);
+  z-index: 390;
 }
 
 .mobileBackdropOpen {
@@ -179,30 +185,36 @@
   left: 0;
   bottom: 0;
   width: min(86vw, 320px);
-  background: #000;
+  background: #050505;
   border-right: 1px solid var(--color-white-12);
+  box-shadow: 14px 0 32px rgba(0, 0, 0, 0.5);
   transform: translateX(-100%);
-  transition: transform var(--ease-base);
-  z-index: 110;
+  opacity: 0;
+  pointer-events: none;
+  transition: transform var(--ease-base), opacity var(--ease-fast);
+  z-index: 410;
 }
 
 .mobilePanelOpen {
   transform: translateX(0);
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .mobilePanelLinks {
   display: flex;
   flex-direction: column;
-  padding: 14px 16px;
+  padding: 18px 16px;
+  background: #050505;
 }
 
 .mobileLink,
 .mobileLogoutBtn {
-  padding: 12px 6px;
+  padding: 14px 6px;
   border-bottom: 1px solid var(--color-white-12);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--color-white-60);
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
