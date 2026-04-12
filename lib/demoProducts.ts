@@ -106,6 +106,19 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
     category: "Cap",
     tag: "new",
   },
+  {
+    id: "demo-test-tee",
+    name: "Demo Test Tee",
+    description:
+      "Basic crew-neck tee for testing purposes. Lightweight cotton, classic fit. This is a demo product.",
+    price: 23,
+    images: [
+      `${U}/photo-1521572163474-6864f9cf17ab?w=800&h=960&fit=crop`,
+    ],
+    sizes: ["S", "M", "L", "XL"],
+    status: "active",
+    category: "Tshirt",
+  },
 ];
 
 export function getDemoProduct(id: string): DemoProduct | undefined {
