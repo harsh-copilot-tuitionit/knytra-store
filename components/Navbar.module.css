@@ -1,7 +1,7 @@
 .navbar {
   position: sticky;
   top: 0;
-  z-index: 400;
+  z-index: 500;
   background-color: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--color-white-12);
@@ -167,11 +167,11 @@
 .mobileBackdrop {
   position: fixed;
   inset: 72px 0 0;
-  background: rgba(0, 0, 0, 0.72);
+  background: rgba(0, 0, 0, 0.75);
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--ease-fast);
-  z-index: 390;
+  z-index: 640;
 }
 
 .mobileBackdropOpen {
@@ -185,14 +185,14 @@
   left: 0;
   bottom: 0;
   width: min(86vw, 320px);
-  background: #050505;
+  background-color: #050505;
   border-right: 1px solid var(--color-white-12);
   box-shadow: 14px 0 32px rgba(0, 0, 0, 0.5);
   transform: translateX(-100%);
   opacity: 0;
   pointer-events: none;
   transition: transform var(--ease-base), opacity var(--ease-fast);
-  z-index: 410;
+  z-index: 650;
 }
 
 .mobilePanelOpen {
@@ -205,7 +205,8 @@
   display: flex;
   flex-direction: column;
   padding: 18px 16px;
-  background: #050505;
+  min-height: 100%;
+  background-color: #050505;
 }
 
 .mobileLink,
