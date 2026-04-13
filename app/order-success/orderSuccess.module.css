@@ -202,6 +202,19 @@
   background: #222;
 }
 
+.ctaSecondary {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.ctaSecondary:hover {
+  color: #000;
+}
+
 /* ── Loading spinner */
 .spinner {
   width: 48px;

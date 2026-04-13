@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Suspense, useEffect, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 import styles from "./orderSuccess.module.css";
 
 interface OrderItem {
@@ -33,6 +34,7 @@ interface OrderData {
 
 function OrderSuccessContent() {
   const params = useSearchParams();
+  const { user, loading: authLoading } = useAuth();
   const docId = params.get("doc_id") ?? "";
   const paymentId = params.get("payment_id") ?? "";
   const isCOD = params.get("method") === "cod";
@@ -42,16 +44,43 @@ function OrderSuccessContent() {
   const [error, setError] = useState(false);
 
   useEffect(() => {
+    if (authLoading) return;          // wait for Firebase auth to settle
     if (!docId) { setError(true); setLoading(false); return; }
 
-    fetch(`/api/orders/${docId}`)
-      .then((res) => {
-        if (!res.ok) throw new Error("Not found");
-        return res.json();
-      })
-      .then((data: OrderData) => { setOrder(data); setLoading(false); })
-      .catch(() => { setError(true); setLoading(false); });
-  }, [docId]);
+    const MAX_RETRIES = 5;
+    const RETRY_DELAY = 800;          // ms
+    let cancelled = false;
+
+    async function fetchOrder(attempt: number) {
+      try {
+        const headers: Record<string, string> = {};
+        if (user) {
+          const token = await user.getIdToken();
+          headers["Authorization"] = `Bearer ${token}`;
+        }
+
+        const url = paymentId
+          ? `/api/orders/${docId}?payment_id=${encodeURIComponent(paymentId)}`
+          : `/api/orders/${docId}`;
+        const res = await fetch(url, { headers });
+        if (!res.ok) throw new Error(`Status ${res.status}`);
+        const data: OrderData = await res.json();
+        if (!cancelled) { setOrder(data); setLoading(false); }
+      } catch (err) {
+        console.warn(`[order-success] fetch attempt ${attempt} failed:`, err);
+        if (!cancelled && attempt < MAX_RETRIES) {
+          await new Promise((r) => setTimeout(r, RETRY_DELAY));
+          if (!cancelled) fetchOrder(attempt + 1);
+        } else if (!cancelled) {
+          setError(true);
+          setLoading(false);
+        }
+      }
+    }
+
+    fetchOrder(1);
+    return () => { cancelled = true; };
+  }, [docId, user, authLoading]);
 
   if (loading) {
     return (
@@ -68,8 +97,19 @@ function OrderSuccessContent() {
     return (
       <div className={styles.page}>
         <div className={styles.card}>
-          <p className={styles.sub}>Could not load order details.</p>
-          <Link href="/shop" className={styles.cta}>Continue Shopping</Link>
+          <div className={styles.checkmark}>✓</div>
+          <h1 className={styles.title}>Payment Successful</h1>
+          <p className={styles.sub}>
+            Your payment went through, but we couldn&apos;t load the order
+            details right now. You can view your order from the Orders page.
+          </p>
+          {paymentId && (
+            <div className={styles.paymentId}>
+              Payment ID: <span>{paymentId}</span>
+            </div>
+          )}
+          <Link href="/account/orders" className={styles.cta}>View My Orders</Link>
+          <Link href="/shop" className={styles.ctaSecondary}>Continue Shopping</Link>
         </div>
       </div>
     );

@@ -25,19 +25,20 @@ export async function GET(
 
     // ── Authorization ──────────────────────────────────────────────────────
     //
-    // Two valid paths:
-    //   1. Logged-in user — must supply a Firebase ID token in the
-    //      Authorization: Bearer <token> header.
-    //      The token is verified server-side; order.userId must equal the
-    //      decoded uid.
+    // Three valid paths:
+    //   1. Logged-in user — Firebase ID token in Authorization: Bearer header.
+    //      Token is verified server-side; order.userId must equal decoded uid.
     //
-    //   2. Guest — must supply a valid gto_<id> HttpOnly cookie issued by
-    //      /api/track-order after phone/email verification.  The browser
-    //      sends the cookie automatically on same-origin requests.
+    //   2. Payment-ID proof — caller passes ?payment_id= matching the
+    //      order's razorpay_payment_id. Used by /order-success for guests.
+    //
+    //   3. Guest cookie — valid gto_<id> HttpOnly cookie issued by
+    //      /api/track-order after phone/email verification.
     //
     // Any other combination is rejected with 401 / 403.
 
     const authHeader = request.headers.get("authorization") ?? "";
+    const paymentIdFromQuery = new URL(request.url).searchParams.get("payment_id");
 
     if (authHeader.startsWith("Bearer ")) {
       const idToken = authHeader.slice(7);
@@ -51,8 +52,15 @@ export async function GET(
       if (d.userId !== uid) {
         return Response.json({ error: "Forbidden." }, { status: 403 });
       }
+    } else if (
+      paymentIdFromQuery &&
+      d.payment?.razorpay_payment_id &&
+      d.payment.razorpay_payment_id === paymentIdFromQuery
+    ) {
+      // Guest fallback — allow access only when the caller proves they
+      // possess the Razorpay payment ID that belongs to this order.
     } else {
-      // No Bearer header — require a valid guest token cookie
+      // No Bearer header and no valid payment_id — try guest token cookie
       const cookie = request.cookies.get(`gto_${id}`)?.value ?? "";
       if (!verifyGuestToken(id, cookie)) {
         return Response.json({ error: "Unauthorized." }, { status: 401 });
