@@ -233,7 +233,9 @@
     border-top: none;
     border-left: none;
     background: #fafafa;
-    min-height: calc(100vh - 69px);
+    position: sticky;
+    top: 72px;
+    align-self: flex-start;
   }
 }
 
