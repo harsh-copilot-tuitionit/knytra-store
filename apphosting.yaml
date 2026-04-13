@@ -63,11 +63,4 @@ env:
     value: "https://api.qikink.com"
     availability: [BUILD, RUNTIME]
 
-  - variable: ENABLE_COD
-    value: "true"
-    availability: [RUNTIME]
-
-  - variable: ENABLE_COD_MAX_ORDER
-    value: "3000"
-    availability: [RUNTIME]
 

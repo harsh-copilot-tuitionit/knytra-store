@@ -99,29 +99,6 @@ export default function CheckoutPage() {
   });
   const [paying, setPaying] = useState(false);
   const [paymentError, setPaymentError] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<"online" | "cod">("online");
-  const [codEnabled, setCodEnabled] = useState(false);
-  const [codMaxOrder, setCodMaxOrder] = useState<number | null>(null);
-
-  // Fetch COD config from server (never exposed client-side)
-  useEffect(() => {
-    fetch("/api/checkout-config")
-      .then((r) => r.json())
-      .then((data) => {
-        setCodEnabled(data.codEnabled ?? false);
-        setCodMaxOrder(data.codMaxOrder ?? null);
-      })
-      .catch(() => { /* COD stays disabled on error */ });
-  }, []);
-
-  const codAvailable = codEnabled && (codMaxOrder === null || checkoutTotal <= codMaxOrder);
-
-  // Reset to online if COD becomes unavailable
-  useEffect(() => {
-    if (!codAvailable && paymentMethod === "cod") {
-      setPaymentMethod("online");
-    }
-  }, [codAvailable, paymentMethod]);
 
   // ── Saved addresses ──────────────────────────────────────────────────────
   const [savedAddresses,   setSavedAddresses]   = useState<SavedAddress[]>([]);
@@ -278,7 +255,6 @@ export default function CheckoutPage() {
         state:       form.state,
         fullAddress: form.fullAddress,
       },
-      ...(paymentMethod === "cod" ? { paymentMethod: "cod" } : {}),
     };
 
     // Optionally save address (fire-and-forget for both flows)
@@ -323,35 +299,6 @@ export default function CheckoutPage() {
           console.warn("[checkout] Failed to save address.", err);
         })
         .finally(() => { setSavingAddress(false); });
-    }
-
-    // ── COD flow ──
-    if (paymentMethod === "cod") {
-      try {
-        const res = await fetch("/api/create-order", {
-          method: "POST",
-          headers,
-          body: JSON.stringify(orderBody),
-        });
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          if (res.status === 401) {
-            setPaymentError("Session expired. Please login again.");
-            setPaying(false);
-            router.replace("/login?next=/checkout");
-            return;
-          }
-          throw new Error(data.error ?? "Order creation failed");
-        }
-        const data = await res.json();
-        clearBuyNow();
-        if (!isBuyNow) clearCart();
-        router.push(`/order-success?doc_id=${data.firestore_order_id}&method=cod`);
-      } catch {
-        setPaymentError("Could not place order. Please try again.");
-        setPaying(false);
-      }
-      return;
     }
 
     // ── Razorpay flow ──
@@ -678,49 +625,10 @@ export default function CheckoutPage() {
             <p className={styles.addressSaveInfo}>{addressSaveInfo}</p>
           )}
 
-          {/* ── Payment Method ── */}
-          <div className={styles.paymentMethodSection}>
-            <h3 className={styles.paymentMethodTitle}>Payment Method</h3>
-            <div className={styles.paymentOptions}>
-              <label className={`${styles.paymentOption} ${paymentMethod === "online" ? styles.paymentOptionActive : ""}`}>
-                <input
-                  type="radio"
-                  name="paymentMethod"
-                  value="online"
-                  checked={paymentMethod === "online"}
-                  onChange={() => setPaymentMethod("online")}
-                  className={styles.paymentRadio}
-                  disabled={paying}
-                />
-                <div className={styles.paymentOptionBody}>
-                  <span className={styles.paymentOptionLabel}>Pay Online</span>
-                  <span className={styles.paymentOptionDesc}>UPI, Cards, Net Banking</span>
-                </div>
-              </label>
-              {codAvailable && (
-                <label className={`${styles.paymentOption} ${paymentMethod === "cod" ? styles.paymentOptionActive : ""}`}>
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    value="cod"
-                    checked={paymentMethod === "cod"}
-                    onChange={() => setPaymentMethod("cod")}
-                    className={styles.paymentRadio}
-                    disabled={paying}
-                  />
-                  <div className={styles.paymentOptionBody}>
-                    <span className={styles.paymentOptionLabel}>Cash on Delivery</span>
-                    <span className={styles.paymentOptionDesc}>Pay when you receive</span>
-                  </div>
-                </label>
-              )}
-            </div>
-          </div>
+
 
           <p className={styles.secureNote}>
-            {paymentMethod === "cod"
-              ? "📦 Your order will be confirmed instantly"
-              : "🔒 Secure checkout · Payments powered by Razorpay"}
+            🔒 Secure checkout · Payments powered by Razorpay
           </p>
         </section>
 
@@ -778,9 +686,9 @@ export default function CheckoutPage() {
               disabled={!isValid || paying || (!!user && addressesLoading)}
             >
               {paying
-                ? (paymentMethod === "cod" ? "Placing order…" : "Opening payment…")
+                ? "Opening payment…"
                 : isValid
-                  ? (paymentMethod === "cod" ? "Place Order — COD →" : "Proceed to Pay →")
+                  ? "Proceed to Pay →"
                   : "Fill details to continue"}
             </button>
             {paymentError && (
@@ -802,9 +710,9 @@ export default function CheckoutPage() {
           disabled={!isValid || paying || (!!user && addressesLoading)}
         >
           {paying
-            ? (paymentMethod === "cod" ? "Placing order…" : "Opening payment…")
+            ? "Opening payment…"
             : isValid
-              ? (paymentMethod === "cod" ? "Place Order — COD →" : "Proceed to Pay →")
+              ? "Proceed to Pay →"
               : "Fill details to continue"}
         </button>
       </div>

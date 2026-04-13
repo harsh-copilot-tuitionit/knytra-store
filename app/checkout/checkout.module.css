@@ -136,74 +136,7 @@
   margin-top: 4px;
 }
 
-/* ── Payment Method Selector ── */
-.paymentMethodSection {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 8px;
-}
-
-.paymentMethodTitle {
-  font-family: var(--font-heading);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #555;
-  margin: 0;
-}
-
-.paymentOptions {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.paymentOption {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  border: 1.5px solid #e0e0e0;
-  cursor: pointer;
-  transition: border-color 150ms ease, background 150ms ease;
-}
-
-.paymentOption:hover {
-  border-color: #999;
-}
-
-.paymentOptionActive {
-  border-color: #000;
-  background: #fafafa;
-}
-
-.paymentRadio {
-  accent-color: #000;
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-}
-
-.paymentOptionBody {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.paymentOptionLabel {
-  font-family: var(--font-heading);
-  font-size: 14px;
-  font-weight: 700;
-  color: #000;
-}
-
-.paymentOptionDesc {
-  font-size: 12px;
-  color: #888;
-}
-
+/* ── Payment Error ── */
 .paymentError {
   font-size: 13px;
   color: #c00;
