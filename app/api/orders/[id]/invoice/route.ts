@@ -2,6 +2,8 @@ import { NextRequest } from "next/server";
 import PDFDocument from "pdfkit";
 import { getAdminDb } from "@/lib/firebase-admin";
 
+export const runtime = "nodejs";
+
 // ── helpers ────────────────────────────────────────────────────────────────
 
 function formatINR(amount: number) {

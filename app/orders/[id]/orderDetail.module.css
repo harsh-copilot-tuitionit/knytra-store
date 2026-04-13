@@ -321,7 +321,7 @@
   text-transform: uppercase;
   padding: 12px 28px;
   border-radius: 4px;
-  text-decoration: none;
+  cursor: pointer;
   transition: background 0.2s, color 0.2s;
 }
 

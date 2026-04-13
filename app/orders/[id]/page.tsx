@@ -262,13 +262,26 @@ export default function OrderDetailPage() {
         </div>
 
         <div className={styles.ctaRow}>
-          <a
-            href={`/api/orders/${order.id}/invoice`}
-            download
+          <button
             className={styles.invoiceBtn}
+            onClick={async () => {
+              try {
+                const res = await fetch(`/api/orders/${order.id}/invoice`);
+                if (!res.ok) throw new Error("Failed");
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `knytra-invoice-${order.id.slice(-8).toUpperCase()}.pdf`;
+                a.click();
+                URL.revokeObjectURL(url);
+              } catch {
+                alert("Could not generate invoice. Please try again.");
+              }
+            }}
           >
             ↓ Download Invoice
-          </a>
+          </button>
           <Link href="/shop" className={styles.cta}>Continue Shopping</Link>
         </div>
 

@@ -1,37 +1,55 @@
 /**
  * Qikink print-on-demand order integration.
  *
- * Auth: OAuth2 client-credentials → Bearer token.
+ * Auth: POST /api/token (form-encoded) → Accesstoken header on subsequent calls.
+ * Order creation: POST /api/order/create with ClientId + Accesstoken headers.
  * Env vars: QIKINK_CLIENT_ID, QIKINK_CLIENT_SECRET, QIKINK_API_BASE
- *
- * Adjust TOKEN_PATH / ORDER_PATH if Qikink changes their API routes.
  */
 
 const API_BASE = process.env.QIKINK_API_BASE ?? "https://api.qikink.com";
-const TOKEN_PATH = "/token";
-const ORDER_PATH = "/api/v1/orders";
+const TOKEN_PATH = "/api/token";
+const ORDER_PATH = "/api/order/create";
 
 // ── Types ──────────────────────────────────────────────
 
-export interface QikinkOrderItem {
-  product_name: string;
-  variant: string; // size
-  quantity: number;
+export interface QikinkDesign {
+  design_code: string;
+  width_inches: string;
+  height_inches: string;
+  placement_sku: string; // "fr" | "bk" | "lp" | "rp" | "rs" | "ls"
+  design_link: string;
+  mockup_link: string;
+}
+
+export interface QikinkLineItem {
+  search_from_my_products: 0 | 1;
+  quantity: string;
+  price: string;
+  sku: string;
+  print_type_id?: number; // required if search_from_my_products is 0
+  designs?: QikinkDesign[]; // required if search_from_my_products is 0
+}
+
+export interface QikinkShippingAddress {
+  first_name: string;
+  last_name?: string;
+  address1: string;
+  address2?: string;
+  phone: string;
+  email: string;
+  city: string;
+  zip: string;
+  province: string;
+  country_code: string;
 }
 
 export interface QikinkOrderPayload {
-  order_id: string; // our Firestore order id
-  customer_name: string;
-  email: string;
-  phone: string;
-  shipping_address: {
-    address_line1: string;
-    city: string;
-    state: string;
-    pincode: string;
-    country: string;
-  };
-  items: QikinkOrderItem[];
+  order_number: string;
+  qikink_shipping: "0" | "1";
+  gateway: "COD" | "Prepaid";
+  total_order_value: string;
+  line_items: QikinkLineItem[];
+  shipping_address: QikinkShippingAddress;
 }
 
 export interface QikinkResult {
@@ -48,7 +66,6 @@ let cachedToken: string | null = null;
 let tokenExpiresAt = 0;
 
 async function getAccessToken(): Promise<string> {
-  // Return cached token if still valid (with 60s buffer)
   if (cachedToken && Date.now() < tokenExpiresAt - 60_000) {
     return cachedToken;
   }
@@ -62,11 +79,10 @@ async function getAccessToken(): Promise<string> {
 
   const res = await fetch(`${API_BASE}${TOKEN_PATH}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      client_id: clientId,
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      ClientId: clientId,
       client_secret: clientSecret,
-      grant_type: "client_credentials",
     }),
   });
 
@@ -76,8 +92,7 @@ async function getAccessToken(): Promise<string> {
   }
 
   const data = await res.json();
-  cachedToken = data.access_token;
-  // Default 1-hour expiry if not provided
+  cachedToken = data.access_token ?? data.Accesstoken;
   tokenExpiresAt = Date.now() + (data.expires_in ?? 3600) * 1000;
   return cachedToken!;
 }
@@ -89,11 +104,17 @@ export async function createQikinkOrder(
 ): Promise<QikinkResult> {
   try {
     const token = await getAccessToken();
+    const clientId = process.env.QIKINK_CLIENT_ID;
+
+    if (!clientId) {
+      throw new Error("Missing QIKINK_CLIENT_ID");
+    }
 
     const res = await fetch(`${API_BASE}${ORDER_PATH}`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${token}`,
+        ClientId: clientId,
+        Accesstoken: token,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(payload),
@@ -114,7 +135,7 @@ export async function createQikinkOrder(
     console.log("[qikink] Order created:", body);
     return {
       success: true,
-      qikinkOrderId: body?.order_id ?? body?.id ?? undefined,
+      qikinkOrderId: body?.order_id?.toString() ?? undefined,
       qikinkStatus: "created",
       qikinkResponse: body,
     };

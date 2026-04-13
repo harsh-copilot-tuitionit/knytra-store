@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import crypto from "crypto";
 import { getAdminDb } from "@/lib/firebase-admin";
-import { createQikinkOrder, QikinkOrderItem } from "@/lib/qikink";
+import { createQikinkOrder, QikinkLineItem, QikinkShippingAddress } from "@/lib/qikink";
 
 export async function POST(request: NextRequest) {
   try {
@@ -77,28 +77,42 @@ async function sendToQikink(
     return;
   }
 
-  const user = order.user ?? {};
-  const items: QikinkOrderItem[] = orderItems.map(
-    (item: { name?: string; size?: string; quantity?: number }) => ({
-      product_name: item.name ?? "",
-      variant: item.size ?? "",
-      quantity: item.quantity ?? 1,
+  // Map order items → Qikink line_items
+  // Products created on Qikink dashboard use search_from_my_products=1 + SKU
+  const line_items: QikinkLineItem[] = orderItems.map(
+    (item: { qikinkSku?: string; sku?: string; name?: string; size?: string; price?: number; quantity?: number }) => ({
+      search_from_my_products: 1 as const,
+      quantity: String(item.quantity ?? 1),
+      price: String(item.price ?? 0),
+      sku: item.qikinkSku ?? item.sku ?? "",
     }),
   );
 
+  // Parse name into first/last
+  const fullName = order.user?.name ?? addr.name ?? "";
+  const nameParts = fullName.trim().split(/\s+/);
+  const firstName = nameParts[0] ?? "";
+  const lastName = nameParts.slice(1).join(" ") || undefined;
+
+  const shipping_address: QikinkShippingAddress = {
+    first_name: firstName,
+    last_name: lastName,
+    address1: addr.fullAddress ?? "",
+    phone: order.user?.phone ?? addr.phone ?? "",
+    email: order.user?.email ?? "",
+    city: addr.city ?? "",
+    zip: addr.pincode ?? "",
+    province: addr.state ?? "",
+    country_code: "IN",
+  };
+
   const result = await createQikinkOrder({
-    order_id: orderId,
-    customer_name: user.name ?? addr.name ?? "",
-    email: user.email ?? "",
-    phone: user.phone ?? addr.phone ?? "",
-    shipping_address: {
-      address_line1: addr.fullAddress ?? "",
-      city: addr.city ?? "",
-      state: addr.state ?? "",
-      pincode: addr.pincode ?? "",
-      country: "India",
-    },
-    items,
+    order_number: orderId.slice(0, 15),
+    qikink_shipping: "1",
+    gateway: "Prepaid",
+    total_order_value: String(order.total ?? 0),
+    line_items,
+    shipping_address,
   });
 
   // Persist Qikink result to Firestore
