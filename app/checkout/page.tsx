@@ -409,16 +409,35 @@ export default function CheckoutPage() {
       },
       theme: { color: "#000000" },
 
-      // 4. Success
-      handler: (response: RazorpaySuccessResponse) => {
+      // 4. Success — verify inline, always land on /order-success
+      handler: async (response: RazorpaySuccessResponse) => {
         clearBuyNow();
         if (!isBuyNow) clearCart();
-        router.push(
-          `/order-confirmation?payment_id=${response.razorpay_payment_id}` +
-          `&order_id=${response.razorpay_order_id}` +
-          `&signature=${response.razorpay_signature}` +
-          `&doc_id=${firestoreOrderId}`
-        );
+
+        const successUrl =
+          `/order-success?doc_id=${firestoreOrderId}` +
+          `&payment_id=${response.razorpay_payment_id}`;
+
+        try {
+          const verifyRes = await fetch("/api/verify-payment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              razorpay_order_id:   response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature:  response.razorpay_signature,
+              firestore_order_id:  firestoreOrderId,
+            }),
+          });
+          if (!verifyRes.ok) {
+            console.error("[checkout] verify-payment returned", verifyRes.status);
+          }
+        } catch (err) {
+          // Webhook is the safety net — still redirect to success
+          console.error("[checkout] verify-payment fetch failed:", err);
+        }
+
+        router.replace(successUrl);
       },
 
       // 5. Dismiss / failure

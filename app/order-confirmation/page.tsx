@@ -29,13 +29,15 @@ function OrderConfirmationContent() {
       }),
     })
       .then((res) => {
-        if (res.ok) {
-          router.replace(`/order-success?doc_id=${docId}&payment_id=${paymentId}`);
-        } else {
-          router.replace("/order-failed");
-        }
+        if (!res.ok) console.error("[order-confirmation] verify-payment returned", res.status);
+        // Always redirect to order-success — webhook is the safety net
+        router.replace(`/order-success?doc_id=${docId}&payment_id=${paymentId}`);
       })
-      .catch(() => router.replace("/order-failed"));
+      .catch((err) => {
+        console.error("[order-confirmation] verify-payment fetch failed:", err);
+        // Still redirect to success page with fallback UI
+        router.replace(`/order-success?doc_id=${docId}&payment_id=${paymentId}`);
+      });
   }, [paymentId, orderId, signature, docId, router]);
 
   return (
