@@ -33,6 +33,7 @@ export default function Footer() {
               <Link href="/contact">Contact Us</Link>
               <Link href="/shipping">Shipping Policy</Link>
               <Link href="/track-order">Track Order</Link>
+              <Link href="/careers">Careers</Link>
             </div>
 
             <div className={styles.linkGroup}>

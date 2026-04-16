@@ -55,6 +55,22 @@ service cloud.firestore {
                          && request.auth.uid == userId;
     }
 
+    // ── Careers (Recruitment) ────────────────────────────────────────────────
+    // All careers data is managed exclusively via server-side API routes
+    // using the Admin SDK. No direct client access is permitted.
+
+    match /careers_admins/{uid} {
+      allow read, write: if false;
+    }
+
+    match /careers_jobs/{jobId} {
+      allow read, write: if false;
+    }
+
+    match /careers_applications/{appId} {
+      allow read, write: if false;
+    }
+
     // ── Default ──────────────────────────────────────────────────────────────
     // Deny everything not explicitly matched above.
     match /{document=**} {
