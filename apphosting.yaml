@@ -8,31 +8,31 @@ env:
   # ── Public Firebase config (safe to commit)
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
     value: "AIzaSyDBYTSgmXEqpWY0634woxQ64ZPjt22Y2ao"
-    availability: [BUILD, RUNTIME]
+    availability: [ BUILD, RUNTIME ]
 
   - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
     value: "knytra-in.firebaseapp.com"
-    availability: [BUILD, RUNTIME]
+    availability: [ BUILD, RUNTIME ]
 
   - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
     value: "knytra-in"
-    availability: [BUILD, RUNTIME]
+    availability: [ BUILD, RUNTIME ]
 
   - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
     value: "knytra-in.firebasestorage.app"
-    availability: [BUILD, RUNTIME]
+    availability: [ BUILD, RUNTIME ]
 
   - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
     value: "182983199953"
-    availability: [BUILD, RUNTIME]
+    availability: [ BUILD, RUNTIME ]
 
   - variable: NEXT_PUBLIC_FIREBASE_APP_ID
     value: "1:182983199953:web:9842ff5b229d78d01f09f0"
-    availability: [BUILD, RUNTIME]
+    availability: [ BUILD, RUNTIME ]
 
   - variable: NEXT_PUBLIC_SITE_URL
     value: "https://knytra-in.web.app"
-    availability: [BUILD, RUNTIME]
+    availability: [ BUILD, RUNTIME ]
 
   # ── Secrets (set via: npx firebase-tools apphosting:secrets:set <NAME>)
   - variable: NEXT_PUBLIC_ADMIN_UID
@@ -61,6 +61,6 @@ env:
 
   - variable: QIKINK_API_BASE
     value: "https://api.qikink.com"
-    availability: [BUILD, RUNTIME]
-
-
+    availability: [ BUILD, RUNTIME ]
+  - variable: CAREERS_ADMIN_SECRET
+    secret: CAREERS_ADMIN_SECRET
