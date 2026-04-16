@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, X, Plus } from "lucide-react";
-import styles from "../../../careersAdmin.module.css";
+import styles from "../../careersAdmin.module.css";
 
 export default function EditJobPage() {
   const params = useParams();
