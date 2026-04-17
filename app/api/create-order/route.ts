@@ -70,6 +70,24 @@ export async function POST(request: NextRequest) {
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
+    // ── WhatsApp Notification ──
+    try {
+      const phone = user?.phone || address?.phone;
+      if (phone) {
+        const whatsappRes = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/send-whatsapp`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            to: phone.startsWith("+") ? phone : `+91${phone}`,
+            message: `Hi ${user?.name || "there"}, your order has been placed! Order ID: ${orderRef.id}. Thank you for shopping with Knytra.`
+          })
+        });
+        // Optionally log or handle whatsappRes
+      }
+    } catch (err) {
+      console.error("[create-order] WhatsApp notification error:", err);
+    }
+
     return Response.json({
       razorpay_order_id: order.id,
       firestore_order_id: orderRef.id,

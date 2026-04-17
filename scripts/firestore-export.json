@@ -1,0 +1,34 @@
+{
+  "products": {
+    "05GeGEIIXxaEpFwV4Fy2": {
+      "name": "Lavender Oversized Tee",
+      "description": "Meet your new go-to: the Lavender Terry Oversized Tee. It is all about comfort, texture, and an easy laid-back vibe.\n\nMade from a premium 260 GSM terry-knit fabric, this tee blends 90% cotton with 10% polyester for a soft yet durable feel. The terry texture adds a subtle richness while still staying breathable enough for everyday wear. The lavender color brings a fresh, calm look that feels modern without being loud.\n\nThe unisex oversized fit gives you that relaxed, roomy silhouette with drop shoulders that sit just right. It drapes naturally and works with pretty much anything in your wardrobe.\n\n**Why you’ll love it:**\n\n* Soft, premium terry texture with a solid feel\n* Relaxed oversized fit that feels effortless\n* Clean lavender tone that stands out in a subtle way\n\n**Care instructions:**\nWash inside out in cold water, dry on low heat, and iron inside out to keep it looking fresh.\n\nComfort you can live in, style you don’t have to think about.",
+      "price": 1923,
+      "status": "active",
+      "sizes": [
+        "XS",
+        "S",
+        "M",
+        "L",
+        "XXL",
+        "XL"
+      ],
+      "images": [
+        "https://firebasestorage.googleapis.com/v0/b/knytra-85510.firebasestorage.app/o/products%2F1775240730229_Front_1_c_49.jpg?alt=media&token=74796baf-742c-4735-8bb6-b9ae342c2328",
+        "https://firebasestorage.googleapis.com/v0/b/knytra-85510.firebasestorage.app/o/products%2F1775240740552_Back_2_c_49.jpg?alt=media&token=fecaf3d8-320b-43fc-bc87-e4e557689614"
+      ],
+      "createdAt": {
+        "_seconds": 1775240749,
+        "_nanoseconds": 516000000
+      }
+    }
+  },
+  "waitlist": {
+    "harsh@harshrathore.com": {
+      "email": "harsh@harshrathore.com",
+      "joinedAt": "2026-04-03T16:23:01.039Z",
+      "source": "coming-soon",
+      "status": "active"
+    }
+  }
+}

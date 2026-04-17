@@ -14,6 +14,20 @@ export interface DemoProduct {
 const U = "https://images.unsplash.com";
 
 export const DEMO_PRODUCTS: DemoProduct[] = [
+    {
+      id: "demo-1rs-product",
+      name: "Demo Product ₹1",
+      description: "A test/demo product for just ₹1. Use for testing checkout and order flows.",
+      price: 1,
+      originalPrice: 99,
+      images: [
+        `${U}/photo-1521572163474-6864f9cf17ab?w=800&h=960&fit=crop`,
+      ],
+      sizes: ["M"],
+      status: "active",
+      category: "Demo",
+      tag: "new",
+    },
   {
     id: "concrete-shadow-tee",
     name: "Concrete Shadow Tee",
