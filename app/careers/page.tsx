@@ -53,10 +53,9 @@ async function getOpenJobs(): Promise<CareerJob[]> {
     const snap = await db
       .collection("careers_jobs")
       .where("status", "==", "open")
-      .orderBy("createdAt", "desc")
       .get();
 
-    return snap.docs.map((doc) => {
+    const jobs = snap.docs.map((doc) => {
       const d = doc.data();
       return {
         id: doc.id,
@@ -74,7 +73,14 @@ async function getOpenJobs(): Promise<CareerJob[]> {
         updatedAt: d.updatedAt?.toDate?.()?.toISOString() ?? null,
       };
     });
-  } catch {
+
+    return jobs.sort(
+      (a, b) =>
+        new Date(b.createdAt ?? 0).getTime() -
+        new Date(a.createdAt ?? 0).getTime(),
+    );
+  } catch (err) {
+    console.error("[Careers] Failed to fetch jobs:", err);
     return [];
   }
 }
