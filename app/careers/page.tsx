@@ -7,6 +7,8 @@ import { getAdminDb } from "@/lib/firebase-admin";
 import type { CareerJob } from "@/lib/types/careers";
 import styles from "./careers.module.css";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Careers | Knytra",
   description:
