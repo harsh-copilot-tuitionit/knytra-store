@@ -93,6 +93,10 @@ export async function GET(
         razorpay_order_id:   d.payment?.razorpay_order_id   ?? "",
         razorpay_payment_id: d.payment?.razorpay_payment_id ?? "",
       },
+      whatsapp: {
+        sent:  d.whatsappNotification?.sent  ?? false,
+        error: d.whatsappNotification?.error ?? null,
+      },
     });
   } catch (error: unknown) {
     console.error("[api/orders] Fetch error:", error);

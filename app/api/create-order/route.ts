@@ -100,6 +100,18 @@ export async function POST(request: NextRequest) {
       console.error("[create-order] WhatsApp notification error:", err);
     }
 
+    try {
+      await db.collection("orders").doc(orderRef.id).update({
+        whatsappNotification: {
+          sent: whatsappSent,
+          error: whatsappError,
+          attemptedAt: admin.firestore.FieldValue.serverTimestamp(),
+        },
+      });
+    } catch (err) {
+      console.error("[create-order] Failed to update WhatsApp status on order:", err);
+    }
+
     return Response.json({
       razorpay_order_id: order.id,
       firestore_order_id: orderRef.id,

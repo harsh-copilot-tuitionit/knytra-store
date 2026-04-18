@@ -29,6 +29,10 @@ interface OrderData {
   payment: {
     razorpay_payment_id: string;
   };
+  whatsapp: {
+    sent: boolean;
+    error: string | null;
+  };
   createdAt: string | null;
 }
 
@@ -173,6 +177,17 @@ function OrderSuccessContent() {
         <div className={styles.paymentId}>
           Payment ID: <span>{displayPaymentId}</span>
         </div>
+
+        {order.whatsapp?.sent ? (
+          <div className={styles.whatsappSuccess}>
+            ✅ Order details have been sent to your WhatsApp.
+          </div>
+        ) : (
+          <div className={styles.whatsappPending}>
+            ⚠️ We were unable to send WhatsApp confirmation automatically.
+            {order.whatsapp?.error ? <span> {order.whatsapp.error}</span> : ""}
+          </div>
+        )}
 
         {/* CTA */}
         <Link href="/shop" className={styles.cta}>Continue Shopping</Link>
