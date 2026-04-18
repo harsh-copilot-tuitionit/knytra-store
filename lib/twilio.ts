@@ -2,12 +2,20 @@ import twilio from "twilio";
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
+const whatsappFrom = process.env.TWILIO_WHATSAPP_FROM;
 
 function getTwilioClient() {
   if (!accountSid || !authToken) {
     throw new Error("Twilio credentials are not configured. Set TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN.");
   }
   return twilio(accountSid, authToken);
+}
+
+export function getWhatsAppFromNumber() {
+  if (!whatsappFrom) {
+    throw new Error("WhatsApp sender number is not configured. Set TWILIO_WHATSAPP_FROM to your approved Twilio WhatsApp phone number.");
+  }
+  return whatsappFrom;
 }
 
 export function formatPhone(phone: string) {
@@ -41,6 +49,7 @@ export async function sendWhatsAppMessage({
   console.log("STEP 10: ENV CHECK", {
     sid: process.env.TWILIO_ACCOUNT_SID ? "OK" : "MISSING",
     token: process.env.TWILIO_AUTH_TOKEN ? "OK" : "MISSING",
+    from: whatsappFrom ? "OK" : "MISSING",
   });
 
   const client = getTwilioClient();
@@ -48,7 +57,7 @@ export async function sendWhatsAppMessage({
   try {
     const message = await client.messages.create({
       body,
-      from: "whatsapp:+14155238886",
+      from: getWhatsAppFromNumber(),
       to: formattedPhone,
       statusCallback,
     });
