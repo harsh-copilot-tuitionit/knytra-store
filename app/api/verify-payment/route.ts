@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import crypto from "crypto";
 import { getAdminDb } from "@/lib/firebase-admin";
+import { sendWhatsAppMessage } from "@/lib/twilio";
 import { createQikinkOrder, QikinkLineItem, QikinkShippingAddress } from "@/lib/qikink";
 
 export async function POST(request: NextRequest) {
@@ -36,6 +37,61 @@ export async function POST(request: NextRequest) {
     });
 
     console.log(`[verify-payment] Order ${firestore_order_id} marked success.`);
+
+    // 2a. Send WhatsApp order confirmation after successful payment
+    try {
+      const orderSnap = await db.collection("orders").doc(firestore_order_id).get();
+      if (orderSnap.exists) {
+        const order = orderSnap.data()!;
+        const phone = order.user?.phone || order.address?.phone;
+        const customerName = order.user?.name || order.address?.name || "there";
+
+        if (phone) {
+          const origin = new URL(request.url).origin;
+          const callbackUrl = new URL(
+            `/api/whatsapp-status-callback?orderId=${firestore_order_id}`,
+            origin,
+          ).toString();
+
+          const result = await sendWhatsAppMessage({
+            to: phone.startsWith("+") ? phone : `+91${phone}`,
+            body: `Hi ${customerName}, your payment is confirmed and your KNYTRA order is now placed. Order ID: ${firestore_order_id}.`,
+            statusCallback: callbackUrl,
+          });
+
+          await db.collection("orders").doc(firestore_order_id).update({
+            whatsappNotification: {
+              sent: true,
+              sid: result.sid,
+              status: result.status,
+              error: null,
+              attemptedAt: admin.firestore.FieldValue.serverTimestamp(),
+            },
+          });
+        } else {
+          await db.collection("orders").doc(firestore_order_id).update({
+            whatsappNotification: {
+              sent: false,
+              sid: null,
+              status: null,
+              error: "No phone number available for WhatsApp.",
+              attemptedAt: admin.firestore.FieldValue.serverTimestamp(),
+            },
+          });
+        }
+      }
+    } catch (err: unknown) {
+      console.error("[verify-payment] WhatsApp notification error:", err);
+      await db.collection("orders").doc(firestore_order_id).update({
+        whatsappNotification: {
+          sent: false,
+          sid: null,
+          status: null,
+          error: err instanceof Error ? err.message : String(err),
+          attemptedAt: admin.firestore.FieldValue.serverTimestamp(),
+        },
+      });
+    }
 
     // 3. Send order to Qikink (non-blocking — failures don't break payment flow)
     sendToQikink(db, firestore_order_id).catch((err) =>

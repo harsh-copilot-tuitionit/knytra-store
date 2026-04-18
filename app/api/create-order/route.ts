@@ -2,7 +2,6 @@ import { NextRequest } from "next/server";
 import Razorpay from "razorpay";
 import * as admin from "firebase-admin";
 import { getAdminDb, getAdminAuth } from "@/lib/firebase-admin";
-import { sendWhatsAppMessage } from "@/lib/twilio";
 
 const razorpay = new Razorpay({
   key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
@@ -71,59 +70,11 @@ export async function POST(request: NextRequest) {
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    let whatsappSent = false;
-    let whatsappSid: string | null = null;
-    let whatsappStatus: string | null = null;
-    let whatsappError: string | null = null;
-
-    // ── WhatsApp Notification ──
-    try {
-      const phone = user?.phone || address?.phone;
-      if (phone) {
-        const origin = new URL(request.url).origin;
-        const callbackUrl = new URL(
-          `/api/whatsapp-status-callback?orderId=${orderRef.id}`,
-          origin,
-        ).toString();
-
-        const result = await sendWhatsAppMessage({
-          to: phone.startsWith("+") ? phone : `+91${phone}`,
-          body: `Hi ${user?.name || "there"}, your order has been placed! Order ID: ${orderRef.id}. Thank you for shopping with Knytra.`,
-          statusCallback: callbackUrl,
-        });
-
-        whatsappSid = result.sid;
-        whatsappStatus = result.status;
-        whatsappSent = true;
-      }
-    } catch (err: any) {
-      whatsappError = err?.message ?? String(err);
-      console.error("[create-order] WhatsApp notification error:", err);
-    }
-
-    try {
-      await db.collection("orders").doc(orderRef.id).update({
-        whatsappNotification: {
-          sent: whatsappSent,
-          sid: whatsappSid,
-          status: whatsappStatus,
-          error: whatsappError,
-          attemptedAt: admin.firestore.FieldValue.serverTimestamp(),
-        },
-      });
-    } catch (err) {
-      console.error("[create-order] Failed to update WhatsApp status on order:", err);
-    }
-
     return Response.json({
       razorpay_order_id: order.id,
       firestore_order_id: orderRef.id,
       amount: order.amount,
       currency: order.currency,
-      whatsappSent,
-      whatsappError,
-      whatsappSid,
-      whatsappStatus,
     });
   } catch (error: unknown) {
     console.error("[create-order] error:", error);
