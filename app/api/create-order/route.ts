@@ -70,6 +70,9 @@ export async function POST(request: NextRequest) {
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
+    let whatsappSent = false;
+    let whatsappError: string | null = null;
+
     // ── WhatsApp Notification ──
     try {
       const phone = user?.phone || address?.phone;
@@ -80,16 +83,20 @@ export async function POST(request: NextRequest) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             to: phone.startsWith("+") ? phone : `+91${phone}`,
-            message: `Hi ${user?.name || "there"}, your order has been placed! Order ID: ${orderRef.id}. Thank you for shopping with Knytra.`
+            message: `Hi ${user?.name || "there"}, your order has been placed! Order ID: ${orderRef.id}. Thank you for shopping with Knytra.`,
           }),
         });
 
         if (!whatsappRes.ok) {
           const errorText = await whatsappRes.text();
+          whatsappError = `Status ${whatsappRes.status}: ${errorText}`;
           console.error("[create-order] WhatsApp API returned error", whatsappRes.status, errorText);
+        } else {
+          whatsappSent = true;
         }
       }
     } catch (err) {
+      whatsappError = String(err);
       console.error("[create-order] WhatsApp notification error:", err);
     }
 
@@ -98,6 +105,8 @@ export async function POST(request: NextRequest) {
       firestore_order_id: orderRef.id,
       amount: order.amount,
       currency: order.currency,
+      whatsappSent,
+      whatsappError,
     });
   } catch (error: unknown) {
     console.error("[create-order] error:", error);
