@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import crypto from "crypto";
 import * as admin from "firebase-admin";
 import { getAdminDb } from "@/lib/firebase-admin";
-import { sendWhatsAppMessage } from "@/lib/twilio";
+import { sendOrderConfirmationWhatsApp } from "@/lib/twilio";
 import { createQikinkOrder, QikinkLineItem, QikinkShippingAddress } from "@/lib/qikink";
 
 export async function POST(request: NextRequest) {
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
         if (order.whatsappNotification?.sent) {
           console.log("STEP X: WhatsApp already sent, skipping");
         } else if (phone) {
-          console.log("STEP 4: Calling sendWhatsAppMessage...");
+          console.log("STEP 4: Calling sendOrderConfirmationWhatsApp...");
 
           const origin = new URL(request.url).origin;
           const callbackUrl = new URL(
@@ -70,9 +70,13 @@ export async function POST(request: NextRequest) {
             origin,
           ).toString();
 
-          const result = await sendWhatsAppMessage({
-            to: phone,
-            body: `Hi ${customerName}, your payment is confirmed and your KNYTRA order is now placed. Order ID: ${firestore_order_id}.`,
+          const amountValue = order.totalAmount ?? (typeof order.amount === "number" ? order.amount / 100 : null) ?? 0;
+
+          const result = await sendOrderConfirmationWhatsApp({
+            phone,
+            name: customerName,
+            orderId: orderSnap.id,
+            amount: amountValue,
             statusCallback: callbackUrl,
           });
 
