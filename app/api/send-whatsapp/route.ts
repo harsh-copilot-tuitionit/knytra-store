@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import twilio from 'twilio';
+import { formatPhone } from '@/lib/twilio';
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID!;
 const authToken = process.env.TWILIO_AUTH_TOKEN!;
@@ -11,7 +12,7 @@ export async function POST(req: NextRequest) {
     const msg = await client.messages.create({
       body: message,
       from: 'whatsapp:+14155238886', // Twilio Sandbox WhatsApp number
-      to: `whatsapp:${to}`,
+      to: formatPhone(to),
     });
     return NextResponse.json({ success: true, sid: msg.sid });
   } catch (error: any) {
