@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import crypto from "crypto";
+import * as admin from "firebase-admin";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { sendWhatsAppMessage } from "@/lib/twilio";
 import { createQikinkOrder, QikinkLineItem, QikinkShippingAddress } from "@/lib/qikink";
