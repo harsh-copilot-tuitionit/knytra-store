@@ -7,6 +7,8 @@ import { createQikinkOrder, QikinkLineItem, QikinkShippingAddress } from "@/lib/
 
 export async function POST(request: NextRequest) {
   try {
+    console.log("STEP 1: verify-payment HIT");
+
     const body = await request.json();
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, firestore_order_id } = body;
 
@@ -30,6 +32,8 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: "Invalid payment signature." }, { status: 400 });
     }
 
+    console.log("STEP 2: Payment verified successfully");
+
     // 2. Update Firestore order immediately (webhook is fallback)
     const db = getAdminDb();
     await db.collection("orders").doc(firestore_order_id).update({
@@ -46,8 +50,20 @@ export async function POST(request: NextRequest) {
         const order = orderSnap.data()!;
         const phone = order.user?.phone || order.address?.phone;
         const customerName = order.user?.name || order.address?.name || "there";
+        const total = order.total ?? order.amount ?? null;
 
-        if (phone) {
+        console.log("STEP 3: Order data:", {
+          id: orderSnap.id,
+          phone,
+          name: customerName,
+          total,
+        });
+
+        if (order.whatsappNotification?.sent) {
+          console.log("STEP X: WhatsApp already sent, skipping");
+        } else if (phone) {
+          console.log("STEP 4: Calling sendWhatsAppMessage...");
+
           const origin = new URL(request.url).origin;
           const callbackUrl = new URL(
             `/api/whatsapp-status-callback?orderId=${firestore_order_id}`,
@@ -55,7 +71,7 @@ export async function POST(request: NextRequest) {
           ).toString();
 
           const result = await sendWhatsAppMessage({
-            to: phone.startsWith("+") ? phone : `+91${phone}`,
+            to: phone,
             body: `Hi ${customerName}, your payment is confirmed and your KNYTRA order is now placed. Order ID: ${firestore_order_id}.`,
             statusCallback: callbackUrl,
           });
@@ -70,6 +86,7 @@ export async function POST(request: NextRequest) {
             },
           });
         } else {
+          console.log("STEP 4: No phone available, skipping WhatsApp send");
           await db.collection("orders").doc(firestore_order_id).update({
             whatsappNotification: {
               sent: false,

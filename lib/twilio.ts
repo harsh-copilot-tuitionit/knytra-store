@@ -33,16 +33,34 @@ export async function sendWhatsAppMessage({
   body: string;
   statusCallback?: string;
 }) {
-  const client = getTwilioClient();
-  const msg = await client.messages.create({
-    body,
-    from: "whatsapp:+14155238886",
-    to: formatPhone(to),
-    statusCallback,
+  console.log("STEP 5: WhatsApp function START");
+  console.log("STEP 6: Raw phone:", to);
+  const formattedPhone = formatPhone(to);
+  console.log("STEP 7: Formatted phone:", formattedPhone);
+  console.log("STEP 8: Sending request to Twilio...");
+  console.log("STEP 10: ENV CHECK", {
+    sid: process.env.TWILIO_ACCOUNT_SID ? "OK" : "MISSING",
+    token: process.env.TWILIO_AUTH_TOKEN ? "OK" : "MISSING",
   });
 
-  return {
-    sid: msg.sid,
-    status: msg.status ?? null,
-  };
+  const client = getTwilioClient();
+
+  try {
+    const message = await client.messages.create({
+      body,
+      from: "whatsapp:+14155238886",
+      to: formattedPhone,
+      statusCallback,
+    });
+
+    console.log("STEP 9: Twilio SUCCESS:", message.sid);
+
+    return {
+      sid: message.sid,
+      status: message.status ?? null,
+    };
+  } catch (err: unknown) {
+    console.error("STEP 9: Twilio ERROR:", err);
+    throw err;
+  }
 }
