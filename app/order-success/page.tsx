@@ -31,6 +31,9 @@ interface OrderData {
   };
   whatsapp: {
     sent: boolean;
+    sid: string | null;
+    status: string | null;
+    delivered: boolean;
     error: string | null;
   };
   createdAt: string | null;
@@ -180,7 +183,15 @@ function OrderSuccessContent() {
 
         {order.whatsapp?.sent ? (
           <div className={styles.whatsappSuccess}>
-            ✅ Order details have been sent to your WhatsApp.
+            {order.whatsapp.delivered ? (
+              "✅ Order details have been sent and delivered to your WhatsApp."
+            ) : (
+              <>
+                ✅ Order details have been sent to your WhatsApp.
+                {order.whatsapp.status ? ` Status: ${order.whatsapp.status}.` : ""}
+              </>
+            )}
+            {order.whatsapp.sid ? <div className={styles.whatsappMeta}>Message SID: {order.whatsapp.sid}</div> : null}
           </div>
         ) : (
           <div className={styles.whatsappPending}>

@@ -94,8 +94,11 @@ export async function GET(
         razorpay_payment_id: d.payment?.razorpay_payment_id ?? "",
       },
       whatsapp: {
-        sent:  d.whatsappNotification?.sent  ?? false,
-        error: d.whatsappNotification?.error ?? null,
+        sent:      d.whatsappNotification?.sent      ?? false,
+        sid:       d.whatsappNotification?.sid       ?? null,
+        status:    d.whatsappNotification?.status    ?? null,
+        error:     d.whatsappNotification?.error     ?? null,
+        delivered: d.whatsappNotification?.status === "delivered",
       },
     });
   } catch (error: unknown) {
