@@ -74,15 +74,20 @@ export async function POST(request: NextRequest) {
     try {
       const phone = user?.phone || address?.phone;
       if (phone) {
-        const whatsappRes = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/send-whatsapp`, {
+        const whatsappUrl = new URL("/api/send-whatsapp", request.url).toString();
+        const whatsappRes = await fetch(whatsappUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             to: phone.startsWith("+") ? phone : `+91${phone}`,
             message: `Hi ${user?.name || "there"}, your order has been placed! Order ID: ${orderRef.id}. Thank you for shopping with Knytra.`
-          })
+          }),
         });
-        // Optionally log or handle whatsappRes
+
+        if (!whatsappRes.ok) {
+          const errorText = await whatsappRes.text();
+          console.error("[create-order] WhatsApp API returned error", whatsappRes.status, errorText);
+        }
       }
     } catch (err) {
       console.error("[create-order] WhatsApp notification error:", err);
