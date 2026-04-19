@@ -77,7 +77,9 @@ async function getAccessToken(): Promise<string> {
     throw new Error("Missing QIKINK_CLIENT_ID or QIKINK_CLIENT_SECRET");
   }
 
-  const res = await fetch(`${API_BASE}${TOKEN_PATH}`, {
+  // Attempt A: ClientId + client_secret
+  console.log("QIKINK TOKEN ATTEMPT A");
+  let res = await fetch(`${API_BASE}${TOKEN_PATH}`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
@@ -85,16 +87,37 @@ async function getAccessToken(): Promise<string> {
       client_secret: clientSecret,
     }),
   });
-
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Qikink token request failed (${res.status}): ${text}`);
+  let text = await res.text();
+  console.log("QIKINK TOKEN ATTEMPT A status:", res.status);
+  console.log("QIKINK TOKEN ATTEMPT A body:", text);
+  if (res.ok) {
+    const data = JSON.parse(text);
+    cachedToken = data.access_token ?? data.Accesstoken;
+    tokenExpiresAt = Date.now() + (data.expires_in ?? 3600) * 1000;
+    return cachedToken!;
   }
 
-  const data = await res.json();
-  cachedToken = data.access_token ?? data.Accesstoken;
-  tokenExpiresAt = Date.now() + (data.expires_in ?? 3600) * 1000;
-  return cachedToken!;
+  // Attempt B: client_id + client_secret
+  console.log("QIKINK TOKEN ATTEMPT B");
+  res = await fetch(`${API_BASE}${TOKEN_PATH}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+    }),
+  });
+  text = await res.text();
+  console.log("QIKINK TOKEN ATTEMPT B status:", res.status);
+  console.log("QIKINK TOKEN ATTEMPT B body:", text);
+  if (res.ok) {
+    const data = JSON.parse(text);
+    cachedToken = data.access_token ?? data.Accesstoken;
+    tokenExpiresAt = Date.now() + (data.expires_in ?? 3600) * 1000;
+    return cachedToken!;
+  }
+
+  throw new Error(`Qikink token request failed (A:${res.status}, B:${res.status}): see logs above for details`);
 }
 
 // ── Create order ───────────────────────────────────────
