@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getSessionFromRequest } from "@/lib/careers-auth";
+import { normalizeApplicationConfig } from "@/lib/types/careers";
 import * as admin from "firebase-admin";
 
 function isAdmin(request: NextRequest): boolean {
@@ -36,13 +37,7 @@ export async function GET(request: NextRequest) {
         perks: d.perks ?? [],
         compensation: d.compensation ?? "",
         status: d.status ?? "draft",
-        applicationConfig: d.applicationConfig ?? {
-          showStudentSection: false,
-          showExperienceSection: false,
-          showMotivationSection: false,
-          showAssessmentSection: false,
-          customQuestions: [],
-        },
+        applicationConfig: normalizeApplicationConfig(d.applicationConfig),
         createdAt: d.createdAt?.toDate?.()?.toISOString() ?? null,
         updatedAt: d.updatedAt?.toDate?.()?.toISOString() ?? null,
       };
@@ -106,16 +101,7 @@ export async function POST(request: NextRequest) {
       perks: Array.isArray(body.perks) ? body.perks : [],
       compensation: compensation?.trim() ?? "",
       status: status ?? "draft",
-      applicationConfig:
-        typeof applicationConfig === "object" && applicationConfig !== null
-          ? applicationConfig
-          : {
-              showStudentSection: false,
-              showExperienceSection: false,
-              showMotivationSection: false,
-              showAssessmentSection: false,
-              customQuestions: [],
-            },
+      applicationConfig: normalizeApplicationConfig(applicationConfig),
       createdAt: now,
       updatedAt: now,
     });

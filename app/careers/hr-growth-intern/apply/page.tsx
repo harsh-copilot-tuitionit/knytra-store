@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import ApplicationFlow from "@/components/ApplicationFlow";
 import { getJobBySlug } from "@/lib/careers";
 import type { CareerJob } from "@/lib/types/careers";
+import { normalizeApplicationConfig } from "@/lib/types/careers";
 
 export const dynamic = "force-dynamic";
 
@@ -23,13 +24,7 @@ export default async function HrGrowthInternApplyPage() {
         jobTitle={job.title}
         jobType={job.type}
         description={job.description}
-        applicationConfig={job.applicationConfig ?? {
-          showStudentSection: false,
-          showExperienceSection: false,
-          showMotivationSection: false,
-          showAssessmentSection: false,
-          customQuestions: [],
-        }}
+        applicationConfig={normalizeApplicationConfig(job.applicationConfig)}
       />
     </main>
   );

@@ -6,6 +6,7 @@ import type {
   JobType,
   Question,
 } from "@/lib/types/careers";
+import { normalizeApplicationConfig } from "@/lib/types/careers";
 import styles from "./ApplicationFlow.module.css";
 
 interface Props {
@@ -80,6 +81,10 @@ export default function ApplicationFlow({
   description,
   applicationConfig,
 }: Props) {
+  const normalizedApplicationConfig = useMemo(
+    () => normalizeApplicationConfig(applicationConfig),
+    [applicationConfig],
+  );
   const [state, setState] = useState(() => ({ ...defaultApplicationState }));
   const [activeStep, setActiveStep] = useState(0);
   const [error, setError] = useState("");
@@ -89,19 +94,19 @@ export default function ApplicationFlow({
   const steps = useMemo<StepId[]>(() => {
     const list: StepId[] = ["intro", "basic", "studentQuestion"];
 
-    if (applicationConfig.showStudentSection && state.studentStatus === true) {
+    if (normalizedApplicationConfig.showStudentSection && state.studentStatus === true) {
       list.push("studentDetails");
     }
-    if (applicationConfig.showExperienceSection) {
+    if (normalizedApplicationConfig.showExperienceSection) {
       list.push("experienceDetails");
     }
-    if (applicationConfig.showMotivationSection) {
+    if (normalizedApplicationConfig.showMotivationSection) {
       list.push("motivation");
     }
-    if (applicationConfig.showAssessmentSection) {
+    if (normalizedApplicationConfig.showAssessmentSection) {
       list.push("assessment");
     }
-    if (applicationConfig.customQuestions.length > 0) {
+    if (normalizedApplicationConfig.customQuestions.length > 0) {
       list.push("customQuestions");
     }
 
@@ -229,7 +234,7 @@ export default function ApplicationFlow({
     }
 
     if (stepId === "customQuestions") {
-      for (const question of applicationConfig.customQuestions) {
+      for (const question of normalizedApplicationConfig.customQuestions) {
         if (question.required) {
           const value = state.customAnswers[question.id]?.trim() ?? "";
           if (!value) return `Answer required for: ${question.question}`;
@@ -287,13 +292,13 @@ export default function ApplicationFlow({
             studentStatus: state.studentStatus,
             studentDetails:
               state.studentStatus === true ? state.studentDetails : null,
-            experienceDetails: applicationConfig.showExperienceSection
+            experienceDetails: normalizedApplicationConfig.showExperienceSection
               ? state.experienceDetails
               : null,
-            motivationAnswers: applicationConfig.showMotivationSection
+            motivationAnswers: normalizedApplicationConfig.showMotivationSection
               ? state.motivationAnswers
               : null,
-            assessmentAnswers: applicationConfig.showAssessmentSection
+            assessmentAnswers: normalizedApplicationConfig.showAssessmentSection
               ? state.assessmentAnswers
               : null,
             customAnswers: state.customAnswers,
@@ -573,7 +578,7 @@ export default function ApplicationFlow({
 
             {currentStepId === "customQuestions" && (
               <div className={styles.formGrid}>
-                {applicationConfig.customQuestions.map((question) => (
+                {normalizedApplicationConfig.customQuestions.map((question) => (
                   <div key={question.id} className={styles.formField}>
                     <label className={styles.formLabel}>
                       {question.question}

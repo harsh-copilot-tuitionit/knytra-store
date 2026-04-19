@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { Question } from "@/lib/types/careers";
+import { normalizeApplicationConfig } from "@/lib/types/careers";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, X, Plus, ArrowUp, ArrowDown } from "lucide-react";
@@ -120,7 +121,7 @@ export default function NewJobPage() {
           requirements: requirements.filter((r) => r.trim()),
           responsibilities: responsibilities.filter((r) => r.trim()),
           perks: perks.filter((r) => r.trim()),
-          applicationConfig,
+          applicationConfig: normalizeApplicationConfig(applicationConfig),
         }),
       });
 

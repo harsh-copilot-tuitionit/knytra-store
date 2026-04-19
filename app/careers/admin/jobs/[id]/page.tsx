@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import type { Question } from "@/lib/types/careers";
+import { normalizeApplicationConfig } from "@/lib/types/careers";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, X, Plus, ArrowUp, ArrowDown } from "lucide-react";
@@ -61,13 +62,7 @@ export default function EditJobPage() {
         );
         setPerks(data.perks?.length ? data.perks : [""]);
         setApplicationConfig(
-          data.applicationConfig ?? {
-            showStudentSection: false,
-            showExperienceSection: false,
-            showMotivationSection: false,
-            showAssessmentSection: false,
-            customQuestions: [],
-          },
+          normalizeApplicationConfig(data.applicationConfig),
         );
       } else if (res.status === 404) {
         router.replace("/careers/admin/jobs");
@@ -169,7 +164,7 @@ export default function EditJobPage() {
           requirements: requirements.filter((r) => r.trim()),
           responsibilities: responsibilities.filter((r) => r.trim()),
           perks: perks.filter((r) => r.trim()),
-          applicationConfig,
+          applicationConfig: normalizeApplicationConfig(applicationConfig),
         }),
       });
 

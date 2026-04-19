@@ -1,5 +1,6 @@
 import { getAdminDb } from "@/lib/firebase-admin";
 import type { CareerJob } from "@/lib/types/careers";
+import { normalizeApplicationConfig } from "@/lib/types/careers";
 
 export async function getJobBySlug(slug: string): Promise<CareerJob | null> {
   const db = getAdminDb();
@@ -27,13 +28,7 @@ export async function getJobBySlug(slug: string): Promise<CareerJob | null> {
     perks: d.perks ?? [],
     compensation: d.compensation ?? "",
     status: d.status ?? "draft",
-    applicationConfig: d.applicationConfig ?? {
-      showStudentSection: false,
-      showExperienceSection: false,
-      showMotivationSection: false,
-      showAssessmentSection: false,
-      customQuestions: [],
-    },
+    applicationConfig: normalizeApplicationConfig(d.applicationConfig),
     createdAt: d.createdAt?.toDate?.()?.toISOString() ?? null,
     updatedAt: d.updatedAt?.toDate?.()?.toISOString() ?? null,
   };
@@ -62,13 +57,7 @@ export async function getAllOpenJobs(): Promise<CareerJob[]> {
       perks: d.perks ?? [],
       compensation: d.compensation ?? "",
       status: d.status ?? "draft",
-      applicationConfig: d.applicationConfig ?? {
-        showStudentSection: false,
-        showExperienceSection: false,
-        showMotivationSection: false,
-        showAssessmentSection: false,
-        customQuestions: [],
-      },
+      applicationConfig: normalizeApplicationConfig(d.applicationConfig),
       createdAt: d.createdAt?.toDate?.()?.toISOString() ?? null,
       updatedAt: d.updatedAt?.toDate?.()?.toISOString() ?? null,
     };

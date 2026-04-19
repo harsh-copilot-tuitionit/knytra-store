@@ -30,6 +30,28 @@ export interface ApplicationConfig {
   customQuestions: Question[];
 }
 
+export function normalizeApplicationConfig(
+  config?: Partial<ApplicationConfig> | null,
+): ApplicationConfig {
+  return {
+    showStudentSection: Boolean(config?.showStudentSection),
+    showExperienceSection: Boolean(config?.showExperienceSection),
+    showMotivationSection: Boolean(config?.showMotivationSection),
+    showAssessmentSection: Boolean(config?.showAssessmentSection),
+    customQuestions: Array.isArray(config?.customQuestions)
+      ? config.customQuestions.map((question) => ({
+          id:
+            question.id ||
+            `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          question: question.question ?? "",
+          type: question.type ?? "text",
+          options: Array.isArray(question.options) ? question.options : [],
+          required: Boolean(question.required),
+        }))
+      : [],
+  };
+}
+
 export interface CareerJob {
   id: string;
   title: string;
