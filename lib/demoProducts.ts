@@ -1,11 +1,21 @@
+export interface DemoVariant {
+  size: string;
+  color: string;
+  sku: string;
+  qikinkProductSku: string | null;
+  qikinkDesignSku: string | null;
+}
+
 export interface DemoProduct {
   id: string;
+  slug?: string;
   name: string;
-  description: string;
+  description?: string;
   price: number;
   originalPrice?: number;
   images: string[];
-  sizes: string[];
+  sizes?: string[];
+  variants?: DemoVariant[];
   status: string;
   category: string;
   tag?: "new" | "bestseller";
@@ -14,20 +24,6 @@ export interface DemoProduct {
 const U = "https://images.unsplash.com";
 
 export const DEMO_PRODUCTS: DemoProduct[] = [
-    {
-      id: "demo-1rs-product",
-      name: "Demo Product ₹1",
-      description: "A test/demo product for just ₹1. Use for testing checkout and order flows.",
-      price: 1,
-      originalPrice: 99,
-      images: [
-        `${U}/photo-1521572163474-6864f9cf17ab?w=800&h=960&fit=crop`,
-      ],
-      sizes: ["M"],
-      status: "active",
-      category: "Demo",
-      tag: "new",
-    },
   {
     id: "concrete-shadow-tee",
     name: "Concrete Shadow Tee",
@@ -121,20 +117,28 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
     tag: "new",
   },
   {
-    id: "demo-test-tee",
-    name: "Demo Test Tee",
-    description:
-      "Basic crew-neck tee for testing purposes. Lightweight cotton, classic fit. This is a demo product.",
-    price: 23,
+    id: "qikink-test-tee",
+    slug: "qikink-test-tee",
+    name: "Qikink Test Tee",
+    description: "A dedicated Qikink test tee for order and SKU verification.",
+    price: 1,
     images: [
       `${U}/photo-1521572163474-6864f9cf17ab?w=800&h=960&fit=crop`,
     ],
-    sizes: ["S", "M", "L", "XL"],
     status: "active",
-    category: "Tshirt",
+    category: "T-Shirts",
+    variants: [
+      {
+        size: "S",
+        color: "Lavender",
+        sku: "KNY-TEST-TEE-S",
+        qikinkProductSku: "UOsTMRnHs-Lv-S",
+        qikinkDesignSku: null,
+      },
+    ],
   },
 ];
 
 export function getDemoProduct(id: string): DemoProduct | undefined {
-  return DEMO_PRODUCTS.find((p) => p.id === id);
+  return DEMO_PRODUCTS.find((p) => p.id === id || p.slug === id);
 }

@@ -11,14 +11,24 @@ import { useWishlist } from "@/context/WishlistContext";
 import { getDemoProduct } from "@/lib/demoProducts";
 import styles from "./productDetail.module.css";
 
+interface ProductVariant {
+  size: string;
+  color: string;
+  sku: string;
+  qikinkProductSku: string | null;
+  qikinkDesignSku: string | null;
+}
+
 interface Product {
   id: string;
+  slug?: string;
   name: string;
-  description: string;
+  description?: string;
   price: number;
   originalPrice?: number;
   images: string[];
-  sizes: string[];
+  sizes?: string[];
+  variants?: ProductVariant[];
   status: string;
 }
 
@@ -114,8 +124,9 @@ export default function ProductDetailClient() {
   }, [slug]);
 
   useEffect(() => {
-    if (product?.sizes?.length === 1 && product.sizes[0] === "One Size") {
-      setSelectedSize("One Size");
+    const sizes = product?.sizes?.length ? product.sizes : product?.variants?.map((variant) => variant.size) ?? [];
+    if (sizes.length === 1) {
+      setSelectedSize(sizes[0]);
     }
   }, [product]);
 
@@ -131,6 +142,7 @@ export default function ProductDetailClient() {
       return;
     }
     if (!product) return;
+    const selectedVariant = product.variants?.find((variant) => variant.size === selectedSize);
     setSizeError(false);
     addToCart({
       id: `${product.id}-${selectedSize}`,
@@ -140,6 +152,7 @@ export default function ProductDetailClient() {
       price: product.price,
       image: product.images?.[0] ?? "",
       quantity,
+      qikinkProductSku: selectedVariant?.qikinkProductSku ?? undefined,
     });
     setAddedPulse(true);
     setTimeout(() => setAddedPulse(false), 1200);
@@ -151,6 +164,7 @@ export default function ProductDetailClient() {
       return;
     }
     if (!product) return;
+    const selectedVariant = product.variants?.find((variant) => variant.size === selectedSize);
     setSizeError(false);
     triggerBuyNow({
       id: `${product.id}-${selectedSize}`,
@@ -160,6 +174,7 @@ export default function ProductDetailClient() {
       price: product.price,
       image: product.images?.[0] ?? "",
       quantity,
+      qikinkProductSku: selectedVariant?.qikinkProductSku ?? undefined,
     });
     router.push("/checkout");
   };
@@ -236,8 +251,8 @@ export default function ProductDetailClient() {
   }
 
   const images = product.images ?? [];
-  const showSizeSelector =
-    product.sizes && product.sizes.length > 0 && product.sizes[0] !== "One Size";
+  const availableSizes = product.sizes?.length ? product.sizes : product.variants?.map((variant) => variant.size) ?? [];
+  const showSizeSelector = availableSizes.length > 0 && availableSizes[0] !== "One Size";
 
   const discount = product.originalPrice
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
@@ -358,7 +373,7 @@ export default function ProductDetailClient() {
               <span className={styles.sizeGuideLink}>Size Guide</span>
             </div>
             <div className={styles.sizeGrid}>
-              {product.sizes.map((size) => (
+              {availableSizes.map((size) => (
                 <button
                   key={size}
                   className={`${styles.sizeBtn} ${selectedSize === size ? styles.sizeBtnActive : ""}`}

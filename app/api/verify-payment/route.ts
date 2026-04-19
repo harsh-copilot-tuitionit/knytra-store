@@ -3,7 +3,12 @@ import crypto from "crypto";
 import * as admin from "firebase-admin";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { sendOrderConfirmationWhatsApp } from "@/lib/twilio";
-import { createQikinkOrder, QikinkLineItem, QikinkShippingAddress } from "@/lib/qikink";
+import {
+  createQikinkOrder,
+  QikinkLineItem,
+  QikinkShippingAddress,
+  QikinkResult,
+} from "@/lib/qikink";
 
 export async function POST(request: NextRequest) {
   try {
@@ -132,7 +137,7 @@ export async function POST(request: NextRequest) {
 async function sendToQikink(
   db: FirebaseFirestore.Firestore,
   orderId: string,
-) {
+): Promise<QikinkResult | void> {
   const orderSnap = await db.collection("orders").doc(orderId).get();
   if (!orderSnap.exists) {
     console.warn("[qikink] Order not found:", orderId);
@@ -155,14 +160,25 @@ async function sendToQikink(
     return;
   }
 
-  // Map order items → Qikink line_items
-  // Products created on Qikink dashboard use search_from_my_products=1 + SKU
+  const missingSkuItem = orderItems.find(
+    (item: { qikinkProductSku?: string }) => !item.qikinkProductSku,
+  );
+  if (missingSkuItem) {
+    const errorMessage = "Missing qikinkProductSku";
+    console.error("[qikink] Missing qikinkProductSku", missingSkuItem);
+    await db.collection("orders").doc(orderId).update({
+      qikinkStatus: "failed",
+      qikinkError: errorMessage,
+    });
+    return { success: false, qikinkStatus: "failed", qikinkError: errorMessage };
+  }
+
   const line_items: QikinkLineItem[] = orderItems.map(
-    (item: { qikinkSku?: string; sku?: string; name?: string; size?: string; price?: number; quantity?: number }) => ({
+    (item: { qikinkProductSku?: string; quantity?: number; price?: number }) => ({
       search_from_my_products: 1 as const,
       quantity: String(item.quantity ?? 1),
       price: String(item.price ?? 0),
-      sku: item.qikinkSku ?? item.sku ?? "",
+      sku: item.qikinkProductSku ?? "",
     }),
   );
 

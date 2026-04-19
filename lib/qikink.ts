@@ -78,7 +78,6 @@ async function getAccessToken(): Promise<string> {
   }
 
   // Only attempt: ClientId + client_secret
-  console.log("QIKINK TOKEN REQUEST");
   const res = await fetch(`${API_BASE}${TOKEN_PATH}`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -88,16 +87,16 @@ async function getAccessToken(): Promise<string> {
     }),
   });
   const text = await res.text();
-  console.log("QIKINK TOKEN status:", res.status);
-  console.log("QIKINK TOKEN body:", text);
-  if (res.ok) {
-    const data = JSON.parse(text);
-    cachedToken = data.access_token ?? data.Accesstoken;
-    tokenExpiresAt = Date.now() + (data.expires_in ?? 3600) * 1000;
-    return cachedToken!;
+  if (!res.ok) {
+    console.error("[qikink] Token request failed:", res.status, text);
+    throw new Error(`Qikink token request failed (${res.status})`);
   }
 
-  throw new Error(`Qikink token request failed (${res.status}): see logs above for details`);
+  const data = JSON.parse(text);
+  cachedToken = data.access_token ?? data.Accesstoken;
+  tokenExpiresAt = Date.now() + (data.expires_in ?? 3600) * 1000;
+  console.log("[qikink] Token acquired, expires in", data.expires_in ?? "unknown");
+  return cachedToken!;
 }
 
 // ── Create order ───────────────────────────────────────
@@ -113,6 +112,7 @@ export async function createQikinkOrder(
       throw new Error("Missing QIKINK_CLIENT_ID");
     }
 
+    console.log("[qikink] Order payload:", payload);
     const res = await fetch(`${API_BASE}${ORDER_PATH}`, {
       method: "POST",
       headers: {
@@ -135,7 +135,7 @@ export async function createQikinkOrder(
       };
     }
 
-    console.log("[qikink] Order created:", body);
+    console.log("[qikink] Order created:", body?.order_id ?? body);
     return {
       success: true,
       qikinkOrderId: body?.order_id?.toString() ?? undefined,
