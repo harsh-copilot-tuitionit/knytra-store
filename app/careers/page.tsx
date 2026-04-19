@@ -67,6 +67,7 @@ async function getOpenJobs(): Promise<CareerJob[]> {
         description: d.description ?? "",
         requirements: d.requirements ?? [],
         responsibilities: d.responsibilities ?? [],
+        perks: d.perks ?? [],
         compensation: d.compensation ?? "",
         status: d.status ?? "open",
         createdAt: d.createdAt?.toDate?.()?.toISOString() ?? null,
