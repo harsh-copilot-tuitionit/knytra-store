@@ -161,11 +161,11 @@ async function sendToQikink(
   }
 
   const missingSkuItem = orderItems.find(
-    (item: { qikinkStoreSku?: string }) => !item.qikinkStoreSku,
+    (item: { qikinkProductSku?: string }) => !item.qikinkProductSku,
   );
   if (missingSkuItem) {
-    const errorMessage = "Missing qikinkStoreSku";
-    console.error("[qikink] Missing qikinkStoreSku", missingSkuItem);
+    const errorMessage = "Missing qikinkProductSku";
+    console.error("[qikink] Missing qikinkProductSku", missingSkuItem);
     await db.collection("orders").doc(orderId).update({
       qikinkStatus: "failed",
       qikinkError: errorMessage,
@@ -174,13 +174,13 @@ async function sendToQikink(
   }
 
   const line_items: QikinkLineItem[] = orderItems.map(
-    (item: { qikinkStoreSku?: string; quantity?: number; price?: number }) => {
-      console.log("QIKINK USING STORE SKU:", item.qikinkStoreSku);
+    (item: { qikinkProductSku?: string; quantity?: number; price?: number }) => {
+      console.log("QIKINK USING PRODUCT SKU:", item.qikinkProductSku);
       return {
-        search_from_my_products: 1 as const,
+        search_from_my_products: 0 as const,
         quantity: String(item.quantity ?? 1),
         price: String(item.price ?? 0),
-        sku: item.qikinkStoreSku ?? "",
+        sku: item.qikinkProductSku ?? "",
       };
     },
   );
@@ -207,7 +207,7 @@ async function sendToQikink(
     order_number: orderId.slice(0, 15),
     qikink_shipping: "1",
     gateway: "Prepaid",
-    total_order_value: String(order.total ?? 0),
+    total_order_value: String(order.totalAmount ?? order.total ?? 0),
     line_items,
     shipping_address,
   });

@@ -15,7 +15,7 @@ interface ProductVariant {
   size: string;
   color: string;
   sku: string;
-  qikinkStoreSku: string | null;
+  qikinkProductSku: string | null;
   qikinkDesignSku: string | null;
 }
 
@@ -152,7 +152,7 @@ export default function ProductDetailClient() {
       price: product.price,
       image: product.images?.[0] ?? "",
       quantity,
-      qikinkStoreSku: selectedVariant?.qikinkStoreSku ?? undefined,
+      qikinkProductSku: selectedVariant?.qikinkProductSku ?? undefined,
     });
     setAddedPulse(true);
     setTimeout(() => setAddedPulse(false), 1200);
@@ -174,7 +174,7 @@ export default function ProductDetailClient() {
       price: product.price,
       image: product.images?.[0] ?? "",
       quantity,
-      qikinkStoreSku: selectedVariant?.qikinkStoreSku ?? undefined,
+      qikinkProductSku: selectedVariant?.qikinkProductSku ?? undefined,
     });
     router.push("/checkout");
   };

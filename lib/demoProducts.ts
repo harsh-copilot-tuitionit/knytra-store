@@ -2,7 +2,7 @@ export interface DemoVariant {
   size: string;
   color: string;
   sku: string;
-  qikinkStoreSku: string | null;
+  qikinkProductSku: string | null;
   qikinkDesignSku: string | null;
 }
 
@@ -132,7 +132,7 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
         size: "S",
         color: "Lavender",
         sku: "KNY-TEST-TEE-S",
-        qikinkStoreSku: "v-9xGgOiGFaVZW08YPNhUhUbTUqQje9nKY",
+        qikinkProductSku: "UOsTMRnHs-Lv-S",
         qikinkDesignSku: null,
       },
     ],
@@ -142,7 +142,7 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
     slug: "unisex-terry-oversized-tee",
     name: "Unisex Terry Oversized Tee | UT27",
     description: "Unisex terry oversized tee in Maroon. Single M-size variant for product and Qikink testing.",
-    price: 1,
+    price: 299,
     images: [
       "/images/productimages/64059178/Front.jpg",
       "/images/productimages/64059178/Back.jpg",
@@ -153,8 +153,8 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
       {
         size: "M",
         color: "Maroon",
-        sku: "UOsTMRnHs-Mm-M",
-        qikinkStoreSku: "v-9hCn1CGDaVZW08UGMR8gubTUqg_Z9huZ",
+        sku: "UOsTMRnHs-Mn-M",
+        qikinkProductSku: "UOsTMRnHs-Mn-M",
         qikinkDesignSku: null,
       },
     ],
