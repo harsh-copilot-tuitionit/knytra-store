@@ -114,10 +114,12 @@ export default function ApplicationsPage() {
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>Candidate</th>
-                <th>Position</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>City</th>
+                <th>Role</th>
                 <th>Status</th>
-                <th>Current Role</th>
                 <th>Applied</th>
                 <th></th>
               </tr>
@@ -126,8 +128,9 @@ export default function ApplicationsPage() {
               {applications.map((app) => (
                 <tr key={app.id}>
                   <td>
-                    <strong>{app.name}</strong>
-                    <br />
+                    <strong>{app.fullName}</strong>
+                  </td>
+                  <td>
                     <span
                       style={{
                         fontSize: 12,
@@ -137,21 +140,24 @@ export default function ApplicationsPage() {
                       {app.email}
                     </span>
                   </td>
-                  <td>{app.jobTitle}</td>
+                  <td>
+                    <span
+                      style={{
+                        fontSize: 12,
+                        color: "var(--color-white-40)",
+                      }}
+                    >
+                      {app.phone}
+                    </span>
+                  </td>
+                  <td>{app.city || "—"}</td>
+                  <td>{app.role?.jobTitle ?? "—"}</td>
                   <td>
                     <span
                       className={`${styles.badge} ${getBadgeClass(app.status)}`}
                     >
                       {APPLICATION_STATUS_LABELS[app.status] ?? app.status}
                     </span>
-                  </td>
-                  <td
-                    style={{
-                      color: "var(--color-white-60)",
-                      fontSize: 13,
-                    }}
-                  >
-                    {app.currentRole || "—"}
                   </td>
                   <td>
                     {app.createdAt

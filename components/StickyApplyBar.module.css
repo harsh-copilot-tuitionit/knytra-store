@@ -1,0 +1,62 @@
+.stickyApplyBar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 18px;
+  background: rgba(6, 6, 6, 0.96);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(18px);
+}
+
+.stickyLabel {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.stickyButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  min-width: 220px;
+  padding: 0 20px;
+  border-radius: 999px;
+  border: none;
+  background: #f8f8f8;
+  color: #050505;
+  font-family: var(--font-heading);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: transform var(--ease-fast), background-color var(--ease-fast);
+}
+
+.stickyButton:hover {
+  transform: translateY(-1px);
+  background: #ffffff;
+}
+
+@media (min-width: 768px) {
+  .stickyApplyBar {
+    position: static;
+    padding: 20px 0;
+    border-top: none;
+    background: transparent;
+    justify-content: flex-start;
+  }
+
+  .stickyLabel {
+    font-size: 12px;
+  }
+}

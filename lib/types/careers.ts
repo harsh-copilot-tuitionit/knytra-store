@@ -47,17 +47,46 @@ export interface ApplicationTimelineEntry {
 
 export interface CareerApplication {
   id: string;
-  jobId: string;
-  jobTitle: string;
-  name: string;
+  fullName: string;
   email: string;
   phone: string;
-  resumeUrl: string;
-  portfolioUrl: string;
-  coverLetter: string;
-  experience: string;
-  currentRole: string;
+  city: string;
   linkedIn: string;
+  additionalLink?: string;
+  resumeLink: string;
+  role: {
+    jobId: string;
+    jobSlug: string;
+    jobTitle: string;
+  };
+  isStudent: boolean;
+  studentDetails?: {
+    institute: string;
+    university: string;
+    course: string;
+    specialization: string;
+    currentYear: string;
+    completionYear: string;
+  };
+  experienceDetails?: {
+    highestQualification: string;
+    currentStatus: string;
+    company: string;
+    role: string;
+    experience: string;
+  };
+  motivationAnswers: {
+    whyHRGrowth: string;
+  };
+  availability: {
+    availableMayJune: boolean;
+    performanceBased: boolean;
+    hybridComfortable: boolean;
+  };
+  confirmation: {
+    infoCorrect: boolean;
+    understandsPerformanceBased: boolean;
+  };
   status: ApplicationStatus;
   notes: ApplicationNote[];
   timeline: ApplicationTimelineEntry[];

@@ -31,17 +31,34 @@ export async function GET(
     const d = snap.data()!;
     return Response.json({
       id: snap.id,
-      jobId: d.jobId ?? "",
-      jobTitle: d.jobTitle ?? "",
-      name: d.name ?? "",
+      jobId: d.jobId ?? d.role?.jobId ?? "",
+      jobTitle: d.jobTitle ?? d.role?.jobTitle ?? "",
+      jobSlug: d.role?.jobSlug ?? "",
+      fullName: d.fullName ?? "",
       email: d.email ?? "",
       phone: d.phone ?? "",
-      resumeUrl: d.resumeUrl ?? "",
-      portfolioUrl: d.portfolioUrl ?? "",
-      coverLetter: d.coverLetter ?? "",
-      experience: d.experience ?? "",
-      currentRole: d.currentRole ?? "",
+      city: d.city ?? "",
       linkedIn: d.linkedIn ?? "",
+      additionalLink: d.additionalLink ?? "",
+      resumeLink: d.resumeLink ?? "",
+      role: {
+        jobId: d.role?.jobId ?? d.jobId ?? "",
+        jobSlug: d.role?.jobSlug ?? "",
+        jobTitle: d.role?.jobTitle ?? d.jobTitle ?? "",
+      },
+      isStudent: d.isStudent ?? false,
+      studentDetails: d.studentDetails ?? null,
+      experienceDetails: d.experienceDetails ?? null,
+      motivationAnswers: d.motivationAnswers ?? { whyHRGrowth: "" },
+      availability: d.availability ?? {
+        availableMayJune: false,
+        performanceBased: false,
+        hybridComfortable: false,
+      },
+      confirmation: d.confirmation ?? {
+        infoCorrect: false,
+        understandsPerformanceBased: false,
+      },
       status: d.status ?? "received",
       notes: d.notes ?? [],
       timeline: d.timeline ?? [],
@@ -86,7 +103,6 @@ export async function PUT(
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     };
 
-    // Status transition
     if (body.status && body.status !== current.status) {
       updates.status = body.status;
       updates.timeline = [
@@ -102,7 +118,6 @@ export async function PUT(
       ];
     }
 
-    // Append a note
     if (body.note && typeof body.note === "string" && body.note.trim()) {
       updates.notes = [
         ...(current.notes ?? []),

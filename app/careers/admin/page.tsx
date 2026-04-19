@@ -172,7 +172,7 @@ export default function CareersAdminDashboard() {
                 {recent.map((app) => (
                   <tr key={app.id}>
                     <td>
-                      <strong>{app.name}</strong>
+                      <strong>{app.fullName}</strong>
                       <br />
                       <span
                         style={{
@@ -183,7 +183,7 @@ export default function CareersAdminDashboard() {
                         {app.email}
                       </span>
                     </td>
-                    <td>{app.jobTitle}</td>
+                    <td>{app.role?.jobTitle ?? "—"}</td>
                     <td>
                       <span
                         className={`${styles.badge} ${getBadgeClass(app.status)}`}

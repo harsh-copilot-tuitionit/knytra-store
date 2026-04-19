@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { getAdminDb } from "@/lib/firebase-admin";
-import ApplyForm from "./ApplyForm";
+import StickyApplyBar from "@/components/StickyApplyBar";
 import styles from "../careers.module.css";
 
 interface Props {
@@ -150,11 +150,15 @@ export default async function JobDetailPage({ params }: Props) {
                   </>
                 )}
               </div>
-
-              {/* Right: Apply form */}
-              <ApplyForm jobId={job.id} jobTitle={job.title} />
             </div>
           </div>
+
+          {job.slug === "hr-growth-intern" && (
+            <StickyApplyBar
+              href="/careers/hr-growth-intern/apply"
+              label="Applying for HR + Growth Intern"
+            />
+          )}
         </div>
       </main>
       <Footer />

@@ -3,7 +3,6 @@ import { getAdminDb } from "@/lib/firebase-admin";
 import { getSessionFromRequest } from "@/lib/careers-auth";
 import * as admin from "firebase-admin";
 
-// GET: Admin only — list all applications with optional filters
 export async function GET(request: NextRequest) {
   const session = getSessionFromRequest(request.cookies);
   if (!session) {
@@ -28,17 +27,34 @@ export async function GET(request: NextRequest) {
       const d = doc.data();
       return {
         id: doc.id,
-        jobId: d.jobId ?? "",
-        jobTitle: d.jobTitle ?? "",
-        name: d.name ?? "",
+        jobId: d.jobId ?? d.role?.jobId ?? "",
+        jobTitle: d.jobTitle ?? d.role?.jobTitle ?? "",
+        jobSlug: d.role?.jobSlug ?? "",
+        fullName: d.fullName ?? "",
         email: d.email ?? "",
         phone: d.phone ?? "",
-        resumeUrl: d.resumeUrl ?? "",
-        portfolioUrl: d.portfolioUrl ?? "",
-        coverLetter: d.coverLetter ?? "",
-        experience: d.experience ?? "",
-        currentRole: d.currentRole ?? "",
+        city: d.city ?? "",
         linkedIn: d.linkedIn ?? "",
+        additionalLink: d.additionalLink ?? "",
+        resumeLink: d.resumeLink ?? "",
+        role: {
+          jobId: d.role?.jobId ?? d.jobId ?? "",
+          jobSlug: d.role?.jobSlug ?? "",
+          jobTitle: d.role?.jobTitle ?? d.jobTitle ?? "",
+        },
+        isStudent: d.isStudent ?? false,
+        studentDetails: d.studentDetails ?? null,
+        experienceDetails: d.experienceDetails ?? null,
+        motivationAnswers: d.motivationAnswers ?? { whyHRGrowth: "" },
+        availability: d.availability ?? {
+          availableMayJune: false,
+          performanceBased: false,
+          hybridComfortable: false,
+        },
+        confirmation: d.confirmation ?? {
+          infoCorrect: false,
+          understandsPerformanceBased: false,
+        },
         status: d.status ?? "received",
         notes: d.notes ?? [],
         timeline: d.timeline ?? [],
@@ -57,30 +73,60 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST: Public — submit a job application
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const {
-      jobId,
-      jobTitle,
-      name,
+      role,
+      fullName,
       email,
       phone,
-      resumeUrl,
-      portfolioUrl,
-      coverLetter,
-      experience,
-      currentRole,
+      city,
       linkedIn,
+      additionalLink,
+      resumeLink,
+      isStudent,
+      studentDetails,
+      experienceDetails,
+      motivationAnswers,
+      availability,
+      confirmation,
     } = body;
 
-    if (!name || typeof name !== "string" || name.trim().length < 2) {
+    if (!role || typeof role !== "object") {
       return Response.json(
-        { error: "Name is required (min 2 characters)." },
+        { error: "Role metadata is required." },
         { status: 400 },
       );
     }
+
+    const { jobId, jobSlug, jobTitle } = role;
+    if (!jobId || typeof jobId !== "string") {
+      return Response.json(
+        { error: "Role jobId is required." },
+        { status: 400 },
+      );
+    }
+    if (!jobSlug || typeof jobSlug !== "string") {
+      return Response.json(
+        { error: "Role jobSlug is required." },
+        { status: 400 },
+      );
+    }
+    if (!jobTitle || typeof jobTitle !== "string") {
+      return Response.json(
+        { error: "Role jobTitle is required." },
+        { status: 400 },
+      );
+    }
+
+    if (!fullName || typeof fullName !== "string" || fullName.trim().length < 2) {
+      return Response.json(
+        { error: "Full name is required (min 2 characters)." },
+        { status: 400 },
+      );
+    }
+
     if (
       !email ||
       typeof email !== "string" ||
@@ -91,26 +137,118 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       );
     }
+
     if (
       !phone ||
       typeof phone !== "string" ||
-      !/^\d{10}$/.test(phone.replace(/\D/g, "").slice(-10))
+      !/^\d{10}$/.test(phone.replace(/\D/g, ""))
     ) {
       return Response.json(
         { error: "Valid 10-digit phone number is required." },
         { status: 400 },
       );
     }
-    if (!jobId || typeof jobId !== "string") {
+
+    if (!city || typeof city !== "string" || !city.trim()) {
       return Response.json(
-        { error: "Job selection is required." },
+        { error: "City is required." },
+        { status: 400 },
+      );
+    }
+
+    if (!linkedIn || typeof linkedIn !== "string" || !linkedIn.trim()) {
+      return Response.json(
+        { error: "LinkedIn profile is required." },
+        { status: 400 },
+      );
+    }
+
+    if (!resumeLink || typeof resumeLink !== "string" || !resumeLink.trim()) {
+      return Response.json(
+        { error: "Resume link is required." },
+        { status: 400 },
+      );
+    }
+
+    if (typeof isStudent !== "boolean") {
+      return Response.json(
+        { error: "Student status is required." },
+        { status: 400 },
+      );
+    }
+
+    if (isStudent) {
+      if (
+        !studentDetails ||
+        typeof studentDetails !== "object" ||
+        !studentDetails.institute?.trim() ||
+        !studentDetails.university?.trim() ||
+        !studentDetails.course?.trim() ||
+        !studentDetails.specialization?.trim() ||
+        !studentDetails.currentYear?.trim() ||
+        !studentDetails.completionYear?.trim()
+      ) {
+        return Response.json(
+          { error: "All student details are required." },
+          { status: 400 },
+        );
+      }
+    } else {
+      if (
+        !experienceDetails ||
+        typeof experienceDetails !== "object" ||
+        !experienceDetails.highestQualification?.trim() ||
+        !experienceDetails.currentStatus?.trim() ||
+        !experienceDetails.company?.trim() ||
+        !experienceDetails.role?.trim() ||
+        !experienceDetails.experience?.trim()
+      ) {
+        return Response.json(
+          { error: "All experience details are required." },
+          { status: 400 },
+        );
+      }
+    }
+
+    if (
+      !motivationAnswers ||
+      typeof motivationAnswers !== "object" ||
+      !motivationAnswers.whyHRGrowth?.trim()
+    ) {
+      return Response.json(
+        { error: "Motivation answer is required." },
+        { status: 400 },
+      );
+    }
+
+    if (
+      !availability ||
+      typeof availability !== "object" ||
+      typeof availability.availableMayJune !== "boolean" ||
+      typeof availability.performanceBased !== "boolean" ||
+      typeof availability.hybridComfortable !== "boolean"
+    ) {
+      return Response.json(
+        { error: "Availability answers are required." },
+        { status: 400 },
+      );
+    }
+
+    if (
+      !confirmation ||
+      typeof confirmation !== "object" ||
+      confirmation.infoCorrect !== true ||
+      confirmation.understandsPerformanceBased !== true
+    ) {
+      return Response.json(
+        { error: "Please confirm the application declarations." },
         { status: 400 },
       );
     }
 
     const db = getAdminDb();
-
     const jobSnap = await db.collection("careers_jobs").doc(jobId).get();
+
     if (!jobSnap.exists || jobSnap.data()?.status !== "open") {
       return Response.json(
         { error: "This position is no longer accepting applications." },
@@ -118,11 +256,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Prevent duplicate applications (same email + same job)
+    if (jobSnap.data()?.slug !== jobSlug) {
+      return Response.json(
+        { error: "Role slug mismatch." },
+        { status: 400 },
+      );
+    }
+
     const dupeSnap = await db
       .collection("careers_applications")
       .where("email", "==", email.trim().toLowerCase())
-      .where("jobId", "==", jobId)
+      .where("role.jobId", "==", jobId)
       .limit(1)
       .get();
 
@@ -134,21 +278,30 @@ export async function POST(request: NextRequest) {
     }
 
     const now = admin.firestore.FieldValue.serverTimestamp();
-    const resolvedTitle =
-      jobTitle?.trim() ?? jobSnap.data()?.title ?? "";
 
     const docRef = await db.collection("careers_applications").add({
       jobId,
-      jobTitle: resolvedTitle,
-      name: name.trim(),
+      jobTitle,
+      fullName: fullName.trim(),
       email: email.trim().toLowerCase(),
       phone: phone.replace(/\D/g, "").slice(-10),
-      resumeUrl: resumeUrl?.trim() ?? "",
-      portfolioUrl: portfolioUrl?.trim() ?? "",
-      coverLetter: coverLetter?.trim() ?? "",
-      experience: experience?.trim() ?? "",
-      currentRole: currentRole?.trim() ?? "",
-      linkedIn: linkedIn?.trim() ?? "",
+      city: city.trim(),
+      linkedIn: linkedIn.trim(),
+      additionalLink: additionalLink?.trim() ?? "",
+      resumeLink: resumeLink.trim(),
+      role: {
+        jobId,
+        jobSlug,
+        jobTitle,
+      },
+      isStudent,
+      studentDetails: isStudent ? studentDetails : null,
+      experienceDetails: isStudent ? null : experienceDetails,
+      motivationAnswers: {
+        whyHRGrowth: motivationAnswers.whyHRGrowth.trim(),
+      },
+      availability,
+      confirmation,
       status: "received",
       notes: [],
       timeline: [

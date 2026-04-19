@@ -136,9 +136,9 @@ export default function ApplicationDetailPage() {
       <div className={styles.pageHeader}>
         <div className={styles.pageHeaderRow}>
           <div>
-            <h1 className={styles.pageTitle}>{app.name}</h1>
+            <h1 className={styles.pageTitle}>{app.fullName}</h1>
             <p className={styles.pageSubtitle}>
-              Applied for {app.jobTitle}
+              Applied for {app.role?.jobTitle ?? "—"}
             </p>
           </div>
           <span
@@ -181,9 +181,12 @@ export default function ApplicationDetailPage() {
       <div className={styles.detailGrid}>
         {/* Left column */}
         <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-6)" }}>
-          {/* Candidate info */}
           <div className={styles.detailCard}>
             <h3 className={styles.detailCardTitle}>Candidate Info</h3>
+            <div className={styles.infoRow}>
+              <span className={styles.infoLabel}>Full Name</span>
+              <span className={styles.infoValue}>{app.fullName}</span>
+            </div>
             <div className={styles.infoRow}>
               <span className={styles.infoLabel}>Email</span>
               <a
@@ -202,22 +205,14 @@ export default function ApplicationDetailPage() {
                 {app.phone}
               </a>
             </div>
-            {app.currentRole && (
-              <div className={styles.infoRow}>
-                <span className={styles.infoLabel}>Current Role</span>
-                <span className={styles.infoValue}>
-                  {app.currentRole}
-                </span>
-              </div>
-            )}
-            {app.experience && (
-              <div className={styles.infoRow}>
-                <span className={styles.infoLabel}>Experience</span>
-                <span className={styles.infoValue}>
-                  {app.experience}
-                </span>
-              </div>
-            )}
+            <div className={styles.infoRow}>
+              <span className={styles.infoLabel}>City</span>
+              <span className={styles.infoValue}>{app.city || "—"}</span>
+            </div>
+            <div className={styles.infoRow}>
+              <span className={styles.infoLabel}>Role</span>
+              <span className={styles.infoValue}>{app.role?.jobTitle ?? "—"}</span>
+            </div>
             {app.linkedIn && (
               <div className={styles.infoRow}>
                 <span className={styles.infoLabel}>LinkedIn</span>
@@ -231,29 +226,29 @@ export default function ApplicationDetailPage() {
                 </a>
               </div>
             )}
-            {app.resumeUrl && (
+            {app.additionalLink && (
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>Additional link</span>
+                <a
+                  href={app.additionalLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`${styles.infoValue} ${styles.infoLink}`}
+                >
+                  View link
+                </a>
+              </div>
+            )}
+            {app.resumeLink && (
               <div className={styles.infoRow}>
                 <span className={styles.infoLabel}>Resume</span>
                 <a
-                  href={app.resumeUrl}
+                  href={app.resumeLink}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={`${styles.infoValue} ${styles.infoLink}`}
                 >
                   View Resume
-                </a>
-              </div>
-            )}
-            {app.portfolioUrl && (
-              <div className={styles.infoRow}>
-                <span className={styles.infoLabel}>Portfolio</span>
-                <a
-                  href={app.portfolioUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`${styles.infoValue} ${styles.infoLink}`}
-                >
-                  View Portfolio
                 </a>
               </div>
             )}
@@ -271,15 +266,128 @@ export default function ApplicationDetailPage() {
             </div>
           </div>
 
-          {/* Cover Letter */}
-          {app.coverLetter && (
-            <div className={styles.detailCard}>
-              <h3 className={styles.detailCardTitle}>Cover Letter</h3>
-              <p className={styles.coverLetter}>{app.coverLetter}</p>
-            </div>
-          )}
+          <div className={styles.detailCard}>
+            <h3 className={styles.detailCardTitle}>Background</h3>
+            {app.isStudent ? (
+              <div>
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>Institute</span>
+                  <span className={styles.infoValue}>
+                    {app.studentDetails?.institute ?? "—"}
+                  </span>
+                </div>
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>University</span>
+                  <span className={styles.infoValue}>
+                    {app.studentDetails?.university ?? "—"}
+                  </span>
+                </div>
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>Course</span>
+                  <span className={styles.infoValue}>
+                    {app.studentDetails?.course ?? "—"}
+                  </span>
+                </div>
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>Specialization</span>
+                  <span className={styles.infoValue}>
+                    {app.studentDetails?.specialization ?? "—"}
+                  </span>
+                </div>
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>Current Year</span>
+                  <span className={styles.infoValue}>
+                    {app.studentDetails?.currentYear ?? "—"}
+                  </span>
+                </div>
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>Year of Completion</span>
+                  <span className={styles.infoValue}>
+                    {app.studentDetails?.completionYear ?? "—"}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>Highest Qualification</span>
+                  <span className={styles.infoValue}>
+                    {app.experienceDetails?.highestQualification ?? "—"}
+                  </span>
+                </div>
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>Current Status</span>
+                  <span className={styles.infoValue}>
+                    {app.experienceDetails?.currentStatus ?? "—"}
+                  </span>
+                </div>
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>Current / Last Company</span>
+                  <span className={styles.infoValue}>
+                    {app.experienceDetails?.company ?? "—"}
+                  </span>
+                </div>
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>Role</span>
+                  <span className={styles.infoValue}>
+                    {app.experienceDetails?.role ?? "—"}
+                  </span>
+                </div>
+                <div className={styles.infoRow}>
+                  <span className={styles.infoLabel}>Experience</span>
+                  <span className={styles.infoValue}>
+                    {app.experienceDetails?.experience ?? "—"}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
 
-          {/* Timeline */}
+          <div className={styles.detailCard}>
+            <h3 className={styles.detailCardTitle}>Motivation</h3>
+            <p className={styles.coverLetter}>
+              {app.motivationAnswers?.whyHRGrowth ?? "—"}
+            </p>
+          </div>
+
+          <div className={styles.detailCard}>
+            <h3 className={styles.detailCardTitle}>Availability</h3>
+            <div className={styles.infoRow}>
+              <span className={styles.infoLabel}>Available May 1 – June 30</span>
+              <span className={styles.infoValue}>
+                {app.availability?.availableMayJune ? "Yes" : "No"}
+              </span>
+            </div>
+            <div className={styles.infoRow}>
+              <span className={styles.infoLabel}>Comfortable with performance-based internship</span>
+              <span className={styles.infoValue}>
+                {app.availability?.performanceBased ? "Yes" : "No"}
+              </span>
+            </div>
+            <div className={styles.infoRow}>
+              <span className={styles.infoLabel}>Comfortable with hybrid model</span>
+              <span className={styles.infoValue}>
+                {app.availability?.hybridComfortable ? "Yes" : "No"}
+              </span>
+            </div>
+          </div>
+
+          <div className={styles.detailCard}>
+            <h3 className={styles.detailCardTitle}>Declarations</h3>
+            <div className={styles.infoRow}>
+              <span className={styles.infoLabel}>Information correct</span>
+              <span className={styles.infoValue}>
+                {app.confirmation?.infoCorrect ? "Yes" : "No"}
+              </span>
+            </div>
+            <div className={styles.infoRow}>
+              <span className={styles.infoLabel}>Understands performance-based nature</span>
+              <span className={styles.infoValue}>
+                {app.confirmation?.understandsPerformanceBased ? "Yes" : "No"}
+              </span>
+            </div>
+          </div>
+
           <div className={styles.detailCard}>
             <h3 className={styles.detailCardTitle}>Timeline</h3>
             {app.timeline && app.timeline.length > 0 ? (
@@ -304,8 +412,7 @@ export default function ApplicationDetailPage() {
                         </p>
                       )}
                       <p className={styles.timelineEntryMeta}>
-                        {entry.author} &middot;{" "}
-                        {new Date(entry.createdAt).toLocaleString("en-IN")}
+                        {entry.author} &middot; {new Date(entry.createdAt).toLocaleString("en-IN")}
                       </p>
                     </div>
                   </div>
