@@ -2,7 +2,7 @@ export interface DemoVariant {
   size: string;
   color: string;
   sku: string;
-  qikinkProductSku: string | null;
+  qikinkStoreSku: string | null;
   qikinkDesignSku: string | null;
 }
 
@@ -132,7 +132,7 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
         size: "S",
         color: "Lavender",
         sku: "KNY-TEST-TEE-S",
-        qikinkProductSku: "UOsTMRnHs-Lv-S",
+        qikinkStoreSku: "v-9xGgOiGFaVZW08YPNhUhUbTUqQje9nKY",
         qikinkDesignSku: null,
       },
     ],

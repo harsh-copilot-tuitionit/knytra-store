@@ -10,7 +10,7 @@ export interface CartItem {
   price: number;
   image: string;
   quantity: number;
-  qikinkProductSku?: string;
+  qikinkStoreSku?: string;
 }
 
 interface CartContextType {

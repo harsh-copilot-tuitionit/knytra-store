@@ -161,11 +161,11 @@ async function sendToQikink(
   }
 
   const missingSkuItem = orderItems.find(
-    (item: { qikinkProductSku?: string }) => !item.qikinkProductSku,
+    (item: { qikinkStoreSku?: string }) => !item.qikinkStoreSku,
   );
   if (missingSkuItem) {
-    const errorMessage = "Missing qikinkProductSku";
-    console.error("[qikink] Missing qikinkProductSku", missingSkuItem);
+    const errorMessage = "Missing qikinkStoreSku";
+    console.error("[qikink] Missing qikinkStoreSku", missingSkuItem);
     await db.collection("orders").doc(orderId).update({
       qikinkStatus: "failed",
       qikinkError: errorMessage,
@@ -174,12 +174,15 @@ async function sendToQikink(
   }
 
   const line_items: QikinkLineItem[] = orderItems.map(
-    (item: { qikinkProductSku?: string; quantity?: number; price?: number }) => ({
-      search_from_my_products: 1 as const,
-      quantity: String(item.quantity ?? 1),
-      price: String(item.price ?? 0),
-      sku: item.qikinkProductSku ?? "",
-    }),
+    (item: { qikinkStoreSku?: string; quantity?: number; price?: number }) => {
+      console.log("QIKINK USING STORE SKU:", item.qikinkStoreSku);
+      return {
+        search_from_my_products: 1 as const,
+        quantity: String(item.quantity ?? 1),
+        price: String(item.price ?? 0),
+        sku: item.qikinkStoreSku ?? "",
+      };
+    },
   );
 
   // Parse name into first/last
