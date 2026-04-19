@@ -75,6 +75,7 @@ export interface CareerApplication {
   phone: string;
   city: string;
   studentStatus: boolean;
+  isStudent: boolean;
   studentDetails?: {
     institute: string;
     university: string;
@@ -92,9 +93,10 @@ export interface CareerApplication {
     experience: string;
   };
   motivationAnswers?: {
-    whyJoinKnytra: string;
-    whyThisRole: string;
-    relevantExperience: string;
+    whyJoinKnytra?: string;
+    whyThisRole?: string;
+    relevantExperience?: string;
+    whyHRGrowth?: string;
   };
   assessmentAnswers?: {
     messageToCandidate: string;
