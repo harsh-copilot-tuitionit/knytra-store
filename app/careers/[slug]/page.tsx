@@ -35,6 +35,7 @@ async function getJobBySlug(slug: string) {
     description: d.description ?? "",
     requirements: d.requirements ?? [],
     responsibilities: d.responsibilities ?? [],
+    perks: d.perks ?? [],
     compensation: d.compensation ?? "",
     status: d.status as string,
     createdAt: d.createdAt?.toDate?.()?.toISOString() ?? null,
@@ -134,6 +135,17 @@ export default async function JobDetailPage({ params }: Props) {
                           <li key={i}>{item}</li>
                         ),
                       )}
+                    </ul>
+                  </>
+                )}
+
+                {job.perks && job.perks.length > 0 && (
+                  <>
+                    <h3>Perks</h3>
+                    <ul>
+                      {job.perks.map((item: string, i: number) => (
+                        <li key={i}>{item}</li>
+                      ))}
                     </ul>
                   </>
                 )}

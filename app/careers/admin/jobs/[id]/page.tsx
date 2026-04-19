@@ -24,6 +24,7 @@ export default function EditJobPage() {
   const [responsibilities, setResponsibilities] = useState<string[]>([
     "",
   ]);
+  const [perks, setPerks] = useState<string[]>([""]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -50,6 +51,7 @@ export default function EditJobPage() {
             ? data.responsibilities
             : [""],
         );
+        setPerks(data.perks?.length ? data.perks : [""]);
       } else if (res.status === 404) {
         router.replace("/careers/admin/jobs");
       }
@@ -99,6 +101,7 @@ export default function EditJobPage() {
           ...form,
           requirements: requirements.filter((r) => r.trim()),
           responsibilities: responsibilities.filter((r) => r.trim()),
+          perks: perks.filter((r) => r.trim()),
         }),
       });
 
@@ -330,6 +333,40 @@ export default function EditJobPage() {
             >
               <Plus size={14} style={{ display: "inline" }} /> Add
               requirement
+            </button>
+          </div>
+        </div>
+
+        <div className={styles.formField}>
+          <label className={styles.formLabel}>Perks</label>
+          <div className={styles.listEditor}>
+            {perks.map((item, i) => (
+              <div key={i} className={styles.listItem}>
+                <input
+                  className={styles.listItemInput}
+                  value={item}
+                  onChange={(e) =>
+                    updateListItem(perks, setPerks, i, e.target.value)
+                  }
+                  placeholder={`Perk ${i + 1}`}
+                />
+                {perks.length > 1 && (
+                  <button
+                    type="button"
+                    className={styles.listRemoveBtn}
+                    onClick={() => removeListItem(perks, setPerks, i)}
+                  >
+                    <X size={16} />
+                  </button>
+                )}
+              </div>
+            ))}
+            <button
+              type="button"
+              className={styles.listAddBtn}
+              onClick={() => setPerks((prev) => [...prev, ""])}
+            >
+              <Plus size={14} style={{ display: "inline" }} /> Add perk
             </button>
           </div>
         </div>

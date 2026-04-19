@@ -20,6 +20,7 @@ export default function NewJobPage() {
   });
   const [requirements, setRequirements] = useState<string[]>([""]);
   const [responsibilities, setResponsibilities] = useState<string[]>([""]);
+  const [perks, setPerks] = useState<string[]>([""]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -60,6 +61,7 @@ export default function NewJobPage() {
           ...form,
           requirements: requirements.filter((r) => r.trim()),
           responsibilities: responsibilities.filter((r) => r.trim()),
+          perks: perks.filter((r) => r.trim()),
         }),
       });
 
@@ -287,6 +289,41 @@ export default function NewJobPage() {
             >
               <Plus size={14} style={{ display: "inline" }} /> Add
               requirement
+            </button>
+          </div>
+        </div>
+
+        {/* Perks */}
+        <div className={styles.formField}>
+          <label className={styles.formLabel}>Perks</label>
+          <div className={styles.listEditor}>
+            {perks.map((item, i) => (
+              <div key={i} className={styles.listItem}>
+                <input
+                  className={styles.listItemInput}
+                  value={item}
+                  onChange={(e) =>
+                    updateListItem(perks, setPerks, i, e.target.value)
+                  }
+                  placeholder={`Perk ${i + 1}`}
+                />
+                {perks.length > 1 && (
+                  <button
+                    type="button"
+                    className={styles.listRemoveBtn}
+                    onClick={() => removeListItem(perks, setPerks, i)}
+                  >
+                    <X size={16} />
+                  </button>
+                )}
+              </div>
+            ))}
+            <button
+              type="button"
+              className={styles.listAddBtn}
+              onClick={() => setPerks((prev) => [...prev, ""])}
+            >
+              <Plus size={14} style={{ display: "inline" }} /> Add perk
             </button>
           </div>
         </div>

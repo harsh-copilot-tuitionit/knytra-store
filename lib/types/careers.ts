@@ -25,6 +25,7 @@ export interface CareerJob {
   description: string;
   requirements: string[];
   responsibilities: string[];
+  perks: string[];
   compensation: string;
   status: JobStatus;
   createdAt: string | null;

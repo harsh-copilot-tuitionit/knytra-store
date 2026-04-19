@@ -94,6 +94,7 @@ export async function POST(request: NextRequest) {
       responsibilities: Array.isArray(responsibilities)
         ? responsibilities
         : [],
+      perks: Array.isArray(body.perks) ? body.perks : [],
       compensation: compensation?.trim() ?? "",
       status: status ?? "draft",
       createdAt: now,
