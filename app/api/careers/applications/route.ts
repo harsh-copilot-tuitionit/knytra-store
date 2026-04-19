@@ -34,24 +34,28 @@ export async function GET(request: NextRequest) {
         email: d.email ?? "",
         phone: d.phone ?? "",
         city: d.city ?? "",
-        linkedIn: d.linkedIn ?? "",
-        additionalLink: d.additionalLink ?? "",
-        resumeLink: d.resumeLink ?? "",
         role: {
           jobId: d.role?.jobId ?? d.jobId ?? "",
           jobSlug: d.role?.jobSlug ?? "",
           jobTitle: d.role?.jobTitle ?? d.jobTitle ?? "",
         },
-        isStudent: d.isStudent ?? false,
+        studentStatus: typeof d.studentStatus === "boolean" ? d.studentStatus : false,
         studentDetails: d.studentDetails ?? null,
         experienceDetails: d.experienceDetails ?? null,
-        motivationAnswers: d.motivationAnswers ?? { whyHRGrowth: "" },
-        availability: d.availability ?? {
-          availableMayJune: false,
-          performanceBased: false,
-          hybridComfortable: false,
+        motivationAnswers: d.motivationAnswers ?? {
+          whyJoinKnytra: "",
+          whyThisRole: "",
+          relevantExperience: "",
         },
-        confirmation: d.confirmation ?? {
+        assessmentAnswers: d.assessmentAnswers ?? { messageToCandidate: "" },
+        customAnswers: d.customAnswers ?? {},
+        availability: d.availability ?? {
+          availableDuration: false,
+          performanceBased: false,
+          hybridModel: false,
+          hoursPerDay: "",
+        },
+        declaration: d.declaration ?? {
           infoCorrect: false,
           understandsPerformanceBased: false,
         },
@@ -82,15 +86,14 @@ export async function POST(request: NextRequest) {
       email,
       phone,
       city,
-      linkedIn,
-      additionalLink,
-      resumeLink,
-      isStudent,
+      studentStatus,
       studentDetails,
       experienceDetails,
       motivationAnswers,
+      assessmentAnswers,
+      customAnswers,
       availability,
-      confirmation,
+      declaration,
     } = body;
 
     if (!role || typeof role !== "object") {
@@ -156,28 +159,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!linkedIn || typeof linkedIn !== "string" || !linkedIn.trim()) {
-      return Response.json(
-        { error: "LinkedIn profile is required." },
-        { status: 400 },
-      );
-    }
-
-    if (!resumeLink || typeof resumeLink !== "string" || !resumeLink.trim()) {
-      return Response.json(
-        { error: "Resume link is required." },
-        { status: 400 },
-      );
-    }
-
-    if (typeof isStudent !== "boolean") {
+    if (typeof studentStatus !== "boolean") {
       return Response.json(
         { error: "Student status is required." },
         { status: 400 },
       );
     }
 
-    if (isStudent) {
+    if (studentStatus) {
       if (
         !studentDetails ||
         typeof studentDetails !== "object" ||
@@ -211,12 +200,25 @@ export async function POST(request: NextRequest) {
     }
 
     if (
-      !motivationAnswers ||
-      typeof motivationAnswers !== "object" ||
-      !motivationAnswers.whyHRGrowth?.trim()
+      motivationAnswers &&
+      (typeof motivationAnswers !== "object" ||
+        !motivationAnswers.whyJoinKnytra?.trim() ||
+        !motivationAnswers.whyThisRole?.trim() ||
+        !motivationAnswers.relevantExperience?.trim())
     ) {
       return Response.json(
-        { error: "Motivation answer is required." },
+        { error: "Motivation answers are required." },
+        { status: 400 },
+      );
+    }
+
+    if (
+      assessmentAnswers &&
+      (typeof assessmentAnswers !== "object" ||
+        !assessmentAnswers.messageToCandidate?.trim())
+    ) {
+      return Response.json(
+        { error: "Assessment answer is required." },
         { status: 400 },
       );
     }
@@ -224,9 +226,10 @@ export async function POST(request: NextRequest) {
     if (
       !availability ||
       typeof availability !== "object" ||
-      typeof availability.availableMayJune !== "boolean" ||
+      typeof availability.availableDuration !== "boolean" ||
       typeof availability.performanceBased !== "boolean" ||
-      typeof availability.hybridComfortable !== "boolean"
+      typeof availability.hybridModel !== "boolean" ||
+      !availability.hoursPerDay?.trim()
     ) {
       return Response.json(
         { error: "Availability answers are required." },
@@ -235,10 +238,10 @@ export async function POST(request: NextRequest) {
     }
 
     if (
-      !confirmation ||
-      typeof confirmation !== "object" ||
-      confirmation.infoCorrect !== true ||
-      confirmation.understandsPerformanceBased !== true
+      !declaration ||
+      typeof declaration !== "object" ||
+      declaration.infoCorrect !== true ||
+      declaration.understandsPerformanceBased !== true
     ) {
       return Response.json(
         { error: "Please confirm the application declarations." },
@@ -286,22 +289,24 @@ export async function POST(request: NextRequest) {
       email: email.trim().toLowerCase(),
       phone: phone.replace(/\D/g, "").slice(-10),
       city: city.trim(),
-      linkedIn: linkedIn.trim(),
-      additionalLink: additionalLink?.trim() ?? "",
-      resumeLink: resumeLink.trim(),
       role: {
         jobId,
         jobSlug,
         jobTitle,
       },
-      isStudent,
-      studentDetails: isStudent ? studentDetails : null,
-      experienceDetails: isStudent ? null : experienceDetails,
-      motivationAnswers: {
-        whyHRGrowth: motivationAnswers.whyHRGrowth.trim(),
+      studentStatus,
+      studentDetails: studentStatus ? studentDetails : null,
+      experienceDetails: studentStatus ? null : experienceDetails,
+      motivationAnswers: motivationAnswers ?? null,
+      assessmentAnswers: assessmentAnswers ?? null,
+      customAnswers: customAnswers ?? {},
+      availability: {
+        availableDuration: availability.availableDuration,
+        performanceBased: availability.performanceBased,
+        hybridModel: availability.hybridModel,
+        hoursPerDay: availability.hoursPerDay.trim(),
       },
-      availability,
-      confirmation,
+      declaration,
       status: "received",
       notes: [],
       timeline: [

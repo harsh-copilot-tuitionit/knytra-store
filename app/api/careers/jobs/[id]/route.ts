@@ -40,6 +40,13 @@ export async function GET(
       perks: d.perks ?? [],
       compensation: d.compensation ?? "",
       status: d.status ?? "draft",
+      applicationConfig: d.applicationConfig ?? {
+        showStudentSection: false,
+        showExperienceSection: false,
+        showMotivationSection: false,
+        showAssessmentSection: false,
+        customQuestions: [],
+      },
       createdAt: d.createdAt?.toDate?.()?.toISOString() ?? null,
       updatedAt: d.updatedAt?.toDate?.()?.toISOString() ?? null,
     });
@@ -97,6 +104,8 @@ export async function PUT(
     if (body.compensation !== undefined)
       updates.compensation = body.compensation.trim();
     if (body.status) updates.status = body.status;
+    if (body.applicationConfig && typeof body.applicationConfig === "object")
+      updates.applicationConfig = body.applicationConfig;
 
     await docRef.update(updates);
     return Response.json({ success: true });

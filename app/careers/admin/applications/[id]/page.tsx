@@ -213,45 +213,6 @@ export default function ApplicationDetailPage() {
               <span className={styles.infoLabel}>Role</span>
               <span className={styles.infoValue}>{app.role?.jobTitle ?? "—"}</span>
             </div>
-            {app.linkedIn && (
-              <div className={styles.infoRow}>
-                <span className={styles.infoLabel}>LinkedIn</span>
-                <a
-                  href={app.linkedIn}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`${styles.infoValue} ${styles.infoLink}`}
-                >
-                  Profile
-                </a>
-              </div>
-            )}
-            {app.additionalLink && (
-              <div className={styles.infoRow}>
-                <span className={styles.infoLabel}>Additional link</span>
-                <a
-                  href={app.additionalLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`${styles.infoValue} ${styles.infoLink}`}
-                >
-                  View link
-                </a>
-              </div>
-            )}
-            {app.resumeLink && (
-              <div className={styles.infoRow}>
-                <span className={styles.infoLabel}>Resume</span>
-                <a
-                  href={app.resumeLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`${styles.infoValue} ${styles.infoLink}`}
-                >
-                  View Resume
-                </a>
-              </div>
-            )}
             <div className={styles.infoRow}>
               <span className={styles.infoLabel}>Applied</span>
               <span className={styles.infoValue}>
@@ -346,28 +307,71 @@ export default function ApplicationDetailPage() {
           <div className={styles.detailCard}>
             <h3 className={styles.detailCardTitle}>Motivation</h3>
             <p className={styles.coverLetter}>
-              {app.motivationAnswers?.whyHRGrowth ?? "—"}
+              {app.motivationAnswers?.whyJoinKnytra || app.motivationAnswers?.whyHRGrowth || "—"}
             </p>
+            {app.motivationAnswers?.whyThisRole && (
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>Why this role</span>
+                <span className={styles.infoValue}>
+                  {app.motivationAnswers.whyThisRole}
+                </span>
+              </div>
+            )}
+            {app.motivationAnswers?.relevantExperience && (
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>Relevant experience</span>
+                <span className={styles.infoValue}>
+                  {app.motivationAnswers.relevantExperience}
+                </span>
+              </div>
+            )}
           </div>
+
+          {app.assessmentAnswers?.messageToCandidate ? (
+            <div className={styles.detailCard}>
+              <h3 className={styles.detailCardTitle}>Assessment</h3>
+              <p className={styles.coverLetter}>
+                {app.assessmentAnswers.messageToCandidate}
+              </p>
+            </div>
+          ) : null}
+
+          {app.customAnswers && Object.keys(app.customAnswers).length > 0 ? (
+            <div className={styles.detailCard}>
+              <h3 className={styles.detailCardTitle}>Additional Answers</h3>
+              {Object.entries(app.customAnswers).map(([question, answer], index) => (
+                <div className={styles.infoRow} key={index}>
+                  <span className={styles.infoLabel}>{question}</span>
+                  <span className={styles.infoValue}>{answer || "—"}</span>
+                </div>
+              ))}
+            </div>
+          ) : null}
 
           <div className={styles.detailCard}>
             <h3 className={styles.detailCardTitle}>Availability</h3>
             <div className={styles.infoRow}>
-              <span className={styles.infoLabel}>Available May 1 – June 30</span>
+              <span className={styles.infoLabel}>Available for full duration</span>
               <span className={styles.infoValue}>
-                {app.availability?.availableMayJune ? "Yes" : "No"}
+                {app.availability?.availableDuration ? "Yes" : "No"}
               </span>
             </div>
             <div className={styles.infoRow}>
-              <span className={styles.infoLabel}>Comfortable with performance-based internship</span>
+              <span className={styles.infoLabel}>Performance-based internship</span>
               <span className={styles.infoValue}>
                 {app.availability?.performanceBased ? "Yes" : "No"}
               </span>
             </div>
             <div className={styles.infoRow}>
-              <span className={styles.infoLabel}>Comfortable with hybrid model</span>
+              <span className={styles.infoLabel}>Hybrid model comfortable</span>
               <span className={styles.infoValue}>
-                {app.availability?.hybridComfortable ? "Yes" : "No"}
+                {app.availability?.hybridModel ? "Yes" : "No"}
+              </span>
+            </div>
+            <div className={styles.infoRow}>
+              <span className={styles.infoLabel}>Hours per day</span>
+              <span className={styles.infoValue}>
+                {app.availability?.hoursPerDay || "—"}
               </span>
             </div>
           </div>
@@ -377,13 +381,13 @@ export default function ApplicationDetailPage() {
             <div className={styles.infoRow}>
               <span className={styles.infoLabel}>Information correct</span>
               <span className={styles.infoValue}>
-                {app.confirmation?.infoCorrect ? "Yes" : "No"}
+                {app.declaration?.infoCorrect ? "Yes" : "No"}
               </span>
             </div>
             <div className={styles.infoRow}>
               <span className={styles.infoLabel}>Understands performance-based nature</span>
               <span className={styles.infoValue}>
-                {app.confirmation?.understandsPerformanceBased ? "Yes" : "No"}
+                {app.declaration?.understandsPerformanceBased ? "Yes" : "No"}
               </span>
             </div>
           </div>

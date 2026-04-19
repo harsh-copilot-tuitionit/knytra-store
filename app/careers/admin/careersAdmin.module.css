@@ -880,6 +880,82 @@
   margin-top: var(--sp-4);
 }
 
+.formSection {
+  border-top: 1px solid var(--color-white-12);
+  padding-top: var(--sp-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.sectionTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sectionSubtitle {
+  color: var(--color-white-50);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-4);
+}
+
+.customQuestionCard {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 14px;
+  padding: var(--sp-4);
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.customQuestionRow {
+  display: flex;
+  gap: var(--sp-2);
+  align-items: center;
+}
+
+.iconButton {
+  border: none;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--color-white-60);
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background var(--ease-fast), color var(--ease-fast);
+}
+
+.iconButton:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--color-white);
+}
+
+.checkboxRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.checkboxLabel {
+  font-size: 13px;
+  color: var(--color-white-70);
+}
+
+@media (max-width: 760px) {
+  .formRow,
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ── Cover letter display ── */
 .coverLetter {
   font-size: 14px;

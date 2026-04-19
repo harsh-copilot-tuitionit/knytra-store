@@ -153,12 +153,10 @@ export default async function JobDetailPage({ params }: Props) {
             </div>
           </div>
 
-          {job.slug === "hr-growth-intern" && (
-            <StickyApplyBar
-              href="/careers/hr-growth-intern/apply"
-              label="Applying for HR + Growth Intern"
-            />
-          )}
+          <StickyApplyBar
+            href={`/careers/${job.slug}/apply`}
+            label={`Applying for ${job.title}`}
+          />
         </div>
       </main>
       <Footer />

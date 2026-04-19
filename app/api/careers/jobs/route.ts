@@ -33,8 +33,16 @@ export async function GET(request: NextRequest) {
         description: d.description ?? "",
         requirements: d.requirements ?? [],
         responsibilities: d.responsibilities ?? [],
+        perks: d.perks ?? [],
         compensation: d.compensation ?? "",
         status: d.status ?? "draft",
+        applicationConfig: d.applicationConfig ?? {
+          showStudentSection: false,
+          showExperienceSection: false,
+          showMotivationSection: false,
+          showAssessmentSection: false,
+          customQuestions: [],
+        },
         createdAt: d.createdAt?.toDate?.()?.toISOString() ?? null,
         updatedAt: d.updatedAt?.toDate?.()?.toISOString() ?? null,
       };
@@ -67,6 +75,7 @@ export async function POST(request: NextRequest) {
       responsibilities,
       compensation,
       status,
+      applicationConfig,
     } = body;
 
     if (!title || typeof title !== "string" || title.trim().length < 2) {
@@ -97,6 +106,16 @@ export async function POST(request: NextRequest) {
       perks: Array.isArray(body.perks) ? body.perks : [],
       compensation: compensation?.trim() ?? "",
       status: status ?? "draft",
+      applicationConfig:
+        typeof applicationConfig === "object" && applicationConfig !== null
+          ? applicationConfig
+          : {
+              showStudentSection: false,
+              showExperienceSection: false,
+              showMotivationSection: false,
+              showAssessmentSection: false,
+              customQuestions: [],
+            },
       createdAt: now,
       updatedAt: now,
     });

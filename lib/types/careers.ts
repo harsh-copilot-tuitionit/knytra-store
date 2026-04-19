@@ -1,11 +1,10 @@
-/**
- * KNYTRA — Recruitment & Careers Types
- */
-
 export type JobType = "full-time" | "part-time" | "contract" | "internship";
 export type JobStatus = "open" | "closed" | "draft";
 
+export type QuestionType = "text" | "textarea" | "select";
+
 export type ApplicationStatus =
+  | "new"
   | "received"
   | "screening"
   | "shortlisted"
@@ -14,6 +13,22 @@ export type ApplicationStatus =
   | "offer"
   | "hired"
   | "rejected";
+
+export interface Question {
+  id: string;
+  question: string;
+  type: QuestionType;
+  options?: string[];
+  required: boolean;
+}
+
+export interface ApplicationConfig {
+  showStudentSection: boolean;
+  showExperienceSection: boolean;
+  showMotivationSection: boolean;
+  showAssessmentSection: boolean;
+  customQuestions: Question[];
+}
 
 export interface CareerJob {
   id: string;
@@ -28,6 +43,7 @@ export interface CareerJob {
   perks: string[];
   compensation: string;
   status: JobStatus;
+  applicationConfig?: ApplicationConfig;
   createdAt: string | null;
   updatedAt: string | null;
 }
@@ -47,19 +63,18 @@ export interface ApplicationTimelineEntry {
 
 export interface CareerApplication {
   id: string;
-  fullName: string;
-  email: string;
-  phone: string;
-  city: string;
-  linkedIn: string;
-  additionalLink?: string;
-  resumeLink: string;
+  jobId: string;
+  jobTitle: string;
   role: {
     jobId: string;
     jobSlug: string;
     jobTitle: string;
   };
-  isStudent: boolean;
+  fullName: string;
+  email: string;
+  phone: string;
+  city: string;
+  studentStatus: boolean;
   studentDetails?: {
     institute: string;
     university: string;
@@ -67,6 +82,7 @@ export interface CareerApplication {
     specialization: string;
     currentYear: string;
     completionYear: string;
+    cgpa?: string;
   };
   experienceDetails?: {
     highestQualification: string;
@@ -75,15 +91,22 @@ export interface CareerApplication {
     role: string;
     experience: string;
   };
-  motivationAnswers: {
-    whyHRGrowth: string;
+  motivationAnswers?: {
+    whyJoinKnytra: string;
+    whyThisRole: string;
+    relevantExperience: string;
   };
+  assessmentAnswers?: {
+    messageToCandidate: string;
+  };
+  customAnswers: Record<string, string>;
   availability: {
-    availableMayJune: boolean;
+    availableDuration: boolean;
     performanceBased: boolean;
-    hybridComfortable: boolean;
+    hybridModel: boolean;
+    hoursPerDay: string;
   };
-  confirmation: {
+  declaration: {
     infoCorrect: boolean;
     understandsPerformanceBased: boolean;
   };
@@ -103,6 +126,7 @@ export interface CareersAdmin {
 }
 
 export const APPLICATION_STATUS_LABELS: Record<ApplicationStatus, string> = {
+  new: "New",
   received: "Received",
   screening: "Screening",
   shortlisted: "Shortlisted",
@@ -114,6 +138,7 @@ export const APPLICATION_STATUS_LABELS: Record<ApplicationStatus, string> = {
 };
 
 export const APPLICATION_STATUS_ORDER: ApplicationStatus[] = [
+  "new",
   "received",
   "screening",
   "shortlisted",
@@ -121,6 +146,7 @@ export const APPLICATION_STATUS_ORDER: ApplicationStatus[] = [
   "assessment",
   "offer",
   "hired",
+  "rejected",
 ];
 
 export const JOB_TYPE_LABELS: Record<JobType, string> = {

@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import type { Question } from "@/lib/types/careers";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, X, Plus } from "lucide-react";
+import { ArrowLeft, X, Plus, ArrowUp, ArrowDown } from "lucide-react";
 import styles from "../../careersAdmin.module.css";
 
 export default function NewJobPage() {
@@ -21,6 +22,13 @@ export default function NewJobPage() {
   const [requirements, setRequirements] = useState<string[]>([""]);
   const [responsibilities, setResponsibilities] = useState<string[]>([""]);
   const [perks, setPerks] = useState<string[]>([""]);
+  const [applicationConfig, setApplicationConfig] = useState({
+    showStudentSection: false,
+    showExperienceSection: false,
+    showMotivationSection: false,
+    showAssessmentSection: false,
+    customQuestions: [] as Question[],
+  });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -48,6 +56,56 @@ export default function NewJobPage() {
     setList(list.filter((_, i) => i !== index));
   }
 
+  function createQuestion(): Question {
+    return {
+      id:
+        typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random()}`,
+      question: "",
+      type: "text",
+      options: [],
+      required: true,
+    };
+  }
+
+  function updateQuestion(
+    index: number,
+    changes: Partial<Question>,
+  ) {
+    setApplicationConfig((current) => {
+      const updated = [...current.customQuestions];
+      updated[index] = { ...updated[index], ...changes };
+      return { ...current, customQuestions: updated };
+    });
+  }
+
+  function removeQuestion(index: number) {
+    setApplicationConfig((current) => ({
+      ...current,
+      customQuestions: current.customQuestions.filter((_, i) => i !== index),
+    }));
+  }
+
+  function moveQuestion(index: number, direction: -1 | 1) {
+    setApplicationConfig((current) => {
+      const updated = [...current.customQuestions];
+      const nextIndex = index + direction;
+      if (nextIndex < 0 || nextIndex >= updated.length) return current;
+      const temp = updated[nextIndex];
+      updated[nextIndex] = updated[index];
+      updated[index] = temp;
+      return { ...current, customQuestions: updated };
+    });
+  }
+
+  function addQuestion() {
+    setApplicationConfig((current) => ({
+      ...current,
+      customQuestions: [...current.customQuestions, createQuestion()],
+    }));
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -62,6 +120,7 @@ export default function NewJobPage() {
           requirements: requirements.filter((r) => r.trim()),
           responsibilities: responsibilities.filter((r) => r.trim()),
           perks: perks.filter((r) => r.trim()),
+          applicationConfig,
         }),
       });
 
@@ -327,7 +386,137 @@ export default function NewJobPage() {
             </button>
           </div>
         </div>
+        <div className={styles.formSection}>
+          <h2 className={styles.sectionTitle}>Application Flow Configuration</h2>
 
+          <div className={styles.formGrid}>
+            {[
+              { label: "Student section", key: "showStudentSection" },
+              { label: "Experience section", key: "showExperienceSection" },
+              { label: "Motivation section", key: "showMotivationSection" },
+              { label: "Assessment section", key: "showAssessmentSection" },
+            ].map((option) => (
+              <label key={option.key} className={styles.checkboxRow}>
+                <input
+                  type="checkbox"
+                  checked={applicationConfig[option.key as keyof typeof applicationConfig] as boolean}
+                  onChange={(e) =>
+                    setApplicationConfig((current) => ({
+                      ...current,
+                      [option.key]: e.target.checked,
+                    }))
+                  }
+                />
+                <span className={styles.checkboxLabel}>{option.label}</span>
+              </label>
+            ))}
+          </div>
+
+          <div className={styles.formField}>
+            <div className={styles.sectionSubtitle}>
+              Custom questions will render as part of the application flow.
+            </div>
+            {applicationConfig.customQuestions.map((question, index) => (
+              <div key={question.id} className={styles.customQuestionCard}>
+                <div className={styles.customQuestionRow}>
+                  <input
+                    className={styles.formInput}
+                    type="text"
+                    value={question.question}
+                    onChange={(e) =>
+                      updateQuestion(index, { question: e.target.value })
+                    }
+                    placeholder="Question text"
+                  />
+                  <button
+                    type="button"
+                    className={styles.iconButton}
+                    onClick={() => moveQuestion(index, -1)}
+                    disabled={index === 0}
+                  >
+                    <ArrowUp size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.iconButton}
+                    onClick={() => moveQuestion(index, 1)}
+                    disabled={index === applicationConfig.customQuestions.length - 1}
+                  >
+                    <ArrowDown size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.iconButton}
+                    onClick={() => removeQuestion(index)}
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+                <div className={styles.formRow}>
+                  <div className={styles.formField}>
+                    <label className={styles.formLabel}>
+                      Input type
+                    </label>
+                    <select
+                      className={styles.formSelect}
+                      value={question.type}
+                      onChange={(e) =>
+                        updateQuestion(index, {
+                          type: e.target.value as "text" | "textarea" | "select",
+                          options: e.target.value === "select" ? question.options ?? [""] : [],
+                        })
+                      }
+                    >
+                      <option value="text">Text</option>
+                      <option value="textarea">Textarea</option>
+                      <option value="select">Select</option>
+                    </select>
+                  </div>
+                  <div className={styles.formField}>
+                    <label className={styles.checkboxLabel}>
+                      <input
+                        type="checkbox"
+                        checked={question.required}
+                        onChange={(e) =>
+                          updateQuestion(index, { required: e.target.checked })
+                        }
+                      />
+                      Required
+                    </label>
+                  </div>
+                </div>
+                {question.type === "select" && (
+                  <div className={styles.formField}>
+                    <label className={styles.formLabel}>
+                      Options (comma separated)
+                    </label>
+                    <input
+                      className={styles.formInput}
+                      type="text"
+                      value={(question.options ?? []).join(", ")}
+                      onChange={(e) =>
+                        updateQuestion(index, {
+                          options: e.target.value
+                            .split(",")
+                            .map((opt) => opt.trim())
+                            .filter(Boolean),
+                        })
+                      }
+                      placeholder="Option 1, Option 2, Option 3"
+                    />
+                  </div>
+                )}
+              </div>
+            ))}
+            <button
+              type="button"
+              className={styles.listAddBtn}
+              onClick={addQuestion}
+            >
+              <Plus size={14} style={{ display: "inline" }} /> Add question
+            </button>
+          </div>
+        </div>
         {error && (
           <p style={{ color: "#f87171", fontSize: 14 }}>{error}</p>
         )}
