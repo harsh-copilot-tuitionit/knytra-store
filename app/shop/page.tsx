@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { DEMO_PRODUCTS, DemoProduct } from "@/lib/demoProducts";
 import { useWishlist } from "@/context/WishlistContext";
@@ -32,22 +32,24 @@ export default function Shop() {
   const [wishlistToast, setWishlistToast] = useState<string | null>(null);
 
   useEffect(() => {
-    async function load() {
-      const demos: Product[] = DEMO_PRODUCTS.map((d: DemoProduct) => ({ ...d }));
-      try {
-        const q = query(collection(db, "products"), where("status", "==", "active"));
-        const snap = await getDocs(q);
-        const fb = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Product[];
+    const q = query(collection(db, "products"), where("status", "==", "active"));
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const fb = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Product[];
         const fbIds = new Set(fb.map((p) => p.id));
-        const mergedDemos = demos.filter((d) => !fbIds.has(d.id));
-        setAllProducts([...fb, ...mergedDemos]);
-      } catch {
-        setAllProducts(demos);
-      } finally {
+        const demos: Product[] = DEMO_PRODUCTS.map((d: DemoProduct) => ({ ...d }));
+        const merged = [...fb, ...demos.filter((d) => !fbIds.has(d.id))];
+        setAllProducts(merged);
         setLoading(false);
-      }
-    }
-    load();
+      },
+      () => {
+        const demos: Product[] = DEMO_PRODUCTS.map((d: DemoProduct) => ({ ...d }));
+        setAllProducts(demos);
+        setLoading(false);
+      },
+    );
+    return () => unsubscribe();
   }, []);
 
   useEffect(() => {

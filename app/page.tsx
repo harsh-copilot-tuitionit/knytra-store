@@ -90,10 +90,6 @@ export default function HomePage() {
               </text>
             </svg>
           </div>
-
-          <Link href="/shop" className={styles.shopCta}>
-            START SHOPPING →
-          </Link>
         </div>
       </section>
 

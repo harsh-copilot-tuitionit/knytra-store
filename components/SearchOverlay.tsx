@@ -3,10 +3,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { DEMO_PRODUCTS, DemoProduct } from "@/lib/demoProducts";
-import { Search, X } from "lucide-react";
+import { Search } from "lucide-react";
 import styles from "./SearchOverlay.module.css";
 
 interface Product {
@@ -35,40 +35,41 @@ export default function SearchOverlay({ onClose }: SearchOverlayProps) {
 
   // Load products once on mount (same logic as /shop)
   useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      const demos: Product[] = DEMO_PRODUCTS.map((d: DemoProduct) => ({
-        id: d.id,
-        name: d.name,
-        price: d.price,
-        images: d.images,
-        status: d.status,
-        category: d.category,
-        description: d.description,
-      }));
-
-      try {
-        const q = query(collection(db, "products"), where("status", "==", "active"));
-        const snap = await getDocs(q);
-        const fb = snap.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as Product[];
-
-        if (cancelled) return;
+    const q = query(collection(db, "products"), where("status", "==", "active"));
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const fb = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Product[];
         const fbIds = new Set(fb.map((p) => p.id));
-        const mergedDemos = demos.filter((d) => !fbIds.has(d.id));
-        setProducts([...fb, ...mergedDemos]);
-      } catch {
-        if (!cancelled) setProducts(demos);
-      } finally {
-        if (!cancelled) setLoaded(true);
-      }
-    }
+        const demos: Product[] = DEMO_PRODUCTS.map((d: DemoProduct) => ({
+          id: d.id,
+          name: d.name,
+          price: d.price,
+          images: d.images,
+          status: d.status,
+          category: d.category,
+          description: d.description,
+        }));
+        const merged = [...fb, ...demos.filter((d) => !fbIds.has(d.id))];
+        setProducts(merged);
+        setLoaded(true);
+      },
+      () => {
+        const demos: Product[] = DEMO_PRODUCTS.map((d: DemoProduct) => ({
+          id: d.id,
+          name: d.name,
+          price: d.price,
+          images: d.images,
+          status: d.status,
+          category: d.category,
+          description: d.description,
+        }));
+        setProducts(demos);
+        setLoaded(true);
+      },
+    );
 
-    load();
-    return () => { cancelled = true; };
+    return () => unsubscribe();
   }, []);
 
   // Auto-focus input

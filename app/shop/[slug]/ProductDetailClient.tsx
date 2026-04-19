@@ -110,6 +110,7 @@ export default function ProductDetailClient() {
       setLoading(false);
       return;
     }
+
     async function fetchProduct() {
       try {
         const snap = await getDoc(doc(db, "products", slug));
@@ -120,6 +121,7 @@ export default function ProductDetailClient() {
         setLoading(false);
       }
     }
+
     fetchProduct();
   }, [slug]);
 
