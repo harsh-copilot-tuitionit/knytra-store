@@ -49,6 +49,9 @@ function mapJobDoc(doc: FirebaseFirestore.DocumentSnapshot): CareerJob {
     pipelineStages: Array.isArray(d.pipelineStages)
       ? d.pipelineStages
       : APPLICATION_PIPELINE_STAGES,
+    assignedRecruiters: Array.isArray(d.assignedRecruiters)
+      ? d.assignedRecruiters
+      : [],
     createdAt: d.createdAt?.toDate?.()?.toISOString() ?? null,
     updatedAt: d.updatedAt?.toDate?.()?.toISOString() ?? null,
   };
@@ -111,7 +114,8 @@ function mapApplicationDoc(doc: FirebaseFirestore.DocumentSnapshot): CareerAppli
       understandsPerformanceBased: false,
     },
     status: d.status ?? "received",
-    stage: d.stage ?? (d.status as ApplicationStage) ?? "received",
+    currentStage: d.currentStage ?? d.stage ?? (d.status as ApplicationStage) ?? "received",
+    stage: d.stage ?? d.currentStage ?? (d.status as ApplicationStage) ?? "received",
     evaluation: d.evaluation ?? {
       rating: 0,
       strengths: "",
@@ -203,6 +207,9 @@ export async function createJob(body: JobInput) {
     pipelineStages: Array.isArray(body.pipelineStages)
       ? body.pipelineStages
       : APPLICATION_PIPELINE_STAGES,
+    assignedRecruiters: Array.isArray(body.assignedRecruiters)
+      ? body.assignedRecruiters
+      : [],
     createdAt: now,
     updatedAt: now,
   });
@@ -242,6 +249,7 @@ export async function updateJob(id: string, body: Partial<JobInput>) {
   if (body.applicationConfig && typeof body.applicationConfig === "object")
     updates.applicationConfig = normalizeApplicationConfig(body.applicationConfig);
   if (Array.isArray(body.pipelineStages)) updates.pipelineStages = body.pipelineStages;
+  if (Array.isArray(body.assignedRecruiters)) updates.assignedRecruiters = body.assignedRecruiters;
 
   await docRef.update(updates);
   return true;
@@ -444,6 +452,7 @@ export async function createApplication(
     },
     declaration: body.declaration,
     status: "received",
+    currentStage: "received",
     stage: "received",
     evaluation: {
       rating: 0,
@@ -541,6 +550,7 @@ export async function updateApplication(
 
   if (payload.status && payload.status !== current.status) {
     updates.status = payload.status;
+    if (!payload.stage) updates.currentStage = payload.status;
     timeline.push({
       status: payload.status,
       action: "status_change",
@@ -554,6 +564,7 @@ export async function updateApplication(
 
   if (payload.stage && payload.stage !== current.stage) {
     updates.stage = payload.stage;
+    updates.currentStage = payload.stage;
     timeline.push({
       status: payload.status ?? current.status ?? "received",
       action: "stage_change",

@@ -143,6 +143,7 @@ export interface CareerApplication {
     understandsPerformanceBased: boolean;
   };
   status: ApplicationStatus;
+  currentStage: ApplicationStage;
   stage: ApplicationStage;
   evaluation: ApplicationEvaluation;
   notes: ApplicationNote[];
@@ -166,6 +167,7 @@ export interface CareerJob {
   status: JobStatus;
   applicationConfig: ApplicationConfig;
   pipelineStages?: ApplicationStage[];
+  assignedRecruiters?: string[];
   createdAt: string | null;
   updatedAt: string | null;
 }
@@ -202,6 +204,7 @@ export interface JobInput {
   status?: JobStatus;
   applicationConfig?: Partial<ApplicationConfig> | null;
   pipelineStages?: ApplicationStage[];
+  assignedRecruiters?: string[];
 }
 
 export const APPLICATION_STATUS_LABELS: Record<ApplicationStatus, string> = {
