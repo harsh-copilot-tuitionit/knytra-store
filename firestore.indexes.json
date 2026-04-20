@@ -33,6 +33,14 @@
       ]
     },
     {
+      "collectionGroup": "careers_jobs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "slug", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "careers_applications",
       "queryScope": "COLLECTION",
       "fields": [
