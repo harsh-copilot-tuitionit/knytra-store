@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import ApplicationFlow from "@/components/ApplicationFlow";
-import { getJobBySlug } from "@/lib/careers";
+import { getJobBySlug } from "@/lib/ats/service";
 import type { CareerJob } from "@/lib/types/careers";
 import { normalizeApplicationConfig } from "@/lib/types/careers";
 

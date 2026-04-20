@@ -1,7 +1,6 @@
 import { NextRequest } from "next/server";
-import { getAdminDb } from "@/lib/firebase-admin";
 import { getSessionFromRequest } from "@/lib/careers-auth";
-import * as admin from "firebase-admin";
+import { getApplicationById, updateApplication } from "@/lib/ats/service";
 
 export async function GET(
   request: NextRequest,
@@ -15,61 +14,11 @@ export async function GET(
   const { id } = await params;
 
   try {
-    const db = getAdminDb();
-    const snap = await db
-      .collection("careers_applications")
-      .doc(id)
-      .get();
-
-    if (!snap.exists) {
-      return Response.json(
-        { error: "Application not found." },
-        { status: 404 },
-      );
+    const application = await getApplicationById(id);
+    if (!application) {
+      return Response.json({ error: "Application not found." }, { status: 404 });
     }
-
-    const d = snap.data()!;
-    return Response.json({
-      id: snap.id,
-      jobId: d.jobId ?? d.role?.jobId ?? "",
-      jobTitle: d.jobTitle ?? d.role?.jobTitle ?? "",
-      jobSlug: d.role?.jobSlug ?? "",
-      fullName: d.fullName ?? "",
-      email: d.email ?? "",
-      phone: d.phone ?? "",
-      city: d.city ?? "",
-      role: {
-        jobId: d.role?.jobId ?? d.jobId ?? "",
-        jobSlug: d.role?.jobSlug ?? "",
-        jobTitle: d.role?.jobTitle ?? d.jobTitle ?? "",
-      },
-      studentStatus: typeof d.studentStatus === "boolean" ? d.studentStatus : d.isStudent ?? false,
-      isStudent: typeof d.studentStatus === "boolean" ? d.studentStatus : d.isStudent ?? false,
-      studentDetails: d.studentDetails ?? null,
-      experienceDetails: d.experienceDetails ?? null,
-      motivationAnswers: d.motivationAnswers ?? {
-        whyJoinKnytra: d.motivationAnswers?.whyHRGrowth ?? "",
-        whyThisRole: "",
-        relevantExperience: "",
-      },
-      assessmentAnswers: d.assessmentAnswers ?? { messageToCandidate: "" },
-      customAnswers: d.customAnswers ?? {},
-      availability: d.availability ?? {
-        availableDuration: false,
-        performanceBased: false,
-        hybridModel: false,
-        hoursPerDay: "",
-      },
-      declaration: d.declaration ?? {
-        infoCorrect: false,
-        understandsPerformanceBased: false,
-      },
-      status: d.status ?? "received",
-      notes: d.notes ?? [],
-      timeline: d.timeline ?? [],
-      createdAt: d.createdAt?.toDate?.()?.toISOString() ?? null,
-      updatedAt: d.updatedAt?.toDate?.()?.toISOString() ?? null,
-    });
+    return Response.json(application);
   } catch (error) {
     console.error("[GET /api/careers/applications/id]", error);
     return Response.json(
@@ -92,54 +41,30 @@ export async function PUT(
 
   try {
     const body = await request.json();
-    const db = getAdminDb();
-    const docRef = db.collection("careers_applications").doc(id);
-    const snap = await docRef.get();
+    const application = await updateApplication(id, {
+      status: body.status,
+      stage: body.stage,
+      note: body.note,
+      statusNote: body.statusNote,
+      evaluation: body.evaluation,
+      candidate: body.candidate,
+      author: session.uid,
+    });
 
-    if (!snap.exists) {
-      return Response.json(
-        { error: "Application not found." },
-        { status: 404 },
-      );
+    if (!application) {
+      return Response.json({ error: "Application not found." }, { status: 404 });
     }
 
-    const current = snap.data()!;
-    const updates: Record<string, unknown> = {
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-    };
-
-    if (body.status && body.status !== current.status) {
-      updates.status = body.status;
-      updates.timeline = [
-        ...(current.timeline ?? []),
-        {
-          status: body.status,
-          note:
-            body.statusNote?.trim() ||
-            `Status changed to ${body.status}`,
-          author: session.uid,
-          createdAt: new Date().toISOString(),
-        },
-      ];
-    }
-
-    if (body.note && typeof body.note === "string" && body.note.trim()) {
-      updates.notes = [
-        ...(current.notes ?? []),
-        {
-          text: body.note.trim(),
-          author: session.uid,
-          createdAt: new Date().toISOString(),
-        },
-      ];
-    }
-
-    await docRef.update(updates);
-    return Response.json({ success: true });
+    return Response.json({ success: true, application });
   } catch (error) {
     console.error("[PUT /api/careers/applications/id]", error);
     return Response.json(
-      { error: "Failed to update application." },
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to update application.",
+      },
       { status: 500 },
     );
   }

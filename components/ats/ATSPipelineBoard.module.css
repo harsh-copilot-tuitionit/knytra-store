@@ -1,0 +1,64 @@
+.pipelineBoard {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+
+.pipelineColumn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  min-height: 220px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+.pipelineHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.pipelineCount {
+  color: var(--color-white-40);
+}
+
+.pipelineList {
+  display: grid;
+  gap: 10px;
+}
+
+.pipelineCard {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 14px;
+  border: 1px solid transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.pipelineCard:hover,
+.pipelineCard:focus-visible {
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.cardTitle {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.cardMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.85rem;
+  color: var(--color-white-50);
+}

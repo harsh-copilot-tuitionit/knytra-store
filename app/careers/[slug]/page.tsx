@@ -4,7 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { notFound } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { getAdminDb } from "@/lib/firebase-admin";
+import { getJobBySlug as fetchJobBySlug } from "@/lib/ats/service";
 import StickyApplyBar from "@/components/StickyApplyBar";
 import styles from "../careers.module.css";
 
@@ -13,34 +13,7 @@ interface Props {
 }
 
 async function getJobBySlug(slug: string) {
-  const db = getAdminDb();
-  const snap = await db
-    .collection("careers_jobs")
-    .where("slug", "==", slug)
-    .where("status", "==", "open")
-    .limit(1)
-    .get();
-
-  if (snap.empty) return null;
-
-  const doc = snap.docs[0];
-  const d = doc.data();
-  return {
-    id: doc.id,
-    title: d.title ?? "",
-    slug: d.slug ?? "",
-    department: d.department ?? "",
-    location: d.location ?? "",
-    type: d.type ?? "full-time",
-    description: d.description ?? "",
-    requirements: d.requirements ?? [],
-    responsibilities: d.responsibilities ?? [],
-    perks: d.perks ?? [],
-    compensation: d.compensation ?? "",
-    status: d.status as string,
-    createdAt: d.createdAt?.toDate?.()?.toISOString() ?? null,
-    updatedAt: d.updatedAt?.toDate?.()?.toISOString() ?? null,
-  };
+  return await fetchJobBySlug(slug);
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

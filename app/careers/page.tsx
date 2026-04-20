@@ -3,8 +3,8 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { getAdminDb } from "@/lib/firebase-admin";
 import type { CareerJob } from "@/lib/types/careers";
+import { getOpenJobs as fetchOpenJobs } from "@/lib/ats/service";
 import styles from "./careers.module.css";
 
 export const dynamic = "force-dynamic";
@@ -48,42 +48,7 @@ const CULTURE = [
 ];
 
 async function getOpenJobs(): Promise<CareerJob[]> {
-  try {
-    const db = getAdminDb();
-    const snap = await db
-      .collection("careers_jobs")
-      .where("status", "==", "open")
-      .get();
-
-    const jobs = snap.docs.map((doc) => {
-      const d = doc.data();
-      return {
-        id: doc.id,
-        title: d.title ?? "",
-        slug: d.slug ?? "",
-        department: d.department ?? "",
-        location: d.location ?? "",
-        type: d.type ?? "full-time",
-        description: d.description ?? "",
-        requirements: d.requirements ?? [],
-        responsibilities: d.responsibilities ?? [],
-        perks: d.perks ?? [],
-        compensation: d.compensation ?? "",
-        status: d.status ?? "open",
-        createdAt: d.createdAt?.toDate?.()?.toISOString() ?? null,
-        updatedAt: d.updatedAt?.toDate?.()?.toISOString() ?? null,
-      };
-    });
-
-    return jobs.sort(
-      (a, b) =>
-        new Date(b.createdAt ?? 0).getTime() -
-        new Date(a.createdAt ?? 0).getTime(),
-    );
-  } catch (err) {
-    console.error("[Careers] Failed to fetch jobs:", err);
-    return [];
-  }
+  return await fetchOpenJobs();
 }
 
 export default async function CareersPage() {

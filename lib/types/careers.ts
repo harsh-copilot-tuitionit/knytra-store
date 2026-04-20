@@ -1,10 +1,7 @@
 export type JobType = "full-time" | "part-time" | "contract" | "internship";
 export type JobStatus = "open" | "closed" | "draft";
 
-export type QuestionType = "text" | "textarea" | "select";
-
-export type ApplicationStatus =
-  | "new"
+export type ApplicationStage =
   | "received"
   | "screening"
   | "shortlisted"
@@ -13,6 +10,10 @@ export type ApplicationStatus =
   | "offer"
   | "hired"
   | "rejected";
+
+export type ApplicationStatus = ApplicationStage;
+
+export type QuestionType = "text" | "textarea" | "select";
 
 export interface Question {
   id: string;
@@ -52,22 +53,10 @@ export function normalizeApplicationConfig(
   };
 }
 
-export interface CareerJob {
-  id: string;
-  title: string;
-  slug: string;
-  department: string;
-  location: string;
-  type: JobType;
-  description: string;
-  requirements: string[];
-  responsibilities: string[];
-  perks: string[];
-  compensation: string;
-  status: JobStatus;
-  applicationConfig?: ApplicationConfig;
-  createdAt: string | null;
-  updatedAt: string | null;
+export interface ApplicationRole {
+  jobId: string;
+  jobSlug: string;
+  jobTitle: string;
 }
 
 export interface ApplicationNote {
@@ -78,20 +67,39 @@ export interface ApplicationNote {
 
 export interface ApplicationTimelineEntry {
   status: ApplicationStatus;
+  action: string;
   note: string;
   author: string;
   createdAt: string;
+}
+
+export interface ApplicationEvaluation {
+  rating: number;
+  strengths: string;
+  weaknesses: string;
+  notes: string;
+}
+
+export interface CandidateProfile {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  city: string;
+  applicationsCount: number;
+  lastApplicationAt: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
 }
 
 export interface CareerApplication {
   id: string;
   jobId: string;
   jobTitle: string;
-  role: {
-    jobId: string;
-    jobSlug: string;
-    jobTitle: string;
-  };
+  jobSlug: string;
+  role: ApplicationRole;
+  candidateId: string;
+  candidate: CandidateProfile;
   fullName: string;
   email: string;
   phone: string;
@@ -106,14 +114,14 @@ export interface CareerApplication {
     currentYear: string;
     completionYear: string;
     cgpa?: string;
-  };
+  } | null;
   experienceDetails?: {
     highestQualification: string;
     currentStatus: string;
     company: string;
     role: string;
     experience: string;
-  };
+  } | null;
   motivationAnswers?: {
     whyJoinKnytra?: string;
     whyThisRole?: string;
@@ -135,22 +143,68 @@ export interface CareerApplication {
     understandsPerformanceBased: boolean;
   };
   status: ApplicationStatus;
+  stage: ApplicationStage;
+  evaluation: ApplicationEvaluation;
   notes: ApplicationNote[];
   timeline: ApplicationTimelineEntry[];
   createdAt: string | null;
   updatedAt: string | null;
 }
 
-export interface CareersAdmin {
-  uid: string;
-  name: string;
-  role: "recruiter" | "hiring_manager" | "admin";
-  createdAt: string;
-  lastLogin: string | null;
+export interface CareerJob {
+  id: string;
+  title: string;
+  slug: string;
+  department: string;
+  location: string;
+  type: JobType;
+  description: string;
+  requirements: string[];
+  responsibilities: string[];
+  perks: string[];
+  compensation: string;
+  status: JobStatus;
+  applicationConfig: ApplicationConfig;
+  pipelineStages?: ApplicationStage[];
+  createdAt: string | null;
+  updatedAt: string | null;
+}
+
+export interface CareerCandidate {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  city: string;
+  applicationsCount: number;
+  lastApplicationAt: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+}
+
+export interface ApplicationFilters {
+  status?: ApplicationStatus;
+  jobId?: string;
+  stage?: ApplicationStage;
+  search?: string;
+}
+
+export interface JobInput {
+  title: string;
+  department?: string;
+  location?: string;
+  type?: JobType;
+  description?: string;
+  requirements?: string[];
+  responsibilities?: string[];
+  perks?: string[];
+  compensation?: string;
+  status?: JobStatus;
+  applicationConfig?: Partial<ApplicationConfig> | null;
+  pipelineStages?: ApplicationStage[];
 }
 
 export const APPLICATION_STATUS_LABELS: Record<ApplicationStatus, string> = {
-  new: "New",
   received: "Received",
   screening: "Screening",
   shortlisted: "Shortlisted",
@@ -162,7 +216,6 @@ export const APPLICATION_STATUS_LABELS: Record<ApplicationStatus, string> = {
 };
 
 export const APPLICATION_STATUS_ORDER: ApplicationStatus[] = [
-  "new",
   "received",
   "screening",
   "shortlisted",
