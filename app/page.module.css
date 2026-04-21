@@ -91,6 +91,28 @@
   object-fit: contain;
 }
 
+.noticePanel {
+  max-width: 620px;
+  padding: 26px 28px;
+  margin-top: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 20px;
+}
+
+.noticeTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 10px;
+}
+
+.noticeText {
+  font-size: 14px;
+  line-height: 1.8;
+  color: rgba(255, 255, 255, 0.65);
+}
+
 .heroText {
   display: flex;
   flex-direction: column;
