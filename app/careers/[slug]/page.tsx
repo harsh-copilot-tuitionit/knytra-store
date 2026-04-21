@@ -8,6 +8,8 @@ import { getJobBySlug as fetchJobBySlug } from "@/lib/ats/service";
 import StickyApplyBar from "@/components/StickyApplyBar";
 import styles from "../careers.module.css";
 
+export const dynamic = "force-dynamic";
+
 interface Props {
   params: Promise<{ slug: string }>;
 }
