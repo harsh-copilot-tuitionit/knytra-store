@@ -6,12 +6,13 @@ import { normalizeApplicationConfig } from "@/lib/types/careers";
 
 export const dynamic = "force-dynamic";
 
-async function getJobBySlugForPage(slug: string): Promise<CareerJob | null> {
+async function getJobBySlugForPage(slug?: string): Promise<CareerJob | null> {
   return await getJobBySlug(slug);
 }
 
-export default async function ApplyPage({ params }: { params: { slug: string } }) {
-  const job = await getJobBySlugForPage(params.slug);
+export default async function ApplyPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const job = await getJobBySlugForPage(slug);
   if (!job) {
     notFound();
   }

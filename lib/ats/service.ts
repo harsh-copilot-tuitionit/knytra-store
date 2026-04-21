@@ -152,9 +152,14 @@ export async function getAllJobs(adminView = false): Promise<CareerJob[]> {
 }
 
 export async function getJobBySlug(
-  slug: string,
+  slug: string | undefined,
   adminView = false,
 ): Promise<CareerJob | null> {
+  if (!slug) {
+    console.warn("[getJobBySlug] called without a slug");
+    return null;
+  }
+
   const db = getAdminDb();
   let query: FirebaseFirestore.Query = db
     .collection("careers_jobs")
