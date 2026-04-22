@@ -22,21 +22,20 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Knytra — Crafted with Intent",
+  title: "Knytra — Launching 14 May 2026",
   description:
-    "A new era of Indian streetwear is coming. Raw, bold, and unapologetically urban. Sign up to be the first to know when we drop.",
+    "Knytra returns with a minimal launch on 14 May 2026. Join the waitlist for first access to the new drop.",
   keywords: [
     "Indian streetwear",
-    "urban fashion India",
-    "streetwear brand",
-    "Knytra",
-    "raw bold urban clothing",
+    "launch",
     "coming soon",
+    "waitlist",
+    "Knytra",
   ],
   openGraph: {
-    title: "Knytra — Crafted with Intent",
+    title: "Knytra — Launching 14 May 2026",
     description:
-      "A new era of Indian streetwear is coming. Raw, bold, and unapologetically urban.",
+      "Knytra returns with a minimal launch on 14 May 2026. Join the waitlist for first access.",
     url: "https://knytra.com",
     siteName: "Knytra",
     type: "website",
@@ -44,9 +43,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Knytra — Crafted with Intent",
+    title: "Knytra — Launching 14 May 2026",
     description:
-      "A new era of Indian streetwear is coming. Raw, bold, and unapologetically urban.",
+      "Knytra returns with a minimal launch on 14 May 2026. Join the waitlist for first access.",
   },
   robots: {
     index: true,
