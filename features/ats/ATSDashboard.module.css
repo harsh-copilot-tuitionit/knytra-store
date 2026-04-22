@@ -31,6 +31,8 @@
   text-align: left;
   cursor: pointer;
   transition: transform var(--ease-fast), background var(--ease-fast), border-color var(--ease-fast);
+  min-width: 0;
+  max-width: 100%;
 }
 
 .listRow:hover {
@@ -56,6 +58,7 @@
   align-items: center;
   justify-content: flex-end;
   flex-wrap: wrap;
+  min-width: 0;
 }
 
 .rowDate {
@@ -70,6 +73,8 @@
   border-radius: 999px;
   font-size: 12px;
   font-weight: 700;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .timelineList {
@@ -82,6 +87,7 @@
   display: flex;
   gap: 16px;
   align-items: flex-start;
+  min-width: 0;
 }
 
 .timelineDot {
@@ -138,6 +144,8 @@
   color: var(--color-white);
   cursor: pointer;
   transition: background var(--ease-fast), border-color var(--ease-fast), transform var(--ease-fast);
+  min-width: 0;
+  max-width: 100%;
 }
 
 .roleRow:hover {
@@ -290,11 +298,15 @@
     overflow-x: auto;
     padding-bottom: 8px;
     -webkit-overflow-scrolling: touch;
+    min-width: 0;
+    max-width: 100%;
   }
 
   .pipelineTile {
     min-width: 170px;
     flex: 0 0 auto;
+    max-width: 100%;
+    min-height: 90px;
   }
 
   .timelineEntry {
