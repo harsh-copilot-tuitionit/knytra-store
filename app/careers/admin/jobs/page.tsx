@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Briefcase, Plus, Trash2 } from "lucide-react";
 import type { CareerJob } from "@/lib/types/careers";
-import styles from "../careersAdmin.module.css";
+import styles from "../CareersAdminPage.module.css";
 
 export default function JobsPage() {
   const [jobs, setJobs] = useState<CareerJob[]>([]);

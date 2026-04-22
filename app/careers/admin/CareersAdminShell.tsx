@@ -18,7 +18,7 @@ import {
   Menu,
   X,
 } from "lucide-react";
-import styles from "./careersAdmin.module.css";
+import styles from "./CareersAdminShell.module.css";
 
 const PUBLIC_PATHS = ["/careers/admin/login", "/careers/admin/setup"];
 

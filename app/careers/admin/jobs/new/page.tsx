@@ -6,7 +6,7 @@ import { normalizeApplicationConfig } from "@/lib/types/careers";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, X, Plus, ArrowUp, ArrowDown } from "lucide-react";
-import styles from "../../careersAdmin.module.css";
+import styles from "../../CareersAdminPage.module.css";
 
 export default function NewJobPage() {
   const router = useRouter();

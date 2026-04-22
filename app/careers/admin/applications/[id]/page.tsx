@@ -12,7 +12,7 @@ import {
   APPLICATION_STATUS_LABELS,
   APPLICATION_STATUS_ORDER,
 } from "@/lib/types/careers";
-import styles from "../../careersAdmin.module.css";
+import styles from "../../CareersAdminPage.module.css";
 
 export default function ApplicationDetailPage() {
   const params = useParams();

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Users } from "lucide-react";
 import type { CareerApplication, CareerJob, ApplicationStatus } from "@/lib/types/careers";
 import { APPLICATION_STATUS_LABELS } from "@/lib/types/careers";
-import styles from "../careersAdmin.module.css";
+import styles from "../CareersAdminPage.module.css";
 
 export default function ApplicationsPage() {
   const [applications, setApplications] = useState<CareerApplication[]>([]);

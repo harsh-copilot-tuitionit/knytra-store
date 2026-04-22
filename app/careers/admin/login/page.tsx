@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import styles from "../careersAdmin.module.css";
+import styles from "../CareersAdminAuth.module.css";
 
 export default function CareersAdminLoginPage() {
   const [uid, setUid] = useState("");

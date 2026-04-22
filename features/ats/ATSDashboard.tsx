@@ -10,7 +10,7 @@ import {
   Activity,
 } from "lucide-react";
 import { useATS } from "@/hooks/ats/useATS";
-import styles from "@/app/careers/admin/careersAdmin.module.css";
+import styles from "@/app/careers/admin/CareersAdminPage.module.css";
 import dashboardStyles from "./ATSDashboard.module.css";
 
 const PIPELINE_STAGES = [
