@@ -11,43 +11,213 @@
   flex-wrap: wrap;
 }
 
-.pipelinePreview {
+.recentList {
   display: flex;
   flex-direction: column;
-  gap: var(--sp-4);
+  gap: 12px;
 }
 
-.pipelineStage {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: var(--sp-4);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.03);
-}
-
-.pipelineStageHeader {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--sp-3);
+.listRow {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1.5fr 0.8fr 0.8fr;
+  gap: 16px;
   align-items: center;
-}
-
-.pipelineStageTitle {
-  font-size: 13px;
-  font-weight: 700;
+  padding: 20px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
   color: var(--color-white);
+  text-align: left;
+  cursor: pointer;
+  transition: transform var(--ease-fast), background var(--ease-fast), border-color var(--ease-fast);
 }
 
-.pipelineStageSubtitle {
+.listRow:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
+}
+
+.rowName {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.rowMeta {
+  font-size: 13px;
+  color: var(--color-white-60);
+  margin-top: 6px;
+}
+
+.rowInfo {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.rowDate {
+  font-size: 13px;
+  color: var(--color-white-60);
+}
+
+.statusTag {
+  background: rgba(96, 165, 250, 0.12);
+  color: #60a5fa;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.timelineList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.timelineEntry {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.timelineDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #60a5fa;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
+.timelineContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.timelineLabel {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-white-60);
+  font-weight: 700;
+}
+
+.timelineNote {
+  font-size: 14px;
+  color: var(--color-white);
+  line-height: 1.5;
+}
+
+.timelineMeta {
   font-size: 12px;
   color: var(--color-white-50);
 }
 
-.candidatesRow {
+.roleList {
   display: flex;
-  gap: var(--sp-2);
+  flex-direction: column;
+  gap: 12px;
+}
+
+.roleRow {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: center;
+  padding: 20px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--color-white);
+  cursor: pointer;
+  transition: background var(--ease-fast), border-color var(--ease-fast), transform var(--ease-fast);
+}
+
+.roleRow:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
+}
+
+.roleInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+}
+
+.roleTitle {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.roleMeta {
+  font-size: 13px;
+  color: var(--color-white-60);
+}
+
+.roleStats {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: right;
+  min-width: 120px;
+}
+
+.roleType {
+  font-size: 12px;
+  color: var(--color-white-50);
+}
+
+.pipelineGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+}
+
+.pipelineTile {
+  border-radius: 14px;
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.pipelineTileHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.pipelineTileLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-white-60);
+  text-transform: uppercase;
+}
+
+.pipelineTileCount {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.pipelineTileCandidates {
+  display: flex;
   flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pipelineEmpty {
+  font-size: 12px;
+  color: var(--color-white-50);
 }
 
 .candidateChip {

@@ -170,36 +170,28 @@ export default function ATSDashboard() {
           </div>
 
           {recentApplications.length > 0 ? (
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Candidate</th>
-                  <th>Role</th>
-                  <th>Date</th>
-                  <th>Stage</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentApplications.map((application) => (
-                  <tr
-                    key={application.id}
-                    onClick={() => window.location.assign(`/careers/admin/applications/${application.id}`)}
-                    style={{ cursor: "pointer" }}
-                  >
-                    <td>
-                      <span className={styles.tableLink}>{application.fullName}</span>
-                    </td>
-                    <td>{application.jobTitle || application.role.jobTitle}</td>
-                    <td>{application.createdAt ? new Date(application.createdAt).toLocaleDateString() : "—"}</td>
-                    <td>
-                      <span className={styles.badge}>{application.stage ?? application.status}</span>
-                    </td>
-                    <td>{application.status}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className={dashboardStyles.recentList}>
+              {recentApplications.map((application) => (
+                <button
+                  key={application.id}
+                  type="button"
+                  className={dashboardStyles.listRow}
+                  onClick={() => window.location.assign(`/careers/admin/applications/${application.id}`)}
+                >
+                  <div>
+                    <div className={dashboardStyles.rowName}>{application.fullName}</div>
+                    <div className={dashboardStyles.rowMeta}>{application.jobTitle || application.role.jobTitle}</div>
+                  </div>
+                  <div className={dashboardStyles.rowInfo}>
+                    <span className={dashboardStyles.rowDate}>
+                      {application.createdAt ? new Date(application.createdAt).toLocaleDateString() : "—"}
+                    </span>
+                    <span className={styles.badge}>{application.stage ?? application.status}</span>
+                    <span className={dashboardStyles.statusTag}>{application.status}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
           ) : (
             <div className={styles.emptyTable}>
               <p>No recent applications found.</p>
@@ -216,14 +208,15 @@ export default function ATSDashboard() {
           </div>
 
           {recentActivity.length > 0 ? (
-            <div className={styles.activityList}>
+            <div className={dashboardStyles.timelineList}>
               {recentActivity.map((entry, index) => (
-                <div key={`${entry.applicationId}-${index}`} className={styles.activityEntry}>
-                  <div>
-                    <span className={styles.activityLabel}>{STAGE_LABELS[entry.status] ?? entry.status}</span>
-                    <p className={styles.activityNote}>{entry.note}</p>
-                    <p className={styles.activityMeta}>
-                      {entry.candidateName} • {entry.jobTitle} • {new Date(entry.createdAt!).toLocaleString()}
+                <div key={`${entry.applicationId}-${index}`} className={dashboardStyles.timelineEntry}>
+                  <span className={dashboardStyles.timelineDot} />
+                  <div className={dashboardStyles.timelineContent}>
+                    <div className={dashboardStyles.timelineLabel}>{STAGE_LABELS[entry.status] ?? entry.status}</div>
+                    <p className={dashboardStyles.timelineNote}>{entry.note}</p>
+                    <p className={dashboardStyles.timelineMeta}>
+                      {entry.candidateName} • {entry.jobTitle} • {new Date(entry.createdAt!).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                     </p>
                   </div>
                 </div>
@@ -242,31 +235,31 @@ export default function ATSDashboard() {
               <h2 className={styles.panelTitle}>Open Roles Snapshot</h2>
               <p className={styles.panelSubtle}>Top roles with recent candidate demand.</p>
             </div>
+            <Link href="/careers/admin/jobs" className={styles.btnSecondary}>
+              Open Workspace
+            </Link>
           </div>
 
           {jobs.length > 0 ? (
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Role</th>
-                  <th>Applicants</th>
-                  <th>Type</th>
-                </tr>
-              </thead>
-              <tbody>
-                {jobs.slice(0, 6).map((job) => (
-                  <tr key={job.id}>
-                    <td>
-                      <Link href={`/careers/admin/jobs/${job.id}`} className={styles.tableLink}>
-                        {job.title}
-                      </Link>
-                    </td>
-                    <td>{jobApplicationCounts[job.id] ?? 0}</td>
-                    <td style={{ textTransform: "capitalize" }}>{job.type.replace("-", " ")}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className={dashboardStyles.roleList}>
+              {jobs.slice(0, 6).map((job) => (
+                <button
+                  key={job.id}
+                  type="button"
+                  className={dashboardStyles.roleRow}
+                  onClick={() => window.location.assign(`/careers/admin/jobs/${job.id}`)}
+                >
+                  <div className={dashboardStyles.roleInfo}>
+                    <div className={dashboardStyles.roleTitle}>{job.title}</div>
+                    <div className={dashboardStyles.roleMeta}>{`${job.department || "General"} • ${job.location || "Remote"}`}</div>
+                  </div>
+                  <div className={dashboardStyles.roleStats}>
+                    <span>{jobApplicationCounts[job.id] ?? 0} applicants</span>
+                    <span className={dashboardStyles.roleType}>{job.type.replace("-", " ")}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
           ) : (
             <div className={styles.emptyTable}>
               <p>No open roles to display.</p>
@@ -280,27 +273,19 @@ export default function ATSDashboard() {
               <h2 className={styles.panelTitle}>Pipeline Preview</h2>
               <p className={styles.panelSubtle}>Stage counts and top candidates per stage.</p>
             </div>
-            <div className={dashboardStyles.buttonRow}>
-              <Link href="/careers/admin/applications" className={styles.btnSecondary}>
-                View Pipeline
-              </Link>
-              <Link href="/careers/admin/jobs" className={styles.btnSecondary}>
-                Job Workspace
-              </Link>
-            </div>
+            <Link href="/careers/admin/applications" className={styles.btnSecondary}>
+              View Pipeline
+            </Link>
           </div>
 
-          <div className={dashboardStyles.pipelinePreview}>
+          <div className={dashboardStyles.pipelineGrid}>
             {PIPELINE_STAGES.map((stage) => (
-              <div key={stage} className={dashboardStyles.pipelineStage}>
-                <div className={dashboardStyles.pipelineStageHeader}>
-                  <div>
-                    <div className={dashboardStyles.pipelineStageTitle}>{STAGE_LABELS[stage]}</div>
-                    <div className={dashboardStyles.pipelineStageSubtitle}>{pipelineCounts[stage] ?? 0} applications</div>
-                  </div>
-                  <span className={styles.stageCount}>{pipelineCounts[stage] ?? 0}</span>
+              <div key={stage} className={dashboardStyles.pipelineTile}>
+                <div className={dashboardStyles.pipelineTileHeader}>
+                  <span className={dashboardStyles.pipelineTileLabel}>{STAGE_LABELS[stage]}</span>
+                  <span className={dashboardStyles.pipelineTileCount}>{pipelineCounts[stage] ?? 0}</span>
                 </div>
-                <div className={dashboardStyles.candidatesRow}>
+                <div className={dashboardStyles.pipelineTileCandidates}>
                   {pipelineBuckets[stage]?.length ? (
                     pipelineBuckets[stage].map((application) => (
                       <span key={application.id} className={dashboardStyles.candidateChip}>
@@ -308,7 +293,7 @@ export default function ATSDashboard() {
                       </span>
                     ))
                   ) : (
-                    <span className={dashboardStyles.pipelineStageSubtitle}>No recent candidates</span>
+                    <span className={dashboardStyles.pipelineEmpty}>No recent candidates</span>
                   )}
                 </div>
               </div>
