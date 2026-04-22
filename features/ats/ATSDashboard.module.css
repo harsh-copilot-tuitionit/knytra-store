@@ -227,3 +227,86 @@
   border-radius: 999px;
   font-size: 12px;
 }
+
+.desktopActions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.mobileActions {
+  display: none;
+  width: 100%;
+  gap: 10px;
+  align-items: center;
+}
+
+.mobileActionMenu {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+@media (max-width: 900px) {
+  .actionRow {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .desktopActions {
+    display: none;
+  }
+
+  .mobileActions {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .mobileActionMenu {
+    display: flex;
+  }
+
+  .listRow {
+    grid-template-columns: 1fr;
+  }
+
+  .roleRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .rowInfo,
+  .roleStats {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .pipelineGrid {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .pipelineTile {
+    min-width: 170px;
+    flex: 0 0 auto;
+  }
+
+  .timelineEntry {
+    gap: 12px;
+  }
+
+  .timelineNote,
+  .timelineMeta,
+  .rowName,
+  .rowMeta,
+  .roleTitle,
+  .roleMeta {
+    word-break: break-word;
+  }
+}

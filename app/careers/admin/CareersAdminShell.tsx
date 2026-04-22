@@ -15,6 +15,8 @@ import {
   Briefcase,
   UserPlus,
   LogOut,
+  Menu,
+  X,
 } from "lucide-react";
 import styles from "./careersAdmin.module.css";
 
@@ -45,6 +47,7 @@ export default function CareersAdminShell({
 }) {
   const [admin, setAdmin] = useState<AdminInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isNavOpen, setIsNavOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -116,9 +119,26 @@ export default function CareersAdminShell({
   return (
     <CareersAdminContext.Provider value={{ admin, loading }}>
       <div className={styles.adminContainer}>
-        <aside className={styles.sidebar}>
+        {isNavOpen ? (
+          <button
+            className={styles.mobileBackdrop}
+            type="button"
+            onClick={() => setIsNavOpen(false)}
+            aria-label="Close navigation"
+          />
+        ) : null}
+
+        <aside className={`${styles.sidebar} ${isNavOpen ? styles.sidebarOpen : ""}`}>
           <div className={styles.sidebarHeader}>
             <h2>KNYTRA Recruit</h2>
+            <button
+              type="button"
+              className={styles.mobileClose}
+              onClick={() => setIsNavOpen(false)}
+              aria-label="Close navigation"
+            >
+              <X size={20} />
+            </button>
           </div>
 
           <nav className={styles.sidebarNav}>
@@ -154,7 +174,17 @@ export default function CareersAdminShell({
 
         <div className={styles.mainContent}>
           <header className={styles.topHeader}>
-            <div style={{ flexGrow: 1 }} />
+            <div className={styles.mobileHeaderRow}>
+              <button
+                type="button"
+                className={styles.hamburgerBtn}
+                onClick={() => setIsNavOpen(true)}
+                aria-label="Open navigation"
+              >
+                <Menu size={20} />
+              </button>
+              <span className={styles.mobileHeaderTitle}>Recruiter Dashboard</span>
+            </div>
             <div className={styles.adminProfile}>
               {admin.name} ({admin.role})
             </div>

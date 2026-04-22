@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -37,6 +37,7 @@ const STAGE_LABELS: Record<string, string> = {
 
 export default function ATSDashboard() {
   const { applications, jobs, summary, loading, reload, moveStage } = useATS();
+  const [mobileActionsOpen, setMobileActionsOpen] = useState(false);
 
   const totalCandidates = useMemo(
     () => new Set(applications.map((application) => application.candidateId)).size,
@@ -108,22 +109,53 @@ export default function ATSDashboard() {
           </p>
         </div>
         <div className={dashboardStyles.actionRow}>
-          <button type="button" className={styles.btnPrimary} onClick={() => void reload()}>
-            Refresh
-          </button>
-          <Link href="/careers/admin/applications" className={styles.btnSecondary}>
-            View Applications
-          </Link>
-          <Link href="/careers/admin/applications" className={styles.btnSecondary}>
-            View Pipeline
-          </Link>
-          <Link href="/careers/admin/jobs" className={styles.btnSecondary}>
-            Job Workspace
-          </Link>
-          <Link href="/careers/admin/jobs/new" className={styles.btnSecondary}>
-            Create Job
-          </Link>
+          <div className={dashboardStyles.desktopActions}>
+            <button type="button" className={styles.btnPrimary} onClick={() => void reload()}>
+              Refresh
+            </button>
+            <Link href="/careers/admin/applications" className={styles.btnSecondary}>
+              View Applications
+            </Link>
+            <Link href="/careers/admin/applications" className={styles.btnSecondary}>
+              View Pipeline
+            </Link>
+            <Link href="/careers/admin/jobs" className={styles.btnSecondary}>
+              Job Workspace
+            </Link>
+            <Link href="/careers/admin/jobs/new" className={styles.btnSecondary}>
+              Create Job
+            </Link>
+          </div>
+
+          <div className={dashboardStyles.mobileActions}>
+            <Link href="/careers/admin/jobs/new" className={styles.btnPrimary}>
+              Create Job
+            </Link>
+            <button
+              type="button"
+              className={styles.btnSecondary}
+              onClick={() => setMobileActionsOpen((open) => !open)}
+            >
+              More
+            </button>
+          </div>
         </div>
+        {mobileActionsOpen ? (
+          <div className={dashboardStyles.mobileActionMenu}>
+            <button type="button" className={styles.btnSecondary} onClick={() => { setMobileActionsOpen(false); void reload(); }}>
+              Refresh
+            </button>
+            <Link href="/careers/admin/applications" className={styles.btnSecondary} onClick={() => setMobileActionsOpen(false)}>
+              View Applications
+            </Link>
+            <Link href="/careers/admin/applications" className={styles.btnSecondary} onClick={() => setMobileActionsOpen(false)}>
+              View Pipeline
+            </Link>
+            <Link href="/careers/admin/jobs" className={styles.btnSecondary} onClick={() => setMobileActionsOpen(false)}>
+              Job Workspace
+            </Link>
+          </div>
+        ) : null}
       </div>
 
       <div className={styles.statsGrid}>
