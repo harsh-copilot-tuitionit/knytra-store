@@ -9,6 +9,7 @@ export default function HomePage() {
         <div className={styles.heroContent}>
           <p className={styles.themeLabel}>LAUNCHING SOON</p>
           <h1 className={styles.title}>KNYTRA</h1>
+          <p className={styles.tagline}>CRAFTED WITH INTENT</p>
           <p className={styles.subtitle}>
             A new chapter in Indian streetwear. The launch window opens 14 May 2026.
           </p>
@@ -23,8 +24,6 @@ export default function HomePage() {
           <div className={styles.emailWrap}>
             <EmailCapture />
           </div>
-
-          <p className={styles.footerText}>No photography. Pure form. Be first in line.</p>
         </div>
       </section>
     </main>
