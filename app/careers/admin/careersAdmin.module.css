@@ -300,6 +300,136 @@
   margin-bottom: var(--sp-10);
 }
 
+.dashboardGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sp-6);
+  margin-bottom: var(--sp-10);
+}
+
+@media (min-width: 1200px) {
+  .dashboardGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.panelCard {
+  background-color: var(--color-off-black);
+  border: 1px solid var(--color-white-12);
+  border-radius: 8px;
+  padding: var(--sp-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.panelHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-3);
+}
+
+.panelTitle {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.panelSubtle {
+  font-size: 13px;
+  color: var(--color-white-60);
+}
+
+.activityList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.activityEntry {
+  padding: var(--sp-4);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.activityLabel {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-white-60);
+}
+
+.activityNote {
+  font-size: 14px;
+  color: var(--color-white);
+  font-weight: 600;
+}
+
+.activityMeta {
+  font-size: 12px;
+  color: var(--color-white-40);
+}
+
+.stageBars {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.stageRow {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr) 44px;
+  gap: var(--sp-3);
+  align-items: center;
+}
+
+.stageLabel {
+  font-size: 12px;
+  color: var(--color-white-60);
+}
+
+.stageProgress {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.stageFill {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #60a5fa, #22c55e);
+  border-radius: 999px;
+}
+
+.stageCount {
+  font-size: 12px;
+  color: var(--color-white-60);
+  text-align: right;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--color-white);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .statCard {
   background-color: var(--color-off-black);
   border: 1px solid var(--color-white-12);
