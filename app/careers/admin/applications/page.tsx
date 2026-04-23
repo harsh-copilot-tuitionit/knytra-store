@@ -163,15 +163,17 @@ export default function ApplicationsPage() {
                   <p className={inboxStyles.candidateName}>{application.fullName}</p>
                   <p className={inboxStyles.candidateEmail}>{application.email}</p>
                 </div>
-                <div className={inboxStyles.applicationMeta}>
-                  <span>{application.role?.jobTitle ?? application.jobTitle}</span>
+                <div className={inboxStyles.applicationJob}>
+                  <span className={inboxStyles.applicationJobTitle}>
+                    {application.role?.jobTitle ?? application.jobTitle}
+                  </span>
                   <span className={inboxStyles.applicationDate}>
                     {application.createdAt
                       ? new Date(application.createdAt).toLocaleDateString()
                       : "—"}
                   </span>
                 </div>
-                <div className={inboxStyles.applicationRight}>
+                <div className={inboxStyles.applicationStatus}>
                   <span className={`${inboxStyles.applicationStage} ${inboxStyles.stageTag}`}>
                     {APPLICATION_STAGE_LABELS[application.currentStage] ?? application.currentStage}
                   </span>
