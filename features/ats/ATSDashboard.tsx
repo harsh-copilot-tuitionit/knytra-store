@@ -10,30 +10,14 @@ import {
   Activity,
 } from "lucide-react";
 import { useATS } from "@/hooks/ats/useATS";
+import {
+  APPLICATION_STAGE_ORDER,
+  APPLICATION_STAGE_LABELS,
+  APPLICATION_STATUS_LABELS,
+  ApplicationStage,
+} from "@/lib/types/careers";
 import styles from "@/app/careers/admin/CareersAdminPage.module.css";
 import dashboardStyles from "./ATSDashboard.module.css";
-
-const PIPELINE_STAGES = [
-  "received",
-  "screening",
-  "shortlisted",
-  "interview",
-  "assessment",
-  "offer",
-  "hired",
-  "rejected",
-] as const;
-
-const STAGE_LABELS: Record<string, string> = {
-  received: "Received",
-  screening: "Screening",
-  shortlisted: "Shortlisted",
-  interview: "Interview",
-  assessment: "Assessment",
-  offer: "Offer",
-  hired: "Hired",
-  rejected: "Rejected",
-};
 
 export default function ATSDashboard() {
   const { applications, jobs, summary, loading, reload, moveStage } = useATS();
@@ -76,9 +60,12 @@ export default function ATSDashboard() {
   }, [applications]);
 
   const pipelineBuckets = useMemo(() => {
-    return PIPELINE_STAGES.reduce((acc, stage) => {
+    return APPLICATION_STAGE_ORDER.reduce((acc, stage) => {
       acc[stage] = applications
-        .filter((application) => (application.stage || application.status || "received") === stage)
+        .filter(
+          (application) =>
+            (application.currentStage || application.stage || application.status || "received") === stage,
+        )
         .slice(0, 2);
       return acc;
     }, {} as Record<string, typeof applications>);
@@ -86,9 +73,10 @@ export default function ATSDashboard() {
 
   const pipelineCounts = useMemo(
     () =>
-      PIPELINE_STAGES.reduce((acc, stage) => {
+      APPLICATION_STAGE_ORDER.reduce((acc, stage) => {
         acc[stage] = applications.filter(
-          (application) => (application.stage || application.status || "received") === stage,
+          (application) =>
+            (application.currentStage || application.stage || application.status || "received") === stage,
         ).length;
         return acc;
       }, {} as Record<string, number>),
@@ -218,7 +206,9 @@ export default function ATSDashboard() {
                     <span className={dashboardStyles.rowDate}>
                       {application.createdAt ? new Date(application.createdAt).toLocaleDateString() : "—"}
                     </span>
-                    <span className={styles.badge}>{application.stage ?? application.status}</span>
+                    <span className={styles.badge}>
+                      {APPLICATION_STAGE_LABELS[application.currentStage ?? application.stage ?? "received"] ?? application.currentStage ?? application.stage ?? application.status}
+                    </span>
                     <span className={dashboardStyles.statusTag}>{application.status}</span>
                   </div>
                 </button>
@@ -245,7 +235,7 @@ export default function ATSDashboard() {
                 <div key={`${entry.applicationId}-${index}`} className={dashboardStyles.timelineEntry}>
                   <span className={dashboardStyles.timelineDot} />
                   <div className={dashboardStyles.timelineContent}>
-                    <div className={dashboardStyles.timelineLabel}>{STAGE_LABELS[entry.status] ?? entry.status}</div>
+                    <div className={dashboardStyles.timelineLabel}>{APPLICATION_STATUS_LABELS[entry.status] ?? entry.status}</div>
                     <p className={dashboardStyles.timelineNote}>{entry.note}</p>
                     <p className={dashboardStyles.timelineMeta}>
                       {entry.candidateName} • {entry.jobTitle} • {new Date(entry.createdAt!).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
@@ -311,10 +301,10 @@ export default function ATSDashboard() {
           </div>
 
           <div className={dashboardStyles.pipelineGrid}>
-            {PIPELINE_STAGES.map((stage) => (
+            {APPLICATION_STAGE_ORDER.map((stage) => (
               <div key={stage} className={dashboardStyles.pipelineTile}>
                 <div className={dashboardStyles.pipelineTileHeader}>
-                  <span className={dashboardStyles.pipelineTileLabel}>{STAGE_LABELS[stage]}</span>
+                  <span className={dashboardStyles.pipelineTileLabel}>{APPLICATION_STAGE_LABELS[stage]}</span>
                   <span className={dashboardStyles.pipelineTileCount}>{pipelineCounts[stage] ?? 0}</span>
                 </div>
                 <div className={dashboardStyles.pipelineTileCandidates}>

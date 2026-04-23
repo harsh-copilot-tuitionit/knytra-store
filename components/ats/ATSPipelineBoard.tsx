@@ -3,17 +3,18 @@
 import { useMemo, useState, type DragEvent } from "react";
 import type {
   CareerApplication,
+  ApplicationStage,
   ApplicationStatus,
 } from "@/lib/types/careers";
 import {
-  APPLICATION_STATUS_LABELS,
-  APPLICATION_STATUS_ORDER,
+  APPLICATION_STAGE_LABELS,
+  APPLICATION_STAGE_ORDER,
 } from "@/lib/types/careers";
 import styles from "./ATSPipelineBoard.module.css";
 
 interface Props {
   applications: CareerApplication[];
-  onMove: (applicationId: string, nextStage: ApplicationStatus) => Promise<void>;
+  onMove: (applicationId: string, nextStage: ApplicationStage) => Promise<void>;
   onView: (applicationId: string) => void;
 }
 
@@ -26,20 +27,21 @@ export default function ATSPipelineBoard({
 
   const buckets = useMemo(
     () =>
-      APPLICATION_STATUS_ORDER.reduce((acc, status) => {
-        acc[status] = [] as CareerApplication[];
+      APPLICATION_STAGE_ORDER.reduce((acc, stage) => {
+        acc[stage] = [] as CareerApplication[];
         return acc;
-      }, {} as Record<ApplicationStatus, CareerApplication[]>),
+      }, {} as Record<ApplicationStage, CareerApplication[]>),
     [],
   );
 
   applications.forEach((application) => {
-    const stage = application.stage || application.status || "received";
+    const stage =
+      application.currentStage || application.stage || application.status || "received";
     if (!buckets[stage]) buckets[stage] = [];
     buckets[stage].push(application);
   });
 
-  function handleDrop(event: DragEvent<HTMLDivElement>, stage: ApplicationStatus) {
+  function handleDrop(event: DragEvent<HTMLDivElement>, stage: ApplicationStage) {
     event.preventDefault();
     if (!draggingId) return;
     onMove(draggingId, stage).catch(() => {
@@ -50,21 +52,21 @@ export default function ATSPipelineBoard({
 
   return (
     <div className={styles.pipelineBoard}>
-      {APPLICATION_STATUS_ORDER.map((status) => (
+      {APPLICATION_STAGE_ORDER.map((stage) => (
         <div
-          key={status}
+          key={stage}
           className={styles.pipelineColumn}
           onDragOver={(event) => event.preventDefault()}
-          onDrop={(event) => handleDrop(event, status)}
+          onDrop={(event) => handleDrop(event, stage)}
         >
           <div className={styles.pipelineHeader}>
-            <span>{APPLICATION_STATUS_LABELS[status]}</span>
+            <span>{APPLICATION_STAGE_LABELS[stage]}</span>
             <span className={styles.pipelineCount}>
-              {buckets[status]?.length ?? 0}
+              {buckets[stage]?.length ?? 0}
             </span>
           </div>
           <div className={styles.pipelineList}>
-            {buckets[status]?.map((application) => (
+            {buckets[stage]?.map((application: CareerApplication) => (
               <button
                 key={application.id}
                 type="button"

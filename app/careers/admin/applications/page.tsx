@@ -3,14 +3,24 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { Users } from "lucide-react";
-import type { CareerApplication, CareerJob, ApplicationStatus } from "@/lib/types/careers";
-import { APPLICATION_STATUS_LABELS } from "@/lib/types/careers";
+import type {
+  CareerApplication,
+  CareerJob,
+  ApplicationStage,
+  ApplicationStatus,
+} from "@/lib/types/careers";
+import {
+  APPLICATION_STAGE_LABELS,
+  APPLICATION_STAGE_ORDER,
+  APPLICATION_STATUS_LABELS,
+} from "@/lib/types/careers";
 import styles from "../CareersAdminPage.module.css";
 
 export default function ApplicationsPage() {
   const [applications, setApplications] = useState<CareerApplication[]>([]);
   const [jobs, setJobs] = useState<CareerJob[]>([]);
   const [loading, setLoading] = useState(true);
+  const [stageFilter, setStageFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [jobFilter, setJobFilter] = useState("");
 
@@ -18,6 +28,7 @@ export default function ApplicationsPage() {
     try {
       const params = new URLSearchParams();
       if (statusFilter) params.set("status", statusFilter);
+      if (stageFilter) params.set("stage", stageFilter);
       if (jobFilter) params.set("jobId", jobFilter);
 
       const [appRes, jobRes] = await Promise.all([
@@ -56,13 +67,13 @@ export default function ApplicationsPage() {
     return map[status] ?? styles.badgeReceived;
   }
 
-  const allStatuses: ApplicationStatus[] = [
-    "received",
-    "screening",
-    "shortlisted",
-    "interview",
-    "assessment",
-    "offer",
+  const allStages: ApplicationStage[] = [
+    ...APPLICATION_STAGE_ORDER,
+  ];
+
+  const lifecycleStatuses: ApplicationStatus[] = [
+    "new",
+    "active",
     "hired",
     "rejected",
   ];
@@ -81,11 +92,24 @@ export default function ApplicationsPage() {
         <div className={styles.tableFilters}>
           <select
             className={styles.filterSelect}
+            value={stageFilter}
+            onChange={(e) => setStageFilter(e.target.value)}
+          >
+            <option value="">All Stages</option>
+            {allStages.map((stage) => (
+              <option key={stage} value={stage}>
+                {APPLICATION_STAGE_LABELS[stage]}
+              </option>
+            ))}
+          </select>
+
+          <select
+            className={styles.filterSelect}
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           >
             <option value="">All Statuses</option>
-            {allStatuses.map((s) => (
+            {lifecycleStatuses.map((s) => (
               <option key={s} value={s}>
                 {APPLICATION_STATUS_LABELS[s]}
               </option>
@@ -119,6 +143,7 @@ export default function ApplicationsPage() {
                 <th>Phone</th>
                 <th>City</th>
                 <th>Role</th>
+                <th>Stage</th>
                 <th>Status</th>
                 <th>Applied</th>
                 <th></th>
@@ -154,11 +179,12 @@ export default function ApplicationsPage() {
                   <td>{app.role?.jobTitle ?? "—"}</td>
                   <td>
                     <span
-                      className={`${styles.badge} ${getBadgeClass(app.status)}`}
+                      className={`${styles.badge} ${getBadgeClass(app.currentStage ?? app.stage ?? app.status)}`}
                     >
-                      {APPLICATION_STATUS_LABELS[app.status] ?? app.status}
+                      {APPLICATION_STAGE_LABELS[app.currentStage ?? app.stage ?? "received"] ?? app.currentStage ?? app.stage ?? "—"}
                     </span>
                   </td>
+                  <td>{APPLICATION_STATUS_LABELS[app.status] ?? app.status}</td>
                   <td>
                     {app.createdAt
                       ? new Date(app.createdAt).toLocaleDateString()

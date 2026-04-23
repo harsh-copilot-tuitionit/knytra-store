@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import type {
   CareerApplication,
   CareerJob,
-  ApplicationStatus,
+  ApplicationStage,
 } from "@/lib/types/careers";
 
 interface ATSSummary {
@@ -59,7 +59,7 @@ export function useATS() {
   }, [load]);
 
   const moveStage = useCallback(
-    async (applicationId: string, nextStage: ApplicationStatus) => {
+    async (applicationId: string, nextStage: ApplicationStage) => {
       const res = await fetch(`/api/careers/applications/${applicationId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },

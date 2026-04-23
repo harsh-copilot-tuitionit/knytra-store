@@ -6,11 +6,13 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import type {
   CareerApplication,
+  ApplicationStage,
   ApplicationStatus,
 } from "@/lib/types/careers";
 import {
   APPLICATION_STATUS_LABELS,
-  APPLICATION_STATUS_ORDER,
+  APPLICATION_STAGE_LABELS,
+  APPLICATION_STAGE_ORDER,
 } from "@/lib/types/careers";
 import styles from "../../CareersAdminPage.module.css";
 
@@ -111,18 +113,18 @@ export default function ApplicationDetailPage() {
   if (!app) return null;
 
   // Pipeline progress
-  const currentIdx = APPLICATION_STATUS_ORDER.indexOf(
-    app.status as ApplicationStatus,
-  );
+  const currentStage: ApplicationStage =
+    app.currentStage ??
+    app.stage ??
+    (APPLICATION_STAGE_ORDER.includes(app.status as ApplicationStage)
+      ? (app.status as ApplicationStage)
+      : "received");
+  const currentIdx = APPLICATION_STAGE_ORDER.indexOf(currentStage);
   const isRejected = app.status === "rejected";
 
   const allStatuses: ApplicationStatus[] = [
-    "received",
-    "screening",
-    "shortlisted",
-    "interview",
-    "assessment",
-    "offer",
+    "new",
+    "active",
     "hired",
     "rejected",
   ];
@@ -153,7 +155,7 @@ export default function ApplicationDetailPage() {
       {/* Pipeline Progress */}
       <div style={{ marginBottom: "var(--sp-6)" }}>
         <div className={styles.pipeline}>
-          {APPLICATION_STATUS_ORDER.map((s, i) => {
+          {APPLICATION_STAGE_ORDER.map((s, i) => {
             let stepClass = styles.pipelineStep;
             if (isRejected) {
               stepClass += ` ${styles.pipelineStepRejected}`;
@@ -166,13 +168,13 @@ export default function ApplicationDetailPage() {
           })}
         </div>
         <div className={styles.pipelineLabels}>
-          {APPLICATION_STATUS_ORDER.map((s, i) => (
+          {APPLICATION_STAGE_ORDER.map((s, i) => (
             <span
               key={s}
               className={`${styles.pipelineLabel} ${i <= currentIdx ? styles.pipelineLabelActive : ""}`}
               style={{ fontSize: 9 }}
             >
-              {APPLICATION_STATUS_LABELS[s]}
+              {APPLICATION_STAGE_LABELS[s]}
             </span>
           ))}
         </div>

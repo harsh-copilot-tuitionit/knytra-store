@@ -231,6 +231,28 @@ export const APPLICATION_STATUS_LABELS: Record<ApplicationStatus, string> = {
   active: "Active",
 };
 
+export const APPLICATION_STAGE_LABELS: Record<ApplicationStage, string> = {
+  received: "Received",
+  screening: "Screening",
+  shortlisted: "Shortlisted",
+  assessment: "Assessment",
+  interview: "Interview",
+  offer: "Offer Extended",
+  hired: "Hired",
+  rejected: "Rejected",
+};
+
+export const APPLICATION_STAGE_ORDER: ApplicationStage[] = [
+  "received",
+  "screening",
+  "shortlisted",
+  "assessment",
+  "interview",
+  "offer",
+  "hired",
+  "rejected",
+];
+
 export const APPLICATION_STATUS_ORDER: ApplicationStatus[] = [
   "received",
   "screening",
