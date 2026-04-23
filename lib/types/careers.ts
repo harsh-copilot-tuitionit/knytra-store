@@ -11,7 +11,9 @@ export type ApplicationStage =
   | "hired"
   | "rejected";
 
-export type ApplicationStatus = ApplicationStage;
+export type ApplicationLifecycleStatus = "new" | "active" | "hired" | "rejected";
+
+export type ApplicationStatus = ApplicationStage | ApplicationLifecycleStatus;
 
 export type QuestionType = "text" | "textarea" | "select";
 
@@ -71,6 +73,14 @@ export interface ApplicationTimelineEntry {
   note: string;
   author: string;
   createdAt: string;
+}
+
+export interface ApplicationStageHistoryEntry {
+  fromStage: ApplicationStage | "none";
+  toStage: ApplicationStage;
+  changedAt: string;
+  changedBy: string;
+  note?: string;
 }
 
 export interface ApplicationEvaluation {
@@ -145,6 +155,7 @@ export interface CareerApplication {
   status: ApplicationStatus;
   currentStage: ApplicationStage;
   stage: ApplicationStage;
+  stageHistory: ApplicationStageHistoryEntry[];
   evaluation: ApplicationEvaluation;
   notes: ApplicationNote[];
   timeline: ApplicationTimelineEntry[];
@@ -216,6 +227,8 @@ export const APPLICATION_STATUS_LABELS: Record<ApplicationStatus, string> = {
   offer: "Offer Extended",
   hired: "Hired",
   rejected: "Rejected",
+  new: "New",
+  active: "Active",
 };
 
 export const APPLICATION_STATUS_ORDER: ApplicationStatus[] = [

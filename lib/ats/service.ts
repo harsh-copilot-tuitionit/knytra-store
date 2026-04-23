@@ -12,6 +12,7 @@ import {
   ApplicationTimelineEntry,
   ApplicationRole,
   JobInput,
+  APPLICATION_STATUS_LABELS,
 } from "@/lib/types/careers";
 import { normalizeApplicationConfig } from "@/lib/types/careers";
 
@@ -27,6 +28,44 @@ export const APPLICATION_PIPELINE_STAGES: ApplicationStage[] = [
 ];
 
 export const DEFAULT_APPLICATION_STAGE: ApplicationStage = "received";
+export const DEFAULT_APPLICATION_STATUS: ApplicationStatus = "new";
+
+function isStageInPipeline(
+  stage: ApplicationStage,
+  pipelineStages: ApplicationStage[] = APPLICATION_PIPELINE_STAGES,
+) {
+  return pipelineStages.includes(stage);
+}
+
+function createStageHistoryEntry(
+  fromStage: ApplicationStage | "none",
+  toStage: ApplicationStage,
+  changedBy: string,
+  note?: string,
+) {
+  return {
+    fromStage,
+    toStage,
+    changedAt: new Date().toISOString(),
+    changedBy: changedBy || "System",
+    note: note?.trim() || undefined,
+  };
+}
+
+function createTimelineEntry(
+  status: ApplicationStatus,
+  action: string,
+  note: string,
+  author: string,
+) {
+  return {
+    status,
+    action,
+    note,
+    author,
+    createdAt: new Date().toISOString(),
+  };
+}
 
 function mapJobDoc(doc: FirebaseFirestore.DocumentSnapshot): CareerJob {
   const d = doc.data() ?? {};
@@ -113,9 +152,25 @@ function mapApplicationDoc(doc: FirebaseFirestore.DocumentSnapshot): CareerAppli
       infoCorrect: false,
       understandsPerformanceBased: false,
     },
-    status: d.status ?? "received",
-    currentStage: d.currentStage ?? d.stage ?? (d.status as ApplicationStage) ?? "received",
-    stage: d.stage ?? d.currentStage ?? (d.status as ApplicationStage) ?? "received",
+    status:
+      typeof d.status === "string"
+        ? (d.status as ApplicationStatus)
+        : DEFAULT_APPLICATION_STATUS,
+    currentStage:
+      (d.currentStage as ApplicationStage) ??
+      (d.stage as ApplicationStage) ??
+      (typeof d.status === "string" && APPLICATION_PIPELINE_STAGES.includes(d.status as ApplicationStage)
+        ? (d.status as ApplicationStage)
+        : undefined) ??
+      DEFAULT_APPLICATION_STAGE,
+    stage:
+      (d.stage as ApplicationStage) ??
+      (d.currentStage as ApplicationStage) ??
+      (typeof d.status === "string" && APPLICATION_PIPELINE_STAGES.includes(d.status as ApplicationStage)
+        ? (d.status as ApplicationStage)
+        : undefined) ??
+      DEFAULT_APPLICATION_STAGE,
+    stageHistory: Array.isArray(d.stageHistory) ? d.stageHistory : [],
     evaluation: d.evaluation ?? {
       rating: 0,
       strengths: "",
@@ -429,6 +484,11 @@ export async function createApplication(
   }
 
   const now = admin.firestore.FieldValue.serverTimestamp();
+  const firstStage = job.pipelineStages?.[0] ?? APPLICATION_PIPELINE_STAGES[0];
+  const initialStage = isStageInPipeline(firstStage, job.pipelineStages)
+    ? firstStage
+    : APPLICATION_PIPELINE_STAGES[0];
+
   const docRef = await db.collection("careers_applications").add({
     jobId: job.id,
     jobTitle: job.title,
@@ -456,9 +516,12 @@ export async function createApplication(
       hoursPerDay: body.availability.hoursPerDay.trim(),
     },
     declaration: body.declaration,
-    status: "received",
-    currentStage: "received",
-    stage: "received",
+    status: DEFAULT_APPLICATION_STATUS,
+    currentStage: initialStage,
+    stage: initialStage,
+    stageHistory: [
+      createStageHistoryEntry("none", initialStage, "System", "Application entered pipeline"),
+    ],
     evaluation: {
       rating: 0,
       strengths: "",
@@ -468,7 +531,7 @@ export async function createApplication(
     notes: [],
     timeline: [
       {
-        status: "received",
+        status: initialStage,
         action: "application_submitted",
         note: "Application submitted",
         author: "System",
@@ -493,13 +556,52 @@ export async function getApplications(
   filters: ApplicationFilters = {},
 ): Promise<CareerApplication[]> {
   const db = getAdminDb();
+
+  if (filters.stage) {
+    const stage = filters.stage;
+    const stageQuery = db
+      .collection("careers_applications")
+      .where("stage", "==", stage)
+      .orderBy("createdAt", "desc");
+    const statusLegacyQuery = db
+      .collection("careers_applications")
+      .where("status", "==", stage)
+      .orderBy("createdAt", "desc");
+
+    const [stageSnap, legacySnap] = await Promise.all([
+      stageQuery.get(),
+      statusLegacyQuery.get(),
+    ]);
+
+    const docs = [...stageSnap.docs, ...legacySnap.docs];
+    const uniqueDocs = Array.from(new Map(docs.map((doc) => [doc.id, doc])).values());
+    let applications = uniqueDocs.map(mapApplicationDoc);
+
+    if (filters.jobId) {
+      applications = applications.filter((app) => app.jobId === filters.jobId);
+    }
+    if (filters.status) {
+      applications = applications.filter((app) => app.status === filters.status);
+    }
+    if (filters.search) {
+      const normalized = filters.search.trim().toLowerCase();
+      applications = applications.filter((app) =>
+        [app.fullName, app.email, app.phone, app.city, app.jobTitle]
+          .join(" ")
+          .toLowerCase()
+          .includes(normalized),
+      );
+    }
+
+    return applications;
+  }
+
   let query: FirebaseFirestore.Query = db
     .collection("careers_applications")
     .orderBy("createdAt", "desc");
 
   if (filters.status) query = query.where("status", "==", filters.status);
   if (filters.jobId) query = query.where("jobId", "==", filters.jobId);
-  if (filters.stage) query = query.where("stage", "==", filters.stage);
 
   const snap = await query.get();
   let applications = snap.docs.map(mapApplicationDoc);
@@ -542,12 +644,20 @@ export async function updateApplication(
     author: string;
   },
 ): Promise<CareerApplication | null> {
+  const currentApp = await getApplicationById(id);
+  if (!currentApp) return null;
+
+  if (payload.stage && payload.stage !== currentApp.stage) {
+    return moveApplicationStage(id, payload.stage, {
+      author: payload.author,
+      note: payload.note,
+      status: payload.status,
+    });
+  }
+
   const db = getAdminDb();
   const docRef = db.collection("careers_applications").doc(id);
-  const snap = await docRef.get();
-  if (!snap.exists) return null;
-
-  const current = snap.data() ?? {};
+  const current = currentApp;
   const updates: Record<string, unknown> = {
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
   };
@@ -555,7 +665,6 @@ export async function updateApplication(
 
   if (payload.status && payload.status !== current.status) {
     updates.status = payload.status;
-    if (!payload.stage) updates.currentStage = payload.status;
     timeline.push({
       status: payload.status,
       action: "status_change",
@@ -565,19 +674,6 @@ export async function updateApplication(
       author: payload.author,
       createdAt: new Date().toISOString(),
     });
-  }
-
-  if (payload.stage && payload.stage !== current.stage) {
-    updates.stage = payload.stage;
-    updates.currentStage = payload.stage;
-    timeline.push({
-      status: payload.status ?? current.status ?? "received",
-      action: "stage_change",
-      note: `Moved to ${payload.stage}`,
-      author: payload.author,
-      createdAt: new Date().toISOString(),
-    });
-    if (!payload.status) updates.status = payload.stage;
   }
 
   if (payload.note && payload.note.trim()) {
@@ -590,7 +686,7 @@ export async function updateApplication(
       },
     ];
     timeline.push({
-      status: current.status ?? "received",
+      status: current.status,
       action: "note_added",
       note: payload.note.trim(),
       author: payload.author,
@@ -624,6 +720,75 @@ export async function updateApplication(
   return mapApplicationDoc(updated);
 }
 
+export async function moveApplicationStage(
+  applicationId: string,
+  newStage: ApplicationStage,
+  options: {
+    author?: string;
+    note?: string;
+    status?: ApplicationStatus;
+  } = {},
+): Promise<CareerApplication | null> {
+  const db = getAdminDb();
+  const docRef = db.collection("careers_applications").doc(applicationId);
+  const snap = await docRef.get();
+  if (!snap.exists) return null;
+
+  const application = mapApplicationDoc(snap);
+  const job = await getJobById(application.jobId, true);
+  const pipelineStages = job?.pipelineStages ?? APPLICATION_PIPELINE_STAGES;
+
+  if (!isStageInPipeline(newStage, pipelineStages)) {
+    throw new Error(`Stage '${newStage}' is not valid for this role pipeline.`);
+  }
+
+  const fromStage = application.stage ?? DEFAULT_APPLICATION_STAGE;
+  if (fromStage === newStage) {
+    return application;
+  }
+
+  let nextStatus: ApplicationStatus = application.status ?? DEFAULT_APPLICATION_STATUS;
+  if (options.status) {
+    nextStatus = options.status;
+  } else if (newStage === "hired") {
+    nextStatus = "hired";
+  } else if (newStage === "rejected") {
+    nextStatus = "rejected";
+  } else if (nextStatus === "new") {
+    nextStatus = "active";
+  }
+
+  const changeNote = options.note?.trim() ||
+    `Moved from ${APPLICATION_STATUS_LABELS[fromStage] ?? fromStage} to ${APPLICATION_STATUS_LABELS[newStage] ?? newStage}`;
+
+  const stageHistory = Array.isArray(application.stageHistory)
+    ? [...application.stageHistory]
+    : [];
+  stageHistory.push(
+    createStageHistoryEntry(fromStage, newStage, options.author ?? "System", options.note),
+  );
+
+  const timeline = Array.isArray(application.timeline)
+    ? [...application.timeline]
+    : [];
+  timeline.push(
+    createTimelineEntry(newStage, "stage_change", changeNote, options.author ?? "System"),
+  );
+
+  const updates: Record<string, unknown> = {
+    stage: newStage,
+    currentStage: newStage,
+    status: nextStatus,
+    stageHistory,
+    timeline,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  };
+
+  await docRef.update(updates);
+  const updated = await docRef.get();
+  return mapApplicationDoc(updated);
+}
+
 export async function getAnalyticsOverview() {
   const apps = await getApplications();
   const jobs = await getAllJobs(true);
@@ -644,7 +809,13 @@ export async function getAnalyticsOverview() {
       acc[app.status] = (acc[app.status] ?? 0) + 1;
       return acc;
     },
-    APPLICATION_PIPELINE_STAGES.reduce((acc, status) => {
+    Array.from(
+      new Set([
+        ...APPLICATION_PIPELINE_STAGES,
+        DEFAULT_APPLICATION_STATUS,
+        "active" as ApplicationStatus,
+      ]),
+    ).reduce((acc, status) => {
       acc[status] = 0;
       return acc;
     }, {} as Record<ApplicationStatus, number>),
@@ -662,7 +833,10 @@ export async function getAnalyticsOverview() {
 
 export async function getPipelineBoard(jobId?: string) {
   const apps = await getApplications({ jobId });
-  return APPLICATION_PIPELINE_STAGES.map((stage) => ({
+  const job = jobId ? await getJobById(jobId, true) : null;
+  const pipelineStages = job?.pipelineStages ?? APPLICATION_PIPELINE_STAGES;
+
+  return pipelineStages.map((stage) => ({
     stage,
     label: stage,
     applications: apps.filter((app) => app.stage === stage),
