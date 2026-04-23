@@ -194,7 +194,8 @@
   }
 
   .topHeader {
-    padding: 0 16px;
+    height: 56px;
+    padding: 0 14px;
   }
 
   .mobileClose {
@@ -203,10 +204,16 @@
 
   .hamburgerBtn {
     display: inline-flex;
+    padding: 8px;
   }
 
   .mobileHeaderTitle {
     display: inline-block;
+    font-size: 13px;
+  }
+
+  .adminProfile {
+    font-size: 13px;
   }
 
   .adminContainer {

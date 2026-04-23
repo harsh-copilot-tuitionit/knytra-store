@@ -21,9 +21,9 @@
   width: 100%;
   display: grid;
   grid-template-columns: 1.5fr 0.8fr 0.8fr;
-  gap: 16px;
+  gap: 12px;
   align-items: center;
-  padding: 20px;
+  padding: 16px;
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.02);
@@ -42,19 +42,19 @@
 }
 
 .rowName {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
 }
 
 .rowMeta {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--color-white-60);
-  margin-top: 6px;
+  margin-top: 4px;
 }
 
 .rowInfo {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   align-items: center;
   justify-content: flex-end;
   flex-wrap: wrap;
@@ -85,9 +85,10 @@
 
 .timelineEntry {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   align-items: flex-start;
   min-width: 0;
+  padding: 12px 0;
 }
 
 .timelineDot {
@@ -107,7 +108,7 @@
 }
 
 .timelineLabel {
-  font-size: 12px;
+  font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-white-60);
@@ -115,13 +116,13 @@
 }
 
 .timelineNote {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--color-white);
-  line-height: 1.5;
+  line-height: 1.4;
 }
 
 .timelineMeta {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--color-white-50);
 }
 
@@ -135,9 +136,9 @@
   width: 100%;
   display: flex;
   justify-content: space-between;
-  gap: 20px;
+  gap: 16px;
   align-items: center;
-  padding: 20px;
+  padding: 16px;
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.02);
@@ -180,7 +181,7 @@
 }
 
 .roleType {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--color-white-50);
 }
 
@@ -300,13 +301,15 @@
     -webkit-overflow-scrolling: touch;
     min-width: 0;
     max-width: 100%;
+    gap: 12px;
   }
 
   .pipelineTile {
     min-width: 170px;
     flex: 0 0 auto;
     max-width: 100%;
-    min-height: 90px;
+    min-height: 84px;
+    padding: 14px;
   }
 
   .timelineEntry {
