@@ -179,32 +179,20 @@ export async function getApplications(
     const stage = filters.stage;
     let stageQuery: FirebaseFirestore.Query = db
       .collection("careers_applications")
-      .where("stage", "==", stage)
+      .where("currentStage", "==", stage)
       .orderBy("createdAt", "desc");
-    let statusLegacyQuery: FirebaseFirestore.Query = db
-      .collection("careers_applications")
-      .where("status", "==", stage)
-      .orderBy("createdAt", "desc");
-
-    if (filters.jobId) {
-      stageQuery = stageQuery.where("jobId", "==", filters.jobId);
-      statusLegacyQuery = statusLegacyQuery.where("jobId", "==", filters.jobId);
-    }
-    stageQuery = applyDateFilters(stageQuery, filters);
-    statusLegacyQuery = applyDateFilters(statusLegacyQuery, filters);
-
-    const [stageSnap, legacySnap] = await Promise.all([
-      stageQuery.get(),
-      statusLegacyQuery.get(),
-    ]);
-
-    const docs = [...stageSnap.docs, ...legacySnap.docs];
-    const uniqueDocs = Array.from(new Map(docs.map((doc) => [doc.id, doc])).values());
-    let applications = uniqueDocs.map(mapApplicationDoc);
 
     if (filters.status) {
-      applications = applications.filter((app) => app.status === filters.status);
+      stageQuery = stageQuery.where("status", "==", filters.status);
     }
+    if (filters.jobId) {
+      stageQuery = stageQuery.where("jobId", "==", filters.jobId);
+    }
+    stageQuery = applyDateFilters(stageQuery, filters);
+
+    const stageSnap = await stageQuery.get();
+    let applications = stageSnap.docs.map(mapApplicationDoc);
+
     if (filters.search) {
       const normalized = filters.search.trim().toLowerCase();
       applications = applications.filter((app) =>
