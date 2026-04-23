@@ -14,12 +14,20 @@ export async function GET(request: NextRequest) {
     const jobId = url.searchParams.get("jobId") ?? undefined;
     const search = url.searchParams.get("search") ?? undefined;
     const stage = url.searchParams.get("stage") ?? undefined;
+    const dateFrom = url.searchParams.get("dateFrom") ?? undefined;
+    const dateTo = url.searchParams.get("dateTo") ?? undefined;
+    const limit = parseInt(url.searchParams.get("limit") ?? "0", 10) || undefined;
+    const offset = parseInt(url.searchParams.get("offset") ?? "0", 10) || undefined;
 
     const applications = await getApplications({
       status: status as any,
       jobId,
       search,
       stage: stage as any,
+      dateFrom,
+      dateTo,
+      limit,
+      offset,
     });
 
     return Response.json({ applications });

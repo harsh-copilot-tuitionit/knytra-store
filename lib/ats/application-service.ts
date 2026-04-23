@@ -145,6 +145,31 @@ export async function createApplication(
   return { id: docRef.id };
 }
 
+function applyDateFilters(
+  query: FirebaseFirestore.Query,
+  filters: ApplicationFilters,
+): FirebaseFirestore.Query {
+  if (filters.dateFrom) {
+    const from = new Date(filters.dateFrom);
+    if (!Number.isNaN(from.getTime())) {
+      query = query.where("createdAt", ">=", from);
+    }
+  }
+  if (filters.dateTo) {
+    const to = new Date(filters.dateTo);
+    if (!Number.isNaN(to.getTime())) {
+      query = query.where("createdAt", "<=", to);
+    }
+  }
+  if (typeof filters.offset === "number") {
+    query = query.offset(filters.offset);
+  }
+  if (typeof filters.limit === "number") {
+    query = query.limit(filters.limit);
+  }
+  return query;
+}
+
 export async function getApplications(
   filters: ApplicationFilters = {},
 ): Promise<CareerApplication[]> {
@@ -152,14 +177,21 @@ export async function getApplications(
 
   if (filters.stage) {
     const stage = filters.stage;
-    const stageQuery = db
+    let stageQuery: FirebaseFirestore.Query = db
       .collection("careers_applications")
       .where("stage", "==", stage)
       .orderBy("createdAt", "desc");
-    const statusLegacyQuery = db
+    let statusLegacyQuery: FirebaseFirestore.Query = db
       .collection("careers_applications")
       .where("status", "==", stage)
       .orderBy("createdAt", "desc");
+
+    if (filters.jobId) {
+      stageQuery = stageQuery.where("jobId", "==", filters.jobId);
+      statusLegacyQuery = statusLegacyQuery.where("jobId", "==", filters.jobId);
+    }
+    stageQuery = applyDateFilters(stageQuery, filters);
+    statusLegacyQuery = applyDateFilters(statusLegacyQuery, filters);
 
     const [stageSnap, legacySnap] = await Promise.all([
       stageQuery.get(),
@@ -170,9 +202,6 @@ export async function getApplications(
     const uniqueDocs = Array.from(new Map(docs.map((doc) => [doc.id, doc])).values());
     let applications = uniqueDocs.map(mapApplicationDoc);
 
-    if (filters.jobId) {
-      applications = applications.filter((app) => app.jobId === filters.jobId);
-    }
     if (filters.status) {
       applications = applications.filter((app) => app.status === filters.status);
     }
@@ -186,6 +215,10 @@ export async function getApplications(
       );
     }
 
+    if (typeof filters.offset === "number" && typeof filters.limit === "number") {
+      applications = applications.slice(filters.offset, filters.offset + filters.limit);
+    }
+
     return applications;
   }
 
@@ -195,6 +228,7 @@ export async function getApplications(
 
   if (filters.status) query = query.where("status", "==", filters.status);
   if (filters.jobId) query = query.where("jobId", "==", filters.jobId);
+  query = applyDateFilters(query, filters);
 
   const snap = await query.get();
   let applications = snap.docs.map(mapApplicationDoc);

@@ -1,102 +1,81 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
-import { Users } from "lucide-react";
-import type {
-  CareerApplication,
-  CareerJob,
-  ApplicationStage,
-  ApplicationStatus,
-} from "@/lib/types/careers";
+import { useRouter } from "next/navigation";
+import { ArrowRight, RefreshCw, Plus, Search } from "lucide-react";
+import { useApplicationsInbox } from "@/hooks/ats/useApplicationsInbox";
+import type { ApplicationStage, ApplicationStatus } from "@/lib/types/careers";
 import {
   APPLICATION_STAGE_LABELS,
   APPLICATION_STAGE_ORDER,
   APPLICATION_STATUS_LABELS,
 } from "@/lib/types/careers";
-import styles from "../CareersAdminPage.module.css";
+import pageStyles from "../CareersAdminPage.module.css";
+import inboxStyles from "../ApplicationsInbox.module.css";
 
 export default function ApplicationsPage() {
-  const [applications, setApplications] = useState<CareerApplication[]>([]);
-  const [jobs, setJobs] = useState<CareerJob[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [stageFilter, setStageFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [jobFilter, setJobFilter] = useState("");
+  const router = useRouter();
+  const {
+    applications,
+    jobs,
+    loading,
+    loadingMore,
+    hasMore,
+    error,
+    filters,
+    actions,
+  } = useApplicationsInbox();
 
-  const load = useCallback(async () => {
-    try {
-      const params = new URLSearchParams();
-      if (statusFilter) params.set("status", statusFilter);
-      if (stageFilter) params.set("stage", stageFilter);
-      if (jobFilter) params.set("jobId", jobFilter);
+  const stageOptions = useMemo(
+    () => APPLICATION_STAGE_ORDER,
+    [],
+  );
 
-      const [appRes, jobRes] = await Promise.all([
-        fetch(`/api/careers/applications?${params}`),
-        fetch("/api/careers/jobs"),
-      ]);
-
-      if (appRes.ok) {
-        const data = await appRes.json();
-        setApplications(data.applications ?? []);
-      }
-      if (jobRes.ok) {
-        const data = await jobRes.json();
-        setJobs(data.jobs ?? []);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [statusFilter, jobFilter]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
-
-  function getBadgeClass(status: string): string {
-    const map: Record<string, string> = {
-      received: styles.badgeReceived,
-      screening: styles.badgeScreening,
-      shortlisted: styles.badgeShortlisted,
-      interview: styles.badgeInterview,
-      assessment: styles.badgeAssessment,
-      offer: styles.badgeOffer,
-      hired: styles.badgeHired,
-      rejected: styles.badgeRejected,
-    };
-    return map[status] ?? styles.badgeReceived;
-  }
-
-  const allStages: ApplicationStage[] = [
-    ...APPLICATION_STAGE_ORDER,
-  ];
-
-  const lifecycleStatuses: ApplicationStatus[] = [
-    "new",
-    "active",
-    "hired",
-    "rejected",
-  ];
+  const statusOptions = useMemo<("new" | "active" | "hired" | "rejected")[]>(
+    () => ["new", "active", "hired", "rejected"],
+    [],
+  );
 
   return (
-    <div>
-      <div className={styles.pageHeader}>
-        <h1 className={styles.pageTitle}>Applications</h1>
-        <p className={styles.pageSubtitle}>
-          {applications.length} total application
-          {applications.length !== 1 ? "s" : ""}
-        </p>
+    <div className={inboxStyles.inboxShell}>
+      <div className={inboxStyles.inboxHeader}>
+        <div className={inboxStyles.inboxTitleGroup}>
+          <h1 className={inboxStyles.inboxTitle}>Applications</h1>
+          <p className={inboxStyles.inboxSubtitle}>All candidates across roles</p>
+        </div>
+
+        <div className={inboxStyles.inboxActions}>
+          <button type="button" className={pageStyles.btnSecondary} onClick={actions.refresh}>
+            <RefreshCw size={16} /> Refresh
+          </button>
+          <Link href="/careers/admin/jobs/new" className={pageStyles.btnPrimary}>
+            <Plus size={16} /> Create Job
+          </Link>
+        </div>
       </div>
 
-      <div className={styles.tableCard}>
-        <div className={styles.tableFilters}>
+      <div className={inboxStyles.filterBar}>
+        <div className={inboxStyles.filterRow}>
+          <label className={inboxStyles.filterInput}>
+            <Search size={16} style={{ marginRight: 8 }} />
+            <input
+              type="search"
+              value={filters.search}
+              onChange={(event) => actions.setSearch(event.target.value)}
+              placeholder="Search name, email, job title"
+              className={inboxStyles.filterInput}
+              style={{ border: "none", background: "transparent", color: "#fff", width: "100%" }}
+            />
+          </label>
+
           <select
-            className={styles.filterSelect}
-            value={stageFilter}
-            onChange={(e) => setStageFilter(e.target.value)}
+            className={inboxStyles.filterSelect}
+            value={filters.stage}
+            onChange={(event) => actions.setStage(event.target.value as ApplicationStage)}
           >
-            <option value="">All Stages</option>
-            {allStages.map((stage) => (
+            <option value="">All stages</option>
+            {stageOptions.map((stage) => (
               <option key={stage} value={stage}>
                 {APPLICATION_STAGE_LABELS[stage]}
               </option>
@@ -104,111 +83,116 @@ export default function ApplicationsPage() {
           </select>
 
           <select
-            className={styles.filterSelect}
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            className={inboxStyles.filterSelect}
+            value={filters.status}
+            onChange={(event) => actions.setStatus(event.target.value as ApplicationStatus)}
           >
-            <option value="">All Statuses</option>
-            {lifecycleStatuses.map((s) => (
-              <option key={s} value={s}>
-                {APPLICATION_STATUS_LABELS[s]}
+            <option value="">All statuses</option>
+            {statusOptions.map((status) => (
+              <option key={status} value={status}>
+                {APPLICATION_STATUS_LABELS[status]}
               </option>
             ))}
           </select>
 
           <select
-            className={styles.filterSelect}
-            value={jobFilter}
-            onChange={(e) => setJobFilter(e.target.value)}
+            className={inboxStyles.filterSelect}
+            value={filters.jobId}
+            onChange={(event) => actions.setJobId(event.target.value)}
           >
-            <option value="">All Positions</option>
-            {jobs.map((j) => (
-              <option key={j.id} value={j.id}>
-                {j.title}
+            <option value="">All positions</option>
+            {jobs.map((job) => (
+              <option key={job.id} value={job.id}>
+                {job.title}
               </option>
             ))}
           </select>
+
+          <select
+            className={inboxStyles.filterSelect}
+            value={filters.dateRange}
+            onChange={(event) => actions.setDateRange(event.target.value as "all" | "7" | "30")}
+          >
+            <option value="all">All time</option>
+            <option value="7">Last 7 days</option>
+            <option value="30">Last 30 days</option>
+          </select>
         </div>
 
-        {loading ? (
-          <div className={styles.emptyTable}>
-            <p>Loading...</p>
-          </div>
-        ) : applications.length > 0 ? (
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Phone</th>
-                <th>City</th>
-                <th>Role</th>
-                <th>Stage</th>
-                <th>Status</th>
-                <th>Applied</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {applications.map((app) => (
-                <tr key={app.id}>
-                  <td>
-                    <strong>{app.fullName}</strong>
-                  </td>
-                  <td>
-                    <span
-                      style={{
-                        fontSize: 12,
-                        color: "var(--color-white-40)",
-                      }}
-                    >
-                      {app.email}
-                    </span>
-                  </td>
-                  <td>
-                    <span
-                      style={{
-                        fontSize: 12,
-                        color: "var(--color-white-40)",
-                      }}
-                    >
-                      {app.phone}
-                    </span>
-                  </td>
-                  <td>{app.city || "—"}</td>
-                  <td>{app.role?.jobTitle ?? "—"}</td>
-                  <td>
-                    <span
-                      className={`${styles.badge} ${getBadgeClass(app.currentStage ?? app.stage ?? app.status)}`}
-                    >
-                      {APPLICATION_STAGE_LABELS[app.currentStage ?? app.stage ?? "received"] ?? app.currentStage ?? app.stage ?? "—"}
-                    </span>
-                  </td>
-                  <td>{APPLICATION_STATUS_LABELS[app.status] ?? app.status}</td>
-                  <td>
-                    {app.createdAt
-                      ? new Date(app.createdAt).toLocaleDateString()
-                      : "—"}
-                  </td>
-                  <td>
-                    <Link
-                      href={`/careers/admin/applications/${app.id}`}
-                      className={styles.tableLink}
-                    >
-                      Review
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <div className={styles.emptyTable}>
-            <Users size={40} style={{ opacity: 0.4 }} />
-            <p>No applications match your filters</p>
-          </div>
-        )}
+        <button type="button" className={inboxStyles.clearButton} onClick={actions.clearFilters}>
+          Clear filters
+        </button>
       </div>
+
+      {loading && (
+        <div className={inboxStyles.skeletonList}>
+          {[...Array(5)].map((_, index) => (
+            <div key={index} className={inboxStyles.skeletonCard}>
+              <div className={inboxStyles.skeletonLine + " " + inboxStyles.skeletonLarge} />
+              <div className={inboxStyles.skeletonLine + " " + inboxStyles.skeletonSmall} />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!loading && applications.length === 0 && (
+        <div className={inboxStyles.emptyState}>
+          <p className={inboxStyles.emptyStateTitle}>No applications found</p>
+          <p className={inboxStyles.emptyStateText}>
+            Try adjusting filters or search.
+          </p>
+        </div>
+      )}
+
+      {!loading && applications.length > 0 && (
+        <div className={inboxStyles.applicationsList}>
+          {applications.map((application) => {
+            const recentlyUpdated =
+              application.updatedAt &&
+              new Date(application.updatedAt).getTime() >=
+                Date.now() - 1000 * 60 * 60 * 24 * 7;
+
+            return (
+              <button
+                key={application.id}
+                type="button"
+                className={inboxStyles.applicationCard}
+                onClick={() => router.push(`/careers/admin/applications/${application.id}`)}
+              >
+                <div className={inboxStyles.applicationInfo}>
+                  <p className={inboxStyles.candidateName}>{application.fullName}</p>
+                  <p className={inboxStyles.candidateEmail}>{application.email}</p>
+                </div>
+                <div className={inboxStyles.applicationMeta}>
+                  <span>{application.role?.jobTitle ?? application.jobTitle}</span>
+                  <span className={inboxStyles.applicationDate}>
+                    {application.createdAt
+                      ? new Date(application.createdAt).toLocaleDateString()
+                      : "—"}
+                  </span>
+                </div>
+                <div className={inboxStyles.applicationRight}>
+                  <span className={`${inboxStyles.applicationStage} ${inboxStyles.stageTag}`}>
+                    {APPLICATION_STAGE_LABELS[application.currentStage] ?? application.currentStage}
+                  </span>
+                  <span className={`${inboxStyles.applicationStage} ${inboxStyles.statusTag}`}>
+                    {APPLICATION_STATUS_LABELS[application.status] ?? application.status}
+                  </span>
+                  {recentlyUpdated ? <span className={inboxStyles.recentTag}>Updated</span> : null}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {!loading && hasMore && (
+        <button type="button" className={inboxStyles.loadMoreButton} onClick={actions.loadMore} disabled={loadingMore}>
+          {loadingMore ? "Loading more…" : "Load more"}
+        </button>
+      )}
+
+      {error ? <p style={{ color: "var(--color-danger)", marginTop: "var(--sp-4)" }}>{error}</p> : null}
     </div>
   );
 }

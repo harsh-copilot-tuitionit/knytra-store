@@ -1,0 +1,273 @@
+.inboxShell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+}
+
+.inboxHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--sp-4);
+  padding: var(--sp-5);
+  background: var(--color-off-black);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+}
+
+.inboxTitleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inboxTitle {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.inboxSubtitle {
+  margin: 0;
+  color: var(--color-white-60);
+  font-size: 14px;
+}
+
+.inboxActions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+
+.filterBar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  align-items: center;
+  padding: var(--sp-4) var(--sp-5);
+  background: rgba(10, 14, 20, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+}
+
+.filterRow {
+  display: grid;
+  grid-template-columns: minmax(220px, 2fr) repeat(4, minmax(150px, 1fr));
+  gap: var(--sp-3);
+  width: 100%;
+}
+
+.filterInput,
+.filterSelect {
+  width: 100%;
+  min-width: 0;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 10px 14px;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 14px;
+}
+
+.filterInput::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.filterRowSmall {
+  display: flex;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.clearButton {
+  background: transparent;
+  color: var(--color-white-80);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 10px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.clearButton:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.applicationsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.applicationCard {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr auto;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-4);
+  background: var(--color-off-black);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.applicationCard:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.applicationInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.candidateName {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.candidateEmail {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-white-50);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.applicationMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  color: var(--color-white-60);
+  font-size: 13px;
+}
+
+.applicationStage {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.stageTag {
+  background: rgba(59, 130, 246, 0.16);
+  color: #93c5fd;
+}
+
+.statusTag {
+  background: rgba(147, 197, 253, 0.1);
+  color: #bfdbfe;
+}
+
+.applicationRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  min-width: 0;
+}
+
+.applicationDate {
+  font-size: 13px;
+  color: var(--color-white-60);
+}
+
+.recentTag {
+  background: rgba(16, 185, 129, 0.16);
+  color: #a7f3d0;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.skeletonList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.skeletonCard {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr auto;
+  gap: var(--sp-4);
+  padding: var(--sp-4);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 16px;
+}
+
+.skeletonLine {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  height: 14px;
+}
+
+.skeletonLarge {
+  width: 70%;
+}
+
+.skeletonSmall {
+  width: 45%;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-12) var(--sp-6);
+  text-align: center;
+  color: var(--color-white-60);
+}
+
+.emptyStateTitle {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.emptyStateText {
+  max-width: 420px;
+}
+
+.loadMoreButton {
+  align-self: center;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--color-white);
+  padding: 12px 18px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.loadMoreButton:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+@media (max-width: 900px) {
+  .filterRow {
+    grid-template-columns: 1fr;
+  }
+
+  .applicationCard,
+  .skeletonCard {
+    grid-template-columns: 1fr;
+  }
+
+  .applicationRight {
+    align-items: flex-start;
+  }
+}

@@ -200,6 +200,10 @@ export interface ApplicationFilters {
   jobId?: string;
   stage?: ApplicationStage;
   search?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  limit?: number;
+  offset?: number;
 }
 
 export interface JobInput {
