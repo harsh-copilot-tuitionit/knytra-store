@@ -31,7 +31,7 @@ env:
     availability: [ BUILD, RUNTIME ]
 
   - variable: NEXT_PUBLIC_SITE_URL
-    value: "https://knytra-in.web.app"
+    value: "https://knytra.in"
     availability: [ BUILD, RUNTIME ]
 
   # ── Secrets (set via: npx firebase-tools apphosting:secrets:set <NAME>)

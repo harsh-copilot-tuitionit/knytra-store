@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     title: "Knytra — Launching 14 May 2026",
     description:
       "Knytra returns with a minimal launch on 14 May 2026. Join the waitlist for first access.",
-    url: "https://knytra.com",
+    url: "https://knytra.in",
     siteName: "Knytra",
     type: "website",
     locale: "en_IN",
@@ -52,7 +52,7 @@ export const metadata: Metadata = {
     follow: true,
   },
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://knytra.com"
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://knytra.in"
   ),
 };
 
