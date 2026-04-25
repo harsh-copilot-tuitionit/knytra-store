@@ -11,7 +11,6 @@ import { mapApplicationDoc } from "./application-mapper";
 import {
   APPLICATION_PIPELINE_STAGES,
   DEFAULT_APPLICATION_STAGE,
-  DEFAULT_APPLICATION_STATUS,
   createStageHistoryEntry,
   createTimelineEntry,
   isStageInPipeline,
@@ -44,16 +43,8 @@ export async function moveApplicationStage(
     return application;
   }
 
-  let nextStatus: ApplicationStatus = application.status ?? DEFAULT_APPLICATION_STATUS;
-  if (options.status) {
-    nextStatus = options.status;
-  } else if (newStage === "hired") {
-    nextStatus = "hired";
-  } else if (newStage === "rejected") {
-    nextStatus = "rejected";
-  } else if (nextStatus === "new") {
-    nextStatus = "active";
-  }
+  // Always sync status to stage for compatibility
+  const nextStatus: ApplicationStatus = newStage;
 
   const changeNote = options.note?.trim() ||
     `Moved from ${APPLICATION_STATUS_LABELS[fromStage] ?? fromStage} to ${APPLICATION_STATUS_LABELS[newStage] ?? newStage}`;

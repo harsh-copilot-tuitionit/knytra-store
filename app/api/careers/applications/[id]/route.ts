@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { getSessionFromRequest } from "@/lib/careers-auth";
-import { getApplicationById, updateApplication } from "@/lib/ats/service";
+import { getApplicationById, updateApplication } from "@/lib/ats/application-service";
 
 export async function GET(
   request: NextRequest,
@@ -42,10 +42,8 @@ export async function PUT(
   try {
     const body = await request.json();
     const application = await updateApplication(id, {
-      status: body.status,
       stage: body.stage,
       note: body.note,
-      statusNote: body.statusNote,
       evaluation: body.evaluation,
       candidate: body.candidate,
       author: session.uid,

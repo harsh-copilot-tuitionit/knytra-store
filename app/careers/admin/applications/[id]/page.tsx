@@ -7,10 +7,8 @@ import { ArrowLeft } from "lucide-react";
 import type {
   CareerApplication,
   ApplicationStage,
-  ApplicationStatus,
 } from "@/lib/types/careers";
 import {
-  APPLICATION_STATUS_LABELS,
   APPLICATION_STAGE_LABELS,
   APPLICATION_STAGE_ORDER,
 } from "@/lib/types/careers";
@@ -23,8 +21,8 @@ export default function ApplicationDetailPage() {
 
   const [app, setApp] = useState<CareerApplication | null>(null);
   const [loading, setLoading] = useState(true);
-  const [newStatus, setNewStatus] = useState("");
-  const [statusNote, setStatusNote] = useState("");
+  const [newStage, setNewStage] = useState("");
+  const [stageNote, setStageNote] = useState("");
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -34,7 +32,7 @@ export default function ApplicationDetailPage() {
       if (res.ok) {
         const data = await res.json();
         setApp(data);
-        setNewStatus(data.status);
+        setNewStage(data.currentStage ?? data.stage ?? "received");
       } else if (res.status === 404) {
         router.replace("/careers/admin/applications");
       }
@@ -47,21 +45,23 @@ export default function ApplicationDetailPage() {
     void load();
   }, [load]);
 
-  async function handleStatusUpdate() {
-    if (!newStatus || newStatus === app?.status) return;
+  async function handleStageUpdate() {
+    if (!newStage || newStage === (app?.currentStage ?? app?.stage)) return;
     setSaving(true);
     try {
       const res = await fetch(`/api/careers/applications/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          status: newStatus,
-          statusNote: statusNote || undefined,
+          stage: newStage,
+          note: stageNote || undefined,
         }),
       });
       if (res.ok) {
-        setStatusNote("");
-        await load();
+        const { application: updated } = await res.json();
+        setApp(updated);
+        setStageNote("");
+        setNewStage(updated.currentStage ?? updated.stage ?? "received");
       }
     } finally {
       setSaving(false);
@@ -86,7 +86,7 @@ export default function ApplicationDetailPage() {
     }
   }
 
-  function getBadgeClass(status: string): string {
+  function getBadgeClass(stage: string): string {
     const map: Record<string, string> = {
       received: styles.badgeReceived,
       screening: styles.badgeScreening,
@@ -97,7 +97,7 @@ export default function ApplicationDetailPage() {
       hired: styles.badgeHired,
       rejected: styles.badgeRejected,
     };
-    return map[status] ?? styles.badgeReceived;
+    return map[stage] ?? styles.badgeReceived;
   }
 
   if (loading) {
@@ -115,19 +115,9 @@ export default function ApplicationDetailPage() {
   // Pipeline progress
   const currentStage: ApplicationStage =
     app.currentStage ??
-    app.stage ??
-    (APPLICATION_STAGE_ORDER.includes(app.status as ApplicationStage)
-      ? (app.status as ApplicationStage)
-      : "received");
+    app.stage ?? "received";
   const currentIdx = APPLICATION_STAGE_ORDER.indexOf(currentStage);
-  const isRejected = app.status === "rejected";
-
-  const allStatuses: ApplicationStatus[] = [
-    "new",
-    "active",
-    "hired",
-    "rejected",
-  ];
+  const isRejected = currentStage === "rejected";
 
   return (
     <div>
@@ -144,10 +134,10 @@ export default function ApplicationDetailPage() {
             </p>
           </div>
           <span
-            className={`${styles.badge} ${getBadgeClass(app.status)}`}
+            className={`${styles.badge} ${getBadgeClass(currentStage)}`}
             style={{ fontSize: 13, padding: "6px 14px" }}
           >
-            {APPLICATION_STATUS_LABELS[app.status] ?? app.status}
+            {APPLICATION_STAGE_LABELS[currentStage] ?? currentStage}
           </span>
         </div>
       </div>
@@ -407,9 +397,7 @@ export default function ApplicationDetailPage() {
                           className={`${styles.badge} ${getBadgeClass(entry.status)}`}
                           style={{ marginRight: 8 }}
                         >
-                          {APPLICATION_STATUS_LABELS[
-                            entry.status as ApplicationStatus
-                          ] ?? entry.status}
+                          {APPLICATION_STAGE_LABELS[entry.status as ApplicationStage] ?? entry.status}
                         </span>
                       </div>
                       {entry.note && (
@@ -434,34 +422,34 @@ export default function ApplicationDetailPage() {
 
         {/* Right column — Actions */}
         <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-6)" }}>
-          {/* Update Status */}
+          {/* Update Stage */}
           <div className={styles.detailCard}>
-            <h3 className={styles.detailCardTitle}>Update Status</h3>
+            <h3 className={styles.detailCardTitle}>Update Stage</h3>
             <div className={styles.statusSelect}>
               <select
                 className={styles.statusSelectControl}
-                value={newStatus}
-                onChange={(e) => setNewStatus(e.target.value)}
+                value={newStage}
+                onChange={(e) => setNewStage(e.target.value)}
               >
-                {allStatuses.map((s) => (
+                {APPLICATION_STAGE_ORDER.map((s) => (
                   <option key={s} value={s}>
-                    {APPLICATION_STATUS_LABELS[s]}
+                    {APPLICATION_STAGE_LABELS[s]}
                   </option>
                 ))}
               </select>
               <textarea
                 className={styles.noteTextarea}
-                placeholder="Add a note for this status change..."
-                value={statusNote}
-                onChange={(e) => setStatusNote(e.target.value)}
+                placeholder="Add a note for this stage change..."
+                value={stageNote}
+                onChange={(e) => setStageNote(e.target.value)}
               />
               <button
                 className={styles.btnPrimary}
-                onClick={() => void handleStatusUpdate()}
-                disabled={saving || newStatus === app.status}
+                onClick={() => void handleStageUpdate()}
+                disabled={saving || newStage === (app.currentStage ?? app.stage)}
                 style={{ width: "100%" }}
               >
-                {saving ? "Updating..." : "Update Status"}
+                {saving ? "Updating..." : "Update Stage"}
               </button>
             </div>
           </div>

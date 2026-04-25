@@ -6,7 +6,6 @@ import type {
   ApplicationRole,
   ApplicationEvaluation,
   ApplicationStage,
-  ApplicationStatus,
 } from "@/lib/types/careers";
 import { getJobById } from "./job-service";
 import { createOrUpdateCandidate } from "./candidate-service";
@@ -245,10 +244,8 @@ export async function getApplicationById(
 export async function updateApplication(
   id: string,
   payload: {
-    status?: ApplicationStatus;
     stage?: ApplicationStage;
     note?: string;
-    statusNote?: string;
     evaluation?: ApplicationEvaluation;
     candidate?: {
       fullName?: string;
@@ -265,7 +262,6 @@ export async function updateApplication(
     return moveApplicationStage(id, payload.stage, {
       author: payload.author,
       note: payload.note,
-      status: payload.status,
     });
   }
 
@@ -277,19 +273,6 @@ export async function updateApplication(
   };
   const timeline = Array.isArray(current.timeline) ? [...current.timeline] : [];
 
-  if (payload.status && payload.status !== current.status) {
-    updates.status = payload.status;
-    timeline.push({
-      status: payload.status,
-      action: "status_change",
-      note:
-        payload.statusNote?.trim() ||
-        `Status moved to ${payload.status}`,
-      author: payload.author,
-      createdAt: new Date().toISOString(),
-    });
-  }
-
   if (payload.note && payload.note.trim()) {
     updates.notes = [
       ...(Array.isArray(current.notes) ? current.notes : []),
@@ -300,7 +283,7 @@ export async function updateApplication(
       },
     ];
     timeline.push({
-      status: current.status,
+      status: current.currentStage ?? current.stage ?? "received",
       action: "note_added",
       note: payload.note.trim(),
       author: payload.author,
