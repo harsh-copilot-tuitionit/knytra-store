@@ -45,6 +45,7 @@ export default function ApplicationDetailPage() {
     void load();
   }, [load]);
 
+
   async function handleStageUpdate() {
     if (!newStage || newStage === (app?.currentStage ?? app?.stage)) return;
     setSaving(true);
@@ -58,10 +59,16 @@ export default function ApplicationDetailPage() {
         }),
       });
       if (res.ok) {
-        const { application: updated } = await res.json();
-        setApp(updated);
+        const data = await res.json();
+        const updated = data.application ?? data;
+        if (updated) {
+          setApp(updated);
+          setNewStage(updated.currentStage ?? updated.stage ?? "received");
+        }
         setStageNote("");
-        setNewStage(updated.currentStage ?? updated.stage ?? "received");
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(err.error || "Failed to update stage.");
       }
     } finally {
       setSaving(false);

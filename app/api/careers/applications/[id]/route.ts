@@ -53,7 +53,7 @@ export async function PUT(
       return Response.json({ error: "Application not found." }, { status: 404 });
     }
 
-    return Response.json({ success: true, application });
+    return Response.json({ application });
   } catch (error) {
     console.error("[PUT /api/careers/applications/id]", error);
     return Response.json(
