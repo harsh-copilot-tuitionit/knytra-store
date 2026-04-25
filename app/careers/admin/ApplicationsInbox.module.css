@@ -44,11 +44,11 @@
 .filterBar {
   position: sticky;
   top: 0;
-  z-index: 2;
-  display: flex;
-  flex-wrap: wrap;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: 1fr auto;
   gap: var(--sp-3);
-  align-items: center;
+  align-items: end;
   padding: var(--sp-3) var(--sp-4);
   background: rgba(10, 14, 20, 0.94);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -58,24 +58,12 @@
 
 .filterRow {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: minmax(240px, 1.1fr) repeat(4, minmax(150px, 0.7fr));
   gap: var(--sp-3);
   width: 100%;
   align-items: end;
 }
 
-
-.filterSelect {
-  width: 100%;
-  min-width: 0;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 10px 14px;
-  border-radius: 14px;
-  color: #fff;
-  font-size: 14px;
-  min-height: 44px;
-}
 
 .filterSearchLabel {
   display: flex;
@@ -87,7 +75,8 @@
   padding: 0 12px;
   min-height: 44px;
   width: 100%;
-  transition: border-color 0.15s;
+  min-width: 0;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .filterSearchIcon {
@@ -110,6 +99,36 @@
   color: rgba(255,255,255,0.45);
 }
 
+.filterSearchLabel:hover,
+.filterSearchLabel:focus-within {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.18);
+}
+
+.filterSelect {
+  width: 100%;
+  min-width: 0;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 10px 14px;
+  border-radius: 14px;
+  color: #fff;
+  font-size: 14px;
+  min-height: 44px;
+  color-scheme: dark;
+}
+
+.filterSelect:hover,
+.filterSelect:focus-visible {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.18);
+}
+
+.filterSelect option {
+  background: #111318;
+  color: #fff;
+}
+
 .filterSearchField:focus-visible,
 .filterSelect:focus-visible,
 .clearButton:focus-visible,
@@ -126,11 +145,53 @@
   border-radius: 14px;
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease;
+  justify-self: end;
 }
 
 .clearButton:hover {
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(255, 255, 255, 0.18);
+}
+
+.loadMoreButton {
+  margin: 0 auto;
+  padding: 12px 18px;
+  color: #fff;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  min-width: 220px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.loadMoreButton:hover:not(:disabled) {
+  background: rgba(255,255,255,0.12);
+  border-color: rgba(255,255,255,0.18);
+}
+
+.loadMoreButton:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.buttonSpinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: button-spin 0.8s linear infinite;
+}
+
+@keyframes button-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .applicationsList {
@@ -142,7 +203,7 @@
 
 .applicationCard {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(220px, auto) 28px;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, auto) 28px;
   align-items: center;
   gap: 12px;
   padding: 12px 18px;
@@ -169,12 +230,72 @@
   background: rgba(255,255,255,0.05);
 }
 
+@media (max-width: 1100px) {
+  .filterBar {
+    grid-template-columns: 1fr;
+  }
+
+  .filterRow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .filterSearchLabel {
+    grid-column: 1 / -1;
+  }
+
+  .clearButton {
+    justify-self: stretch;
+    width: 100%;
+  }
+}
+
 @media (max-width: 900px) {
+  .filterRow {
+    grid-template-columns: 1fr;
+  }
+
   .applicationCard {
     grid-template-columns: 1fr;
     padding: 10px 10px 10px 14px;
     min-height: 0;
     gap: 8px;
+  }
+
+  .candidateName {
+    max-width: 100%;
+    font-size: 14px;
+  }
+
+  .candidateEmail {
+    max-width: 100%;
+    font-size: 13px;
+  }
+
+  .applicationJobGroup {
+    flex-wrap: wrap;
+    gap: 6px 8px;
+    font-size: 12px;
+    max-width: 100%;
+  }
+
+  .applicationJobTitle {
+    max-width: 100%;
+    font-size: 12px;
+  }
+
+  .applicationChips {
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .applicationChevron {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .filterRow {
+    grid-template-columns: 1fr;
   }
 }
 

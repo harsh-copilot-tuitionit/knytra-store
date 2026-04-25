@@ -147,6 +147,7 @@ export default function CareersAdminShell({
                 key={href}
                 href={href}
                 className={`${styles.navLink} ${pathname === href ? styles.navLinkActive : ""}`}
+                onClick={() => setIsNavOpen(false)}
               >
                 <Icon size={20} />
                 <span>{label}</span>
@@ -158,6 +159,7 @@ export default function CareersAdminShell({
             <Link
               href="/careers/admin/setup"
               className={`${styles.navLink} ${pathname === "/careers/admin/setup" ? styles.navLinkActive : ""}`}
+              onClick={() => setIsNavOpen(false)}
             >
               <UserPlus size={20} />
               <span>Add Recruiter</span>

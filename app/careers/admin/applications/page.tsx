@@ -142,6 +142,15 @@ export default function ApplicationsPage() {
       {!loading && applications.length > 0 && (
         <div className={inboxStyles.applicationsList}>
           {applications.map((application) => {
+            const stageLabel =
+              APPLICATION_STAGE_LABELS[application.currentStage] ?? application.currentStage;
+
+            const statusLabel =
+              APPLICATION_STATUS_LABELS[application.status] ?? application.status;
+
+            const shouldShowStatus =
+              statusLabel.trim().toLowerCase() !== stageLabel.trim().toLowerCase();
+
             return (
               <button
                 key={application.id}
@@ -167,11 +176,13 @@ export default function ApplicationsPage() {
                 </div>
                 <div className={inboxStyles.applicationChips}>
                   <span className={`${inboxStyles.applicationStage} ${inboxStyles.stageTag}`}>
-                    {APPLICATION_STAGE_LABELS[application.currentStage] ?? application.currentStage}
+                    {stageLabel}
                   </span>
-                  <span className={`${inboxStyles.applicationStage} ${inboxStyles.statusTag}`}>
-                    {APPLICATION_STATUS_LABELS[application.status] ?? application.status}
-                  </span>
+                  {shouldShowStatus ? (
+                    <span className={`${inboxStyles.applicationStage} ${inboxStyles.statusTag}`}>
+                      {statusLabel}
+                    </span>
+                  ) : null}
                 </div>
                 <span className={inboxStyles.applicationChevron} aria-hidden="true">
                   <ArrowRight size={20} />
@@ -183,8 +194,21 @@ export default function ApplicationsPage() {
       )}
 
       {!loading && hasMore && (
-        <button type="button" className={inboxStyles.loadMoreButton} onClick={actions.loadMore} disabled={loadingMore}>
-          {loadingMore ? "Loading more…" : "Load more"}
+        <button
+          type="button"
+          className={inboxStyles.loadMoreButton}
+          onClick={actions.loadMore}
+          disabled={loadingMore}
+          aria-busy={loadingMore}
+        >
+          {loadingMore ? (
+            <>
+              <span className={inboxStyles.buttonSpinner} aria-hidden="true" />
+              Loading more…
+            </>
+          ) : (
+            "Load more"
+          )}
         </button>
       )}
 
