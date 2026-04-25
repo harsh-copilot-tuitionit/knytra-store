@@ -1,3 +1,23 @@
+/**
+ * Returns true if the given email type has already been sent for this application.
+ */
+type ApplicationEmailLog = {
+  type: string;
+  to: string;
+  subject: string;
+  sentAt: string;
+  sentBy: string;
+  provider: string;
+  success: boolean;
+};
+export async function hasApplicationEmailBeenSent(id: string, type: string): Promise<boolean> {
+  const db = getAdminDb();
+  const snap = await db.collection("careers_applications").doc(id).get();
+  if (!snap.exists) return false;
+  const current = snap.data() || {};
+  const emailLogs = Array.isArray(current.emailLogs) ? current.emailLogs as ApplicationEmailLog[] : [];
+  return emailLogs.some((log) => log && log.type === type && log.success);
+}
 import * as admin from "firebase-admin";
 import { getAdminDb } from "@/lib/firebase-admin";
 import type {

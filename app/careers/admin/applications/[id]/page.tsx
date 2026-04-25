@@ -49,9 +49,11 @@ export default function ApplicationDetailPage() {
     void load();
   }, [load]);
 
+  const [stageUpdateMsg, setStageUpdateMsg] = useState<string | null>(null);
   async function handleStageUpdate() {
     if (!newStage || newStage === (app?.currentStage ?? app?.stage)) return;
     setSaving(true);
+    setStageUpdateMsg(null);
     try {
       const res = await fetch(`/api/careers/applications/${id}`, {
         method: "PUT",
@@ -69,6 +71,14 @@ export default function ApplicationDetailPage() {
           setNewStage(updated.currentStage ?? updated.stage ?? "received");
         }
         setStageNote("");
+        // Show email result message
+        if (data.email?.attempted && data.email?.success) {
+          setStageUpdateMsg("Stage updated and email sent.");
+        } else if (data.email?.attempted && data.email?.success === false) {
+          setStageUpdateMsg(`Stage updated, but email failed: ${data.email.error || "Unknown error"}`);
+        } else {
+          setStageUpdateMsg("Stage updated.");
+        }
       } else {
         const err = await res.json().catch(() => ({}));
         alert(err.error || "Failed to update stage.");
@@ -157,6 +167,11 @@ export default function ApplicationDetailPage() {
       </Link>
 
       <div className={styles.pageHeader}>
+        {stageUpdateMsg && (
+          <div style={{ color: stageUpdateMsg.includes("failed") ? "#c00" : "#0c0", fontSize: 14, marginBottom: 12 }}>
+            {stageUpdateMsg}
+          </div>
+        )}
         <div className={styles.pageHeaderRow}>
           <div>
             <h1 className={styles.pageTitle}>{app.fullName}</h1>

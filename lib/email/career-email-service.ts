@@ -1,3 +1,20 @@
+// (removed unused CareerApplication import)
+// Map application stage to email template type
+export const STAGE_TO_EMAIL_TEMPLATE: Partial<Record<string, CareerEmailTemplateType>> = {
+  shortlisted: "shortlisted",
+  assessment: "assessment",
+  interview: "interview",
+  offer: "offer",
+  hired: "hired",
+  rejected: "rejected",
+};
+
+/**
+ * Returns the email template type for a given stage, or undefined if none.
+ */
+export function getEmailTemplateForStage(stage: string): CareerEmailTemplateType | undefined {
+  return STAGE_TO_EMAIL_TEMPLATE[stage];
+}
 import { smtpTransport } from "./smtp-client";
 import { careerEmailTemplates, CareerEmailTemplateType } from "./career-email-templates";
 
