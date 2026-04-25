@@ -14,6 +14,8 @@ import {
 import pageStyles from "../CareersAdminPage.module.css";
 import inboxStyles from "../ApplicationsInbox.module.css";
 
+const LIFECYCLE_STATUSES = new Set<ApplicationStatus>(["new", "active", "hired", "rejected"]);
+
 export default function ApplicationsPage() {
   const router = useRouter();
   const {
@@ -149,6 +151,7 @@ export default function ApplicationsPage() {
               APPLICATION_STATUS_LABELS[application.status] ?? application.status;
 
             const shouldShowStatus =
+              LIFECYCLE_STATUSES.has(application.status) &&
               statusLabel.trim().toLowerCase() !== stageLabel.trim().toLowerCase();
 
             return (

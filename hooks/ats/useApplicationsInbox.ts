@@ -65,26 +65,34 @@ export function useApplicationsInbox() {
     }
   }, []);
 
-  const fetchApplications = useCallback(
-    async (append = false) => {
+  const buildParams = useCallback(
+    (offset: number) => {
+      const params = new URLSearchParams();
+      params.set("limit", String(PAGE_SIZE));
+      params.set("offset", String(offset));
+      if (debouncedSearch.trim()) params.set("search", debouncedSearch.trim());
+      if (stage) params.set("stage", stage);
+      if (status) params.set("status", status);
+      if (jobId) params.set("jobId", jobId);
+      if (dateFrom) params.set("dateFrom", dateFrom);
+      if (dateRange !== "all") params.set("dateTo", new Date().toISOString());
+      return params;
+    },
+    [dateFrom, dateRange, debouncedSearch, jobId, stage, status],
+  );
+
+  const fetchApplicationsPage = useCallback(
+    async ({ append, offset }: { append: boolean; offset: number }) => {
       if (append) {
         setLoadingMore(true);
       } else {
         setLoading(true);
         setError(null);
+        setHasMore(true);
       }
 
       try {
-        const params = new URLSearchParams();
-        params.set("limit", String(PAGE_SIZE));
-        params.set("offset", String(append ? applications.length : 0));
-        if (debouncedSearch.trim()) params.set("search", debouncedSearch.trim());
-        if (stage) params.set("stage", stage);
-        if (status) params.set("status", status);
-        if (jobId) params.set("jobId", jobId);
-        if (dateFrom) params.set("dateFrom", dateFrom);
-        if (dateRange !== "all") params.set("dateTo", new Date().toISOString());
-
+        const params = buildParams(offset);
         const res = await fetch(`/api/careers/applications?${params}`);
         if (!res.ok) {
           throw new Error("Failed to load applications.");
@@ -93,7 +101,13 @@ export function useApplicationsInbox() {
         const data = await res.json();
         const loaded: CareerApplication[] = data.applications ?? [];
 
-        setApplications((previous) => (append ? [...previous, ...loaded] : loaded));
+        setApplications((previous) => {
+          if (!append) return loaded;
+
+          const existingIds = new Set(previous.map((app) => app.id));
+          const next = loaded.filter((app) => !existingIds.has(app.id));
+          return [...previous, ...next];
+        });
         setHasMore(loaded.length === PAGE_SIZE);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load applications.");
@@ -102,7 +116,7 @@ export function useApplicationsInbox() {
         setLoadingMore(false);
       }
     },
-    [applications.length, dateFrom, dateRange, debouncedSearch, jobId, stage, status],
+    [buildParams],
   );
 
   useEffect(() => {
@@ -110,17 +124,17 @@ export function useApplicationsInbox() {
   }, [loadJobs]);
 
   useEffect(() => {
-    void fetchApplications(false);
-  }, [fetchApplications]);
+    void fetchApplicationsPage({ append: false, offset: 0 });
+  }, [fetchApplicationsPage]);
 
   const refresh = useCallback(() => {
-    void fetchApplications(false);
-  }, [fetchApplications]);
+    void fetchApplicationsPage({ append: false, offset: 0 });
+  }, [fetchApplicationsPage]);
 
   const loadMore = useCallback(() => {
-    if (loadingMore || !hasMore) return;
-    void fetchApplications(true);
-  }, [fetchApplications, hasMore, loadingMore]);
+    if (loading || loadingMore || !hasMore) return;
+    void fetchApplicationsPage({ append: true, offset: applications.length });
+  }, [applications.length, fetchApplicationsPage, hasMore, loading, loadingMore]);
 
   const clearFilters = useCallback(() => {
     setSearch("");

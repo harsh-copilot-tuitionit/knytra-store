@@ -192,6 +192,10 @@
     box-shadow: 24px 0 80px rgba(0, 0, 0, 0.35);
   }
 
+  .sidebar.sidebarOpen {
+    transform: translateX(0);
+  }
+
   .sidebarHeader {
     padding: 0 var(--sp-4);
   }

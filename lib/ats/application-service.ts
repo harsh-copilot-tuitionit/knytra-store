@@ -161,13 +161,37 @@ function applyDateFilters(
       query = query.where("createdAt", "<=", to);
     }
   }
-  if (typeof filters.offset === "number") {
-    query = query.offset(filters.offset);
-  }
-  if (typeof filters.limit === "number") {
-    query = query.limit(filters.limit);
-  }
   return query;
+}
+
+function matchesSearch(app: CareerApplication, search?: string): boolean {
+  if (!search?.trim()) return true;
+
+  const normalized = search.trim().toLowerCase();
+
+  return [
+    app.fullName,
+    app.email,
+    app.phone,
+    app.city,
+    app.jobTitle,
+    app.role?.jobTitle,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase()
+    .includes(normalized);
+}
+
+function applyPagination(
+  applications: CareerApplication[],
+  filters: ApplicationFilters,
+): CareerApplication[] {
+  const offset = typeof filters.offset === "number" ? filters.offset : 0;
+  const limit =
+    typeof filters.limit === "number" ? filters.limit : applications.length;
+
+  return applications.slice(offset, offset + limit);
 }
 
 export async function getApplications(
@@ -176,10 +200,9 @@ export async function getApplications(
   const db = getAdminDb();
 
   if (filters.stage) {
-    const stage = filters.stage;
     let stageQuery: FirebaseFirestore.Query = db
       .collection("careers_applications")
-      .where("currentStage", "==", stage)
+      .where("currentStage", "==", filters.stage)
       .orderBy("createdAt", "desc");
 
     if (filters.status) {
@@ -193,21 +216,8 @@ export async function getApplications(
     const stageSnap = await stageQuery.get();
     let applications = stageSnap.docs.map(mapApplicationDoc);
 
-    if (filters.search) {
-      const normalized = filters.search.trim().toLowerCase();
-      applications = applications.filter((app) =>
-        [app.fullName, app.email, app.phone, app.city, app.jobTitle]
-          .join(" ")
-          .toLowerCase()
-          .includes(normalized),
-      );
-    }
-
-    if (typeof filters.offset === "number" && typeof filters.limit === "number") {
-      applications = applications.slice(filters.offset, filters.offset + filters.limit);
-    }
-
-    return applications;
+    applications = applications.filter((app) => matchesSearch(app, filters.search));
+    return applyPagination(applications, filters);
   }
 
   let query: FirebaseFirestore.Query = db
@@ -221,17 +231,8 @@ export async function getApplications(
   const snap = await query.get();
   let applications = snap.docs.map(mapApplicationDoc);
 
-  if (filters.search) {
-    const normalized = filters.search.trim().toLowerCase();
-    applications = applications.filter((app) =>
-      [app.fullName, app.email, app.phone, app.city, app.jobTitle]
-        .join(" ")
-        .toLowerCase()
-        .includes(normalized),
-    );
-  }
-
-  return applications;
+  applications = applications.filter((app) => matchesSearch(app, filters.search));
+  return applyPagination(applications, filters);
 }
 
 export async function getApplicationById(
