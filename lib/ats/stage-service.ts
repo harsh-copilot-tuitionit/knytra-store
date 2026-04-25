@@ -52,9 +52,15 @@ export async function moveApplicationStage(
   const stageHistory = Array.isArray(application.stageHistory)
     ? [...application.stageHistory]
     : [];
-  stageHistory.push(
-    createStageHistoryEntry(fromStage, newStage, options.author ?? "System", options.note),
-  );
+  if (options.note && options.note.trim()) {
+    stageHistory.push(
+      createStageHistoryEntry(fromStage, newStage, options.author ?? "System", options.note),
+    );
+  } else {
+    stageHistory.push(
+      createStageHistoryEntry(fromStage, newStage, options.author ?? "System"),
+    );
+  }
 
   const timeline = Array.isArray(application.timeline)
     ? [...application.timeline]

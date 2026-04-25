@@ -1,4 +1,4 @@
-import type { ApplicationStage, ApplicationStatus } from "@/lib/types/careers";
+import type { ApplicationStage, ApplicationStatus, ApplicationStageHistoryEntry } from "@/lib/types/careers";
 
 export const APPLICATION_PIPELINE_STAGES: ApplicationStage[] = [
   "received",
@@ -27,13 +27,15 @@ export function createStageHistoryEntry(
   changedBy: string,
   note?: string,
 ) {
-  return {
+  const trimmed = note?.trim();
+  const entry: ApplicationStageHistoryEntry = {
     fromStage,
     toStage,
     changedAt: new Date().toISOString(),
     changedBy: changedBy || "System",
-    note: note?.trim() || undefined,
+    ...(trimmed ? { note: trimmed } : {}),
   };
+  return entry;
 }
 
 export function createTimelineEntry(
