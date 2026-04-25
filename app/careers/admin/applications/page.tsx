@@ -57,18 +57,17 @@ export default function ApplicationsPage() {
 
       <div className={inboxStyles.filterBar}>
         <div className={inboxStyles.filterRow}>
-          <label className={inboxStyles.filterInput}>
-            <Search size={16} style={{ marginRight: 8 }} />
+          <label className={inboxStyles.filterSearchLabel}>
+            <Search size={16} className={inboxStyles.filterSearchIcon} />
             <input
               type="search"
               value={filters.search}
               onChange={(event) => actions.setSearch(event.target.value)}
               placeholder="Search name, email, job title"
-              className={inboxStyles.filterInput}
-              style={{ border: "none", background: "transparent", color: "#fff", width: "100%" }}
+              className={inboxStyles.filterSearchField}
+              autoComplete="off"
             />
           </label>
-
           <select
             className={inboxStyles.filterSelect}
             value={filters.stage}
@@ -81,7 +80,6 @@ export default function ApplicationsPage() {
               </option>
             ))}
           </select>
-
           <select
             className={inboxStyles.filterSelect}
             value={filters.status}
@@ -94,7 +92,6 @@ export default function ApplicationsPage() {
               </option>
             ))}
           </select>
-
           <select
             className={inboxStyles.filterSelect}
             value={filters.jobId}
@@ -107,7 +104,6 @@ export default function ApplicationsPage() {
               </option>
             ))}
           </select>
-
           <select
             className={inboxStyles.filterSelect}
             value={filters.dateRange}
@@ -118,7 +114,6 @@ export default function ApplicationsPage() {
             <option value="30">Last 30 days</option>
           </select>
         </div>
-
         <button type="button" className={inboxStyles.clearButton} onClick={actions.clearFilters}>
           Clear filters
         </button>
@@ -147,11 +142,6 @@ export default function ApplicationsPage() {
       {!loading && applications.length > 0 && (
         <div className={inboxStyles.applicationsList}>
           {applications.map((application) => {
-            const recentlyUpdated =
-              application.updatedAt &&
-              new Date(application.updatedAt).getTime() >=
-                Date.now() - 1000 * 60 * 60 * 24 * 7;
-
             return (
               <button
                 key={application.id}
@@ -159,29 +149,33 @@ export default function ApplicationsPage() {
                 className={inboxStyles.applicationCard}
                 onClick={() => router.push(`/careers/admin/applications/${application.id}`)}
               >
-                <div className={inboxStyles.applicationInfo}>
-                  <p className={inboxStyles.candidateName}>{application.fullName}</p>
-                  <p className={inboxStyles.candidateEmail}>{application.email}</p>
+                <div className={inboxStyles.applicationMain}>
+                  <div className={inboxStyles.applicationMeta}>
+                    <span className={inboxStyles.candidateName}>{application.fullName}</span>
+                    <span className={inboxStyles.candidateEmail}>{application.email}</span>
+                  </div>
+                  <div className={inboxStyles.applicationJobGroup}>
+                    <span className={inboxStyles.applicationJobTitle}>
+                      {application.role?.jobTitle ?? application.jobTitle}
+                    </span>
+                    <span className={inboxStyles.applicationDate}>
+                      {application.createdAt
+                        ? new Date(application.createdAt).toLocaleDateString()
+                        : "—"}
+                    </span>
+                  </div>
                 </div>
-                <div className={inboxStyles.applicationJob}>
-                  <span className={inboxStyles.applicationJobTitle}>
-                    {application.role?.jobTitle ?? application.jobTitle}
-                  </span>
-                  <span className={inboxStyles.applicationDate}>
-                    {application.createdAt
-                      ? new Date(application.createdAt).toLocaleDateString()
-                      : "—"}
-                  </span>
-                </div>
-                <div className={inboxStyles.applicationStatus}>
+                <div className={inboxStyles.applicationChips}>
                   <span className={`${inboxStyles.applicationStage} ${inboxStyles.stageTag}`}>
                     {APPLICATION_STAGE_LABELS[application.currentStage] ?? application.currentStage}
                   </span>
                   <span className={`${inboxStyles.applicationStage} ${inboxStyles.statusTag}`}>
                     {APPLICATION_STATUS_LABELS[application.status] ?? application.status}
                   </span>
-                  {recentlyUpdated ? <span className={inboxStyles.recentTag}>Updated</span> : null}
                 </div>
+                <span className={inboxStyles.applicationChevron} aria-hidden="true">
+                  <ArrowRight size={20} />
+                </span>
               </button>
             );
           })}

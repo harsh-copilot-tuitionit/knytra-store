@@ -64,7 +64,7 @@
   align-items: end;
 }
 
-.filterInput,
+
 .filterSelect {
   width: 100%;
   min-width: 0;
@@ -77,26 +77,40 @@
   min-height: 44px;
 }
 
-.filterInput {
+.filterSearchLabel {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 0 12px;
+  min-height: 44px;
+  width: 100%;
+  transition: border-color 0.15s;
 }
 
-.filterInput input {
-  width: 100%;
+.filterSearchIcon {
+  color: var(--color-white-60);
+  flex-shrink: 0;
+}
+
+.filterSearchField {
   border: none;
   background: transparent;
   color: #fff;
   outline: none;
   font-size: 14px;
+  width: 100%;
+  min-width: 0;
+  padding: 10px 0;
 }
 
-.filterInput input::placeholder {
-  color: rgba(255, 255, 255, 0.45);
+.filterSearchField::placeholder {
+  color: rgba(255,255,255,0.45);
 }
 
-.filterInput input:focus-visible,
+.filterSearchField:focus-visible,
 .filterSelect:focus-visible,
 .clearButton:focus-visible,
 .loadMoreButton:focus-visible {
@@ -125,201 +139,178 @@
   gap: var(--sp-2);
 }
 
+
 .applicationCard {
   display: grid;
-  grid-template-columns: minmax(260px, 1.2fr) minmax(220px, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, auto) 28px;
   align-items: center;
-  gap: 16px;
-  padding: 16px 18px;
-  min-height: 72px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  gap: 12px;
+  padding: 12px 18px;
+  min-height: 56px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.09);
   border-radius: 12px;
   cursor: pointer;
   min-width: 0;
-  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+  transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
+  box-shadow: none;
+  position: relative;
+  overflow: hidden;
 }
 
 .applicationCard:hover {
-  transform: translateY(-1px);
-  border-color: rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.07);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+  border-color: rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.07);
+  box-shadow: 0 4px 18px rgba(0,0,0,0.10);
 }
 
 .applicationCard:active {
-  transform: translateY(0);
+  border-color: rgba(255,255,255,0.13);
+  background: rgba(255,255,255,0.05);
 }
 
-.applicationInfo {
+@media (max-width: 900px) {
+  .applicationCard {
+    grid-template-columns: 1fr;
+    padding: 10px 10px 10px 14px;
+    min-height: 0;
+    gap: 8px;
+  }
+}
+
+.applicationMain {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 0%;
+}
+
+.applicationMeta {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
   min-width: 0;
 }
 
 .candidateName {
-  margin: 0;
   font-size: 15px;
   font-weight: 700;
   color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 240px;
 }
 
 .candidateEmail {
-  margin: 0;
   font-size: 13px;
   color: var(--color-white-55);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  max-width: 320px;
 }
 
-.applicationJob {
+.applicationJobGroup {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  color: var(--color-white-60);
-  font-size: 13px;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
 }
 
 .applicationJobTitle {
   color: var(--color-white-90);
   font-weight: 600;
-}
-
-.applicationStage {
-  display: inline-flex;
-  align-items: center;
-  padding: 5px 12px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.stageTag {
-  background: rgba(56, 189, 248, 0.16);
-  color: #7dd3fc;
-}
-
-.statusTag {
-  background: rgba(168, 85, 247, 0.16);
-  color: #d8b4fe;
-}
-
-.applicationStatus {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 6px;
-  min-width: 0;
-  text-align: right;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 220px;
 }
 
 .applicationDate {
   font-size: 13px;
   color: var(--color-white-60);
+  white-space: nowrap;
 }
 
-.recentTag {
-  background: rgba(16, 185, 129, 0.18);
-  color: #a7f3d0;
-  padding: 5px 12px;
+.applicationChips {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  min-width: 0;
+}
+
+.applicationStage {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  min-width: 0;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.skeletonList {
+.stageTag {
+  background: rgba(56,189,248,0.16);
+  color: #7dd3fc;
+}
+
+.statusTag {
+  background: rgba(168,85,247,0.16);
+  color: #d8b4fe;
+}
+
+.applicationChevron {
   display: flex;
-  flex-direction: column;
-  gap: var(--sp-3);
-}
-
-.skeletonCard {
-  display: grid;
-  grid-template-columns: minmax(260px, 1.2fr) minmax(220px, 1fr) auto;
-  gap: 16px;
-  padding: 16px 18px;
-  background: rgba(255, 255, 255, 0.04);
-  border-radius: 12px;
-}
-
-.skeletonLine {
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 999px;
-  height: 14px;
-  animation: pulse 1.4s ease-in-out infinite;
-}
-
-.skeletonLarge {
-  width: 70%;
-}
-
-.skeletonSmall {
-  width: 45%;
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 0.28;
-  }
-  50% {
-    opacity: 0.55;
-  }
-}
-
-.emptyState {
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: var(--sp-3);
-  padding: var(--sp-12) var(--sp-6);
-  text-align: center;
-  color: var(--color-white-60);
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 20px;
+  justify-content: center;
+  color: var(--color-white-30);
+  margin-left: 4px;
+  transition: color 0.15s;
 }
-
-.emptyStateTitle {
-  font-size: 18px;
-  font-weight: 700;
-}
-
-.emptyStateText {
-  max-width: 420px;
-}
-
-.loadMoreButton {
-  align-self: center;
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: var(--color-white);
-  padding: 12px 18px;
-  border-radius: 14px;
-  cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
-  min-width: 180px;
-}
-
-.loadMoreButton:hover {
-  background: rgba(255, 255, 255, 0.05);
+.applicationCard:hover .applicationChevron {
+  color: var(--color-white-70);
 }
 
 @media (max-width: 900px) {
-  .filterRow {
-    grid-template-columns: 1fr;
+  .applicationMain {
+    gap: 0;
   }
-
-  .applicationCard,
-  .skeletonCard {
-    grid-template-columns: 1fr;
+  .applicationMeta {
+    flex-direction: row;
+    gap: 8px;
+    max-width: 100%;
   }
-
-  .applicationStatus {
-    align-items: flex-start;
+  .candidateName, .candidateEmail {
+    max-width: 120px;
+    font-size: 14px;
+  }
+  .applicationJobGroup {
+    flex-direction: row;
+    gap: 8px;
+    font-size: 12px;
+    max-width: 100%;
+  }
+  .applicationJobTitle {
+    max-width: 180px;
+    font-size: 12px;
+  }
+  .applicationChips {
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .applicationChevron {
+    margin-left: 0;
   }
 }
