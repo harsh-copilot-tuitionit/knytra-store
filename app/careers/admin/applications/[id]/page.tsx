@@ -13,6 +13,7 @@ import {
   APPLICATION_STAGE_ORDER,
 } from "@/lib/types/careers";
 import styles from "../../CareersAdminPage.module.css";
+import { CareerEmailTemplateType } from "@/lib/email/career-email-templates";
 
 export default function ApplicationDetailPage() {
   const params = useParams();
@@ -25,6 +26,9 @@ export default function ApplicationDetailPage() {
   const [stageNote, setStageNote] = useState("");
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
+  const [emailType, setEmailType] = useState<CareerEmailTemplateType>("application_received");
+  const [emailSending, setEmailSending] = useState(false);
+  const [emailResult, setEmailResult] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -44,7 +48,6 @@ export default function ApplicationDetailPage() {
   useEffect(() => {
     void load();
   }, [load]);
-
 
   async function handleStageUpdate() {
     if (!newStage || newStage === (app?.currentStage ?? app?.stage)) return;
@@ -90,6 +93,27 @@ export default function ApplicationDetailPage() {
       }
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleSendEmail() {
+    setEmailSending(true);
+    setEmailResult(null);
+    try {
+      const res = await fetch(`/api/careers/applications/${id}/email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: emailType }),
+      });
+      if (res.ok) {
+        setEmailResult("Email sent successfully.");
+        await load();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setEmailResult(err.error || "Failed to send email.");
+      }
+    } finally {
+      setEmailSending(false);
     }
   }
 
@@ -429,6 +453,40 @@ export default function ApplicationDetailPage() {
 
         {/* Right column — Actions */}
         <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-6)" }}>
+          {/* Send Email Card */}
+          <div className={styles.detailCard}>
+            <h3 className={styles.detailCardTitle}>Send Email</h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <select
+                className={styles.statusSelectControl}
+                value={emailType}
+                onChange={e => setEmailType(e.target.value as CareerEmailTemplateType)}
+                disabled={emailSending}
+              >
+                <option value="application_received">Application Received</option>
+                <option value="shortlisted">Shortlisted</option>
+                <option value="assessment">Assessment</option>
+                <option value="interview">Interview</option>
+                <option value="offer">Offer</option>
+                <option value="hired">Hired</option>
+                <option value="rejected">Rejected</option>
+              </select>
+              <button
+                className={styles.btnPrimary}
+                onClick={() => void handleSendEmail()}
+                disabled={emailSending}
+                style={{ width: "100%" }}
+              >
+                {emailSending ? "Sending..." : "Send Email"}
+              </button>
+              {emailResult && (
+                <div style={{ color: emailResult.includes("success") ? "#0c0" : "#c00", fontSize: 13, marginTop: 4 }}>
+                  {emailResult}
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Update Stage */}
           <div className={styles.detailCard}>
             <h3 className={styles.detailCardTitle}>Update Stage</h3>

@@ -316,3 +316,22 @@ export async function updateApplication(
   const updated = await docRef.get();
   return mapApplicationDoc(updated);
 }
+
+export async function logApplicationEmail(id: string, log: {
+  type: string;
+  to: string;
+  subject: string;
+  sentAt: string;
+  sentBy: string;
+  provider: string;
+  success: boolean;
+}) {
+  const db = getAdminDb();
+  const docRef = db.collection("careers_applications").doc(id);
+  const snap = await docRef.get();
+  if (!snap.exists) return;
+  const current = snap.data() || {};
+  const emailLogs = Array.isArray(current.emailLogs) ? [...current.emailLogs] : [];
+  emailLogs.push(log);
+  await docRef.update({ emailLogs });
+}
