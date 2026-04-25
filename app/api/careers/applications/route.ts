@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
-import { createApplication, getApplicationsPage } from "@/lib/ats/service";
+import { createApplication, getApplicationsPage, hasApplicationEmailBeenSent, logApplicationEmail } from "@/lib/ats/service";
+import { sendCareerEmail } from "@/lib/email/career-email-service";
 import { getSessionFromRequest } from "@/lib/careers-auth";
 import { APPLICATION_STAGE_ORDER } from "@/lib/types/careers";
 import type { ApplicationStage } from "@/lib/types/careers";
@@ -55,6 +56,35 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const result = await createApplication(body);
+
+    // --- Automatic Application Received Email ---
+    let emailResult: { attempted: boolean; success?: boolean; type?: string } | undefined = undefined;
+    try {
+      const appId = result?.id;
+      if (appId && !(await hasApplicationEmailBeenSent(appId, "application_received"))) {
+        const log = await sendCareerEmail({
+          to: body.email,
+          type: "application_received",
+          candidateName: body.fullName,
+          jobTitle: body.role?.jobTitle,
+          sentBy: "system",
+        });
+        if (log.success) {
+          await logApplicationEmail(appId, log);
+          emailResult = { attempted: true, success: true, type: "application_received" };
+        } else {
+          emailResult = { attempted: true, success: false };
+        }
+      }
+    } catch (err) {
+      // Log error server-side, do not expose to client
+      console.error("[Application Received Email]", err);
+      emailResult = { attempted: true, success: false };
+    }
+
+    if (emailResult) {
+      return Response.json({ ...result, email: emailResult }, { status: 201 });
+    }
     return Response.json(result, { status: 201 });
   } catch (error) {
     console.error("[POST /api/careers/applications]", error);

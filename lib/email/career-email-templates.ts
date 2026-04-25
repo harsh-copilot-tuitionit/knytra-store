@@ -14,8 +14,24 @@ interface CareerEmailTemplate {
 
 export const careerEmailTemplates: Record<CareerEmailTemplateType, CareerEmailTemplate> = {
   application_received: {
-    subject: "Your application has been received",
-    html: ({ candidateName, jobTitle }) => `<p>Dear ${candidateName},</p><p>Thank you for applying${jobTitle ? ` for the position of ${jobTitle}` : ""} at Knytra. We have received your application and will review it soon.</p>`
+    subject: "We’ve received your application — KNYTRA",
+    html: ({ candidateName, jobTitle }) => `
+      <p>Hi ${candidateName},</p>
+      <p>Thank you for applying to <b>KNYTRA</b>${jobTitle ? ` for the role of <b>${jobTitle}</b>` : ""}.</p>
+      <p>We’ve successfully received your application and our team is currently reviewing it.</p>
+      <p>At KNYTRA, we’re building more than just a brand — we’re building a culture of intent, creativity, and ownership. Every application we receive is carefully considered, and we truly appreciate the time and effort you’ve put in.</p>
+      <p><b>What happens next?</b></p>
+      <p>If your profile aligns with what we’re looking for, you’ll hear from us regarding the next steps in the process.</p>
+      <p>While you wait, get to know us better:</p>
+      <ul>
+        <li>Website: <a href="https://knytra.in">https://knytra.in</a></li>
+        <li>Instagram: <a href="https://instagram.com/knytra.in">https://instagram.com/knytra.in</a></li>
+        <li>Our Story & Vision: <a href="https://knytra.in/about">https://knytra.in/about</a></li>
+      </ul>
+      <p>We appreciate your interest in being part of KNYTRA.</p>
+      <p>Wishing you the very best — we’ll be in touch soon.</p>
+      <p>Warm regards,<br/>KNYTRA Team</p>
+    `,
   },
   shortlisted: {
     subject: "You have been shortlisted",
