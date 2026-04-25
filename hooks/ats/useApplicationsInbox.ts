@@ -97,6 +97,8 @@ export function useApplicationsInbox() {
   const fetchApplicationsPage = useCallback(
     async ({ offset, pageNavigation }: { offset: number; pageNavigation: boolean }) => {
       const requestId = ++requestIdRef.current;
+      setApplications([]);
+      setTotal(0);
       if (pageNavigation) {
         setPageLoading(true);
       } else {
@@ -127,6 +129,8 @@ export function useApplicationsInbox() {
         setTotal(totalCount);
       } catch (err) {
         if (requestId !== requestIdRef.current) return;
+        setApplications([]);
+        setTotal(0);
         setError(err instanceof Error ? err.message : "Failed to load applications.");
       } finally {
         if (requestId !== requestIdRef.current) return;

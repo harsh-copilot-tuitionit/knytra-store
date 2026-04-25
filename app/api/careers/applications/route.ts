@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { createApplication, getApplicationsPage } from "@/lib/ats/service";
 import { getSessionFromRequest } from "@/lib/careers-auth";
+import { APPLICATION_STAGE_ORDER } from "@/lib/types/careers";
 import type { ApplicationStage } from "@/lib/types/careers";
 
 export async function GET(request: NextRequest) {
@@ -13,7 +14,10 @@ export async function GET(request: NextRequest) {
     const url = new URL(request.url);
     const jobId = url.searchParams.get("jobId") ?? undefined;
     const search = url.searchParams.get("search") ?? undefined;
-    const stage = url.searchParams.get("stage") as ApplicationStage | undefined;
+    const rawStage = url.searchParams.get("stage") ?? undefined;
+    const stage = APPLICATION_STAGE_ORDER.includes(rawStage as ApplicationStage)
+      ? (rawStage as ApplicationStage)
+      : undefined;
     const dateFrom = url.searchParams.get("dateFrom") ?? undefined;
     const dateTo = url.searchParams.get("dateTo") ?? undefined;
     const DEFAULT_LIMIT = 20;

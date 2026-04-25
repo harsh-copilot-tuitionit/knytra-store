@@ -205,41 +205,30 @@ export async function getApplicationsPage(
   filters: ApplicationFilters = {},
 ): Promise<{ applications: CareerApplication[]; total: number }> {
   const db = getAdminDb();
-
-  if (filters.stage) {
-    let stageQuery: FirebaseFirestore.Query = db
-      .collection("careers_applications")
-      .where("currentStage", "==", filters.stage)
-      .orderBy("createdAt", "desc");
-
-    if (filters.status) {
-      stageQuery = stageQuery.where("status", "==", filters.status);
-    }
-    if (filters.jobId) {
-      stageQuery = stageQuery.where("jobId", "==", filters.jobId);
-    }
-    stageQuery = applyDateFilters(stageQuery, filters);
-
-    const stageSnap = await stageQuery.get();
-    let applications = stageSnap.docs.map(mapApplicationDoc);
-
-    applications = applications.filter((app) => matchesSearch(app, filters.search));
-    const total = applications.length;
-    return { applications: applyPagination(applications, filters), total };
-  }
-
   let query: FirebaseFirestore.Query = db
     .collection("careers_applications")
     .orderBy("createdAt", "desc");
 
-  if (filters.status) query = query.where("status", "==", filters.status);
-  if (filters.jobId) query = query.where("jobId", "==", filters.jobId);
   query = applyDateFilters(query, filters);
 
   const snap = await query.get();
   let applications = snap.docs.map(mapApplicationDoc);
 
+  if (filters.stage) {
+    applications = applications.filter(
+      (app) =>
+        app.currentStage === filters.stage || app.stage === filters.stage,
+    );
+  }
+
+  if (filters.jobId) {
+    applications = applications.filter(
+      (app) => app.jobId === filters.jobId || app.role?.jobId === filters.jobId,
+    );
+  }
+
   applications = applications.filter((app) => matchesSearch(app, filters.search));
+
   const total = applications.length;
   return { applications: applyPagination(applications, filters), total };
 }
