@@ -131,8 +131,7 @@
 
 .filterSearchField:focus-visible,
 .filterSelect:focus-visible,
-.clearButton:focus-visible,
-.loadMoreButton:focus-visible {
+.clearButton:focus-visible {
   outline: 2px solid rgba(59, 130, 246, 0.45);
   outline-offset: 3px;
 }
@@ -153,45 +152,48 @@
   border-color: rgba(255, 255, 255, 0.18);
 }
 
-.loadMoreButton {
-  margin: 0 auto;
-  padding: 12px 18px;
-  color: #fff;
+.paginationBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: 16px 0;
+}
+
+.paginationInfo {
+  color: var(--color-white-70);
+  font-size: 13px;
+}
+
+.paginationControls {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.paginationButton {
   background: rgba(255,255,255,0.08);
   border: 1px solid rgba(255,255,255,0.12);
+  color: #fff;
+  padding: 10px 14px;
   border-radius: 14px;
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease;
-  min-width: 220px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
 }
 
-.loadMoreButton:hover:not(:disabled) {
+.paginationButton:hover:not(:disabled) {
   background: rgba(255,255,255,0.12);
-  border-color: rgba(255,255,255,0.18);
 }
 
-.loadMoreButton:disabled {
-  opacity: 0.65;
+.paginationButton:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
-.buttonSpinner {
-  width: 14px;
-  height: 14px;
-  border: 2px solid rgba(255,255,255,0.3);
-  border-top-color: #fff;
-  border-radius: 50%;
-  animation: button-spin 0.8s linear infinite;
-}
-
-@keyframes button-spin {
-  to {
-    transform: rotate(360deg);
-  }
+.paginationLabel {
+  color: var(--color-white-70);
+  font-size: 13px;
 }
 
 .applicationsList {

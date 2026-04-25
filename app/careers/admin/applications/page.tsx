@@ -5,16 +5,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, RefreshCw, Plus, Search } from "lucide-react";
 import { useApplicationsInbox } from "@/hooks/ats/useApplicationsInbox";
-import type { ApplicationStage, ApplicationStatus } from "@/lib/types/careers";
-import {
-  APPLICATION_STAGE_LABELS,
-  APPLICATION_STAGE_ORDER,
-  APPLICATION_STATUS_LABELS,
-} from "@/lib/types/careers";
+import type { ApplicationStage } from "@/lib/types/careers";
+import { APPLICATION_STAGE_LABELS, APPLICATION_STAGE_ORDER } from "@/lib/types/careers";
 import pageStyles from "../CareersAdminPage.module.css";
 import inboxStyles from "../ApplicationsInbox.module.css";
-
-const LIFECYCLE_STATUSES = new Set<ApplicationStatus>(["new", "active", "hired", "rejected"]);
 
 export default function ApplicationsPage() {
   const router = useRouter();
@@ -22,22 +16,21 @@ export default function ApplicationsPage() {
     applications,
     jobs,
     loading,
-    loadingMore,
-    hasMore,
+    pageLoading,
+    page,
+    total,
+    totalPages,
+    pageSize,
     error,
     filters,
     actions,
   } = useApplicationsInbox();
 
-  const stageOptions = useMemo(
-    () => APPLICATION_STAGE_ORDER,
-    [],
-  );
-
-  const statusOptions = useMemo<("new" | "active" | "hired" | "rejected")[]>(
-    () => ["new", "active", "hired", "rejected"],
-    [],
-  );
+  const stageOptions = useMemo(() => APPLICATION_STAGE_ORDER, []);
+  const isListLoading = loading || pageLoading;
+  const totalPageCount = totalPages ?? Math.max(1, Math.ceil(total / pageSize));
+  const startItem = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const endItem = Math.min(page * pageSize, total);
 
   return (
     <div className={inboxStyles.inboxShell}>
@@ -84,18 +77,6 @@ export default function ApplicationsPage() {
           </select>
           <select
             className={inboxStyles.filterSelect}
-            value={filters.status}
-            onChange={(event) => actions.setStatus(event.target.value as ApplicationStatus)}
-          >
-            <option value="">All statuses</option>
-            {statusOptions.map((status) => (
-              <option key={status} value={status}>
-                {APPLICATION_STATUS_LABELS[status]}
-              </option>
-            ))}
-          </select>
-          <select
-            className={inboxStyles.filterSelect}
             value={filters.jobId}
             onChange={(event) => actions.setJobId(event.target.value)}
           >
@@ -121,7 +102,7 @@ export default function ApplicationsPage() {
         </button>
       </div>
 
-      {loading && (
+      {isListLoading && (
         <div className={inboxStyles.skeletonList}>
           {[...Array(5)].map((_, index) => (
             <div key={index} className={inboxStyles.skeletonCard}>
@@ -132,7 +113,7 @@ export default function ApplicationsPage() {
         </div>
       )}
 
-      {!loading && applications.length === 0 && (
+      {!isListLoading && applications.length === 0 && (
         <div className={inboxStyles.emptyState}>
           <p className={inboxStyles.emptyStateTitle}>No applications found</p>
           <p className={inboxStyles.emptyStateText}>
@@ -141,78 +122,76 @@ export default function ApplicationsPage() {
         </div>
       )}
 
-      {!loading && applications.length > 0 && (
-        <div className={inboxStyles.applicationsList}>
-          {applications.map((application) => {
-            const stageLabel =
-              APPLICATION_STAGE_LABELS[application.currentStage] ?? application.currentStage;
+      {!isListLoading && applications.length > 0 && (
+        <>
+          <div className={inboxStyles.applicationsList}>
+            {applications.map((application) => {
+              const stageLabel =
+                APPLICATION_STAGE_LABELS[application.currentStage] ?? application.currentStage;
 
-            const statusLabel =
-              APPLICATION_STATUS_LABELS[application.status] ?? application.status;
-
-            const shouldShowStatus =
-              LIFECYCLE_STATUSES.has(application.status) &&
-              statusLabel.trim().toLowerCase() !== stageLabel.trim().toLowerCase();
-
-            return (
-              <button
-                key={application.id}
-                type="button"
-                className={inboxStyles.applicationCard}
-                onClick={() => router.push(`/careers/admin/applications/${application.id}`)}
-              >
-                <div className={inboxStyles.applicationMain}>
-                  <div className={inboxStyles.applicationMeta}>
-                    <span className={inboxStyles.candidateName}>{application.fullName}</span>
-                    <span className={inboxStyles.candidateEmail}>{application.email}</span>
+              return (
+                <button
+                  key={application.id}
+                  type="button"
+                  className={inboxStyles.applicationCard}
+                  onClick={() => router.push(`/careers/admin/applications/${application.id}`)}
+                >
+                  <div className={inboxStyles.applicationMain}>
+                    <div className={inboxStyles.applicationMeta}>
+                      <span className={inboxStyles.candidateName}>{application.fullName}</span>
+                      <span className={inboxStyles.candidateEmail}>{application.email}</span>
+                    </div>
+                    <div className={inboxStyles.applicationJobGroup}>
+                      <span className={inboxStyles.applicationJobTitle}>
+                        {application.role?.jobTitle ?? application.jobTitle}
+                      </span>
+                      <span className={inboxStyles.applicationDate}>
+                        {application.createdAt
+                          ? new Date(application.createdAt).toLocaleDateString()
+                          : "—"}
+                      </span>
+                    </div>
                   </div>
-                  <div className={inboxStyles.applicationJobGroup}>
-                    <span className={inboxStyles.applicationJobTitle}>
-                      {application.role?.jobTitle ?? application.jobTitle}
-                    </span>
-                    <span className={inboxStyles.applicationDate}>
-                      {application.createdAt
-                        ? new Date(application.createdAt).toLocaleDateString()
-                        : "—"}
+                  <div className={inboxStyles.applicationChips}>
+                    <span className={`${inboxStyles.applicationStage} ${inboxStyles.stageTag}`}>
+                      {stageLabel}
                     </span>
                   </div>
-                </div>
-                <div className={inboxStyles.applicationChips}>
-                  <span className={`${inboxStyles.applicationStage} ${inboxStyles.stageTag}`}>
-                    {stageLabel}
+                  <span className={inboxStyles.applicationChevron} aria-hidden="true">
+                    <ArrowRight size={20} />
                   </span>
-                  {shouldShowStatus ? (
-                    <span className={`${inboxStyles.applicationStage} ${inboxStyles.statusTag}`}>
-                      {statusLabel}
-                    </span>
-                  ) : null}
-                </div>
-                <span className={inboxStyles.applicationChevron} aria-hidden="true">
-                  <ArrowRight size={20} />
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      )}
+                </button>
+              );
+            })}
+          </div>
 
-      {!loading && hasMore && (
-        <button
-          type="button"
-          className={inboxStyles.loadMoreButton}
-          onClick={actions.loadMore}
-          disabled={loadingMore}
-          aria-busy={loadingMore}
-        >
-          {loadingMore ? (
-            <>
-              <span className={inboxStyles.buttonSpinner} aria-hidden="true" />
-              Loading more…
-            </>
-          ) : (
-            "Load more"
-          )}
-        </button>
+          <div className={inboxStyles.paginationBar}>
+            <div className={inboxStyles.paginationInfo}>
+              Showing {startItem}–{endItem} of {total} applications
+            </div>
+            <div className={inboxStyles.paginationControls}>
+              <button
+                type="button"
+                className={inboxStyles.paginationButton}
+                onClick={() => actions.setPage(page - 1)}
+                disabled={page === 1 || isListLoading}
+              >
+                Previous
+              </button>
+              <span className={inboxStyles.paginationLabel}>
+                Page {page} of {totalPageCount}
+              </span>
+              <button
+                type="button"
+                className={inboxStyles.paginationButton}
+                onClick={() => actions.setPage(page + 1)}
+                disabled={page >= totalPageCount || isListLoading}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </>
       )}
 
       {error ? <p style={{ color: "var(--color-danger)", marginTop: "var(--sp-4)" }}>{error}</p> : null}

@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
-import { createApplication, getApplications } from "@/lib/ats/service";
+import { createApplication, getApplicationsPage } from "@/lib/ats/service";
 import { getSessionFromRequest } from "@/lib/careers-auth";
+import type { ApplicationStage } from "@/lib/types/careers";
 
 export async function GET(request: NextRequest) {
   const session = getSessionFromRequest(request.cookies);
@@ -10,27 +11,33 @@ export async function GET(request: NextRequest) {
 
   try {
     const url = new URL(request.url);
-    const status = url.searchParams.get("status") ?? undefined;
     const jobId = url.searchParams.get("jobId") ?? undefined;
     const search = url.searchParams.get("search") ?? undefined;
-    const stage = url.searchParams.get("stage") ?? undefined;
+    const stage = url.searchParams.get("stage") as ApplicationStage | undefined;
     const dateFrom = url.searchParams.get("dateFrom") ?? undefined;
     const dateTo = url.searchParams.get("dateTo") ?? undefined;
-    const limit = parseInt(url.searchParams.get("limit") ?? "0", 10) || undefined;
-    const offset = parseInt(url.searchParams.get("offset") ?? "0", 10) || undefined;
+    const DEFAULT_LIMIT = 20;
+    const parsedLimit = parseInt(url.searchParams.get("limit") ?? "", 10);
+    const parsedOffset = parseInt(url.searchParams.get("offset") ?? "", 10);
+    const limit = Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : DEFAULT_LIMIT;
+    const offset = Number.isFinite(parsedOffset) && parsedOffset > 0 ? parsedOffset : 0;
 
-    const applications = await getApplications({
-      status: status as any,
+    const result = await getApplicationsPage({
       jobId,
       search,
-      stage: stage as any,
+      stage,
       dateFrom,
       dateTo,
       limit,
       offset,
     });
 
-    return Response.json({ applications });
+    return Response.json({
+      applications: result.applications,
+      total: result.total,
+      limit,
+      offset,
+    });
   } catch (error) {
     console.error("[GET /api/careers/applications]", error);
     return Response.json(

@@ -1,11 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type {
   CareerApplication,
   CareerJob,
   ApplicationStage,
-  ApplicationStatus,
 } from "@/lib/types/careers";
 
 const PAGE_SIZE = 20;
@@ -39,19 +38,34 @@ export function useApplicationsInbox() {
   const [applications, setApplications] = useState<CareerApplication[]>([]);
   const [jobs, setJobs] = useState<CareerJob[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
+  const [pageLoading, setPageLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
 
   const [search, setSearch] = useState("");
   const [stage, setStage] = useState<ApplicationStage | "">("");
-  const [status, setStatus] = useState<ApplicationStatus | "">("");
   const [jobId, setJobId] = useState("");
   const [dateRange, setDateRange] = useState<"all" | "7" | "30">("all");
 
   const debouncedSearch = useDebouncedValue(search, 300);
 
   const dateFrom = useMemo(() => formatDateRange(dateRange), [dateRange]);
+  const requestIdRef = useRef(0);
+  const [refreshToken, setRefreshToken] = useState(0);
+
+  const filterKey = useMemo(
+    () =>
+      JSON.stringify({
+        search: debouncedSearch.trim(),
+        stage,
+        jobId,
+        dateRange,
+        dateFrom,
+      }),
+    [debouncedSearch, dateFrom, dateRange, jobId, stage],
+  );
+  const previousFilterKeyRef = useRef(filterKey);
 
   const loadJobs = useCallback(async () => {
     try {
@@ -72,25 +86,25 @@ export function useApplicationsInbox() {
       params.set("offset", String(offset));
       if (debouncedSearch.trim()) params.set("search", debouncedSearch.trim());
       if (stage) params.set("stage", stage);
-      if (status) params.set("status", status);
       if (jobId) params.set("jobId", jobId);
       if (dateFrom) params.set("dateFrom", dateFrom);
       if (dateRange !== "all") params.set("dateTo", new Date().toISOString());
       return params;
     },
-    [dateFrom, dateRange, debouncedSearch, jobId, stage, status],
+    [dateFrom, dateRange, debouncedSearch, jobId, stage],
   );
 
   const fetchApplicationsPage = useCallback(
-    async ({ append, offset }: { append: boolean; offset: number }) => {
-      if (append) {
-        setLoadingMore(true);
+    async ({ offset, pageNavigation }: { offset: number; pageNavigation: boolean }) => {
+      const requestId = ++requestIdRef.current;
+      if (pageNavigation) {
+        setPageLoading(true);
       } else {
         setLoading(true);
-        setError(null);
-        setHasMore(true);
       }
+      setError(null);
 
+      const startTime = Date.now();
       try {
         const params = buildParams(offset);
         const res = await fetch(`/api/careers/applications?${params}`);
@@ -100,20 +114,24 @@ export function useApplicationsInbox() {
 
         const data = await res.json();
         const loaded: CareerApplication[] = data.applications ?? [];
+        const totalCount: number = typeof data.total === "number" ? data.total : 0;
 
-        setApplications((previous) => {
-          if (!append) return loaded;
+        const elapsed = Date.now() - startTime;
+        if (pageNavigation && elapsed < 2000) {
+          await new Promise((resolve) => window.setTimeout(resolve, 2000 - elapsed));
+        }
 
-          const existingIds = new Set(previous.map((app) => app.id));
-          const next = loaded.filter((app) => !existingIds.has(app.id));
-          return [...previous, ...next];
-        });
-        setHasMore(loaded.length === PAGE_SIZE);
+        if (requestId !== requestIdRef.current) return;
+
+        setApplications(loaded);
+        setTotal(totalCount);
       } catch (err) {
+        if (requestId !== requestIdRef.current) return;
         setError(err instanceof Error ? err.message : "Failed to load applications.");
       } finally {
+        if (requestId !== requestIdRef.current) return;
         setLoading(false);
-        setLoadingMore(false);
+        setPageLoading(false);
       }
     },
     [buildParams],
@@ -123,49 +141,71 @@ export function useApplicationsInbox() {
     void loadJobs();
   }, [loadJobs]);
 
-  useEffect(() => {
-    void fetchApplicationsPage({ append: false, offset: 0 });
-  }, [fetchApplicationsPage]);
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  const goToPage = useCallback(
+    (nextPage: number) => {
+      const safePage = Math.min(Math.max(1, nextPage), totalPages);
+      if (safePage === page || loading || pageLoading) return;
+      setPage(safePage);
+    },
+    [loading, page, pageLoading, totalPages],
+  );
 
   const refresh = useCallback(() => {
-    void fetchApplicationsPage({ append: false, offset: 0 });
-  }, [fetchApplicationsPage]);
+    setPage(1);
+    setRefreshToken((value) => value + 1);
+  }, []);
 
-  const loadMore = useCallback(() => {
-    if (loading || loadingMore || !hasMore) return;
-    void fetchApplicationsPage({ append: true, offset: applications.length });
-  }, [applications.length, fetchApplicationsPage, hasMore, loading, loadingMore]);
+  useEffect(() => {
+    const filtersChanged = previousFilterKeyRef.current !== filterKey;
+    previousFilterKeyRef.current = filterKey;
+
+    const nextPage = filtersChanged ? 1 : page;
+    if (filtersChanged && page !== 1) {
+      setPage(1);
+      return;
+    }
+
+    const offset = (nextPage - 1) * PAGE_SIZE;
+    void fetchApplicationsPage({
+      offset,
+      pageNavigation: !filtersChanged && nextPage > 1,
+    });
+  }, [filterKey, fetchApplicationsPage, page, refreshToken]);
 
   const clearFilters = useCallback(() => {
     setSearch("");
     setStage("");
-    setStatus("");
     setJobId("");
     setDateRange("all");
+    setPage(1);
+    setRefreshToken((value) => value + 1);
   }, []);
 
   return {
     applications,
     jobs,
     loading,
-    loadingMore,
-    hasMore,
+    pageLoading,
     error,
+    page,
+    total,
+    totalPages,
+    pageSize: PAGE_SIZE,
     filters: {
       search,
       stage,
-      status,
       jobId,
       dateRange,
     },
     actions: {
       setSearch,
       setStage,
-      setStatus,
       setJobId,
       setDateRange,
+      setPage: goToPage,
       refresh,
-      loadMore,
       clearFilters,
     },
   };

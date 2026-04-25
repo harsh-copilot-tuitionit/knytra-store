@@ -197,6 +197,13 @@ function applyPagination(
 export async function getApplications(
   filters: ApplicationFilters = {},
 ): Promise<CareerApplication[]> {
+  const result = await getApplicationsPage(filters);
+  return result.applications;
+}
+
+export async function getApplicationsPage(
+  filters: ApplicationFilters = {},
+): Promise<{ applications: CareerApplication[]; total: number }> {
   const db = getAdminDb();
 
   if (filters.stage) {
@@ -217,7 +224,8 @@ export async function getApplications(
     let applications = stageSnap.docs.map(mapApplicationDoc);
 
     applications = applications.filter((app) => matchesSearch(app, filters.search));
-    return applyPagination(applications, filters);
+    const total = applications.length;
+    return { applications: applyPagination(applications, filters), total };
   }
 
   let query: FirebaseFirestore.Query = db
@@ -232,7 +240,8 @@ export async function getApplications(
   let applications = snap.docs.map(mapApplicationDoc);
 
   applications = applications.filter((app) => matchesSearch(app, filters.search));
-  return applyPagination(applications, filters);
+  const total = applications.length;
+  return { applications: applyPagination(applications, filters), total };
 }
 
 export async function getApplicationById(
