@@ -40,34 +40,34 @@ export function renderKnytraEmailLayout({
   let signatureText = "";
   if (signatureVariant === "hired") {
     signatureHtml = `
-      <tr><td style="padding-top:32px;border-top:1px solid rgba(255,255,255,0.12)">
-        <div style="font-size:16px;font-weight:bold;color:#fff;margin-bottom:2px">Welcome aboard,</div>
-        <div style="font-size:15px;color:#fff;margin-bottom:8px">KNYTRA Careers Team</div>
-        <div style="font-size:13px;color:rgba(255,255,255,0.60);margin-bottom:2px">KNYTRA NOTIFICATIONS</div>
-        <div style="font-size:13px;color:rgba(255,255,255,0.60);margin-bottom:2px">noreply@knytra.com</div>
-        <div style="font-size:13px;color:rgba(255,255,255,0.60)"><a href=\"https://knytra.in\" style=\"color:rgba(255,255,255,0.60);text-decoration:none\">https://knytra.in</a></div>
+      <tr><td style="padding:20px 28px 16px 28px;border-top:1px solid #2a2a2a;">
+        <div style="font-size:15px;font-weight:700;color:#ffffff;margin-bottom:6px;line-height:1.3;">Welcome aboard,</div>
+        <div style="font-size:15px;color:#ffffff;margin-bottom:8px;line-height:1.4;">KNYTRA Careers Team</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.60);margin-bottom:2px;line-height:1.4;">KNYTRA NOTIFICATIONS</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.60);margin-bottom:2px;line-height:1.4;">noreply@knytra.com</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.60);line-height:1.4;"><a href=\"https://knytra.in\" style=\"color:rgba(255,255,255,0.60);text-decoration:none;\">https://knytra.in</a></div>
       </td></tr>
     `;
     signatureText = `\nWelcome aboard,\nKNYTRA Careers Team\n\nKNYTRA NOTIFICATIONS\nnoreply@knytra.com\nhttps://knytra.in`;
   } else if (signatureVariant === "rejected") {
     signatureHtml = `
-      <tr><td style="padding-top:32px;border-top:1px solid rgba(255,255,255,0.12)">
-        <div style="font-size:16px;font-weight:bold;color:#fff;margin-bottom:2px">With appreciation,</div>
-        <div style="font-size:15px;color:#fff;margin-bottom:8px">KNYTRA Careers Team</div>
-        <div style="font-size:13px;color:rgba(255,255,255,0.60);margin-bottom:2px">KNYTRA NOTIFICATIONS</div>
-        <div style="font-size:13px;color:rgba(255,255,255,0.60);margin-bottom:2px">noreply@knytra.com</div>
-        <div style="font-size:13px;color:rgba(255,255,255,0.60)"><a href=\"https://knytra.in\" style=\"color:rgba(255,255,255,0.60);text-decoration:none\">https://knytra.in</a></div>
+      <tr><td style="padding:20px 28px 16px 28px;border-top:1px solid #2a2a2a;">
+        <div style="font-size:15px;font-weight:700;color:#ffffff;margin-bottom:6px;line-height:1.3;">With appreciation,</div>
+        <div style="font-size:15px;color:#ffffff;margin-bottom:8px;line-height:1.4;">KNYTRA Careers Team</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.60);margin-bottom:2px;line-height:1.4;">KNYTRA NOTIFICATIONS</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.60);margin-bottom:2px;line-height:1.4;">noreply@knytra.com</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.60);line-height:1.4;"><a href=\"https://knytra.in\" style=\"color:rgba(255,255,255,0.60);text-decoration:none;\">https://knytra.in</a></div>
       </td></tr>
     `;
     signatureText = `\nWith appreciation,\nKNYTRA Careers Team\n\nKNYTRA NOTIFICATIONS\nnoreply@knytra.com\nhttps://knytra.in`;
   } else {
     signatureHtml = `
-      <tr><td style="padding-top:32px;border-top:1px solid rgba(255,255,255,0.12)">
-        <div style="font-size:16px;font-weight:bold;color:#fff;margin-bottom:2px">Warm regards,</div>
-        <div style="font-size:15px;color:#fff;margin-bottom:8px">KNYTRA Careers Team</div>
-        <div style="font-size:13px;color:rgba(255,255,255,0.60);margin-bottom:2px">KNYTRA NOTIFICATIONS</div>
-        <div style="font-size:13px;color:rgba(255,255,255,0.60);margin-bottom:2px">noreply@knytra.com</div>
-        <div style="font-size:13px;color:rgba(255,255,255,0.60)"><a href=\"https://knytra.in\" style=\"color:rgba(255,255,255,0.60);text-decoration:none\">https://knytra.in</a></div>
+      <tr><td style="padding:20px 28px 16px 28px;border-top:1px solid #2a2a2a;">
+        <div style="font-size:15px;font-weight:700;color:#ffffff;margin-bottom:6px;line-height:1.3;">Warm regards,</div>
+        <div style="font-size:15px;color:#ffffff;margin-bottom:8px;line-height:1.4;">KNYTRA Careers Team</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.60);margin-bottom:2px;line-height:1.4;">KNYTRA NOTIFICATIONS</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.60);margin-bottom:2px;line-height:1.4;">noreply@knytra.com</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.60);line-height:1.4;"><a href=\"https://knytra.in\" style=\"color:rgba(255,255,255,0.60);text-decoration:none;\">https://knytra.in</a></div>
       </td></tr>
     `;
     signatureText = `\nWarm regards,\nKNYTRA Careers Team\n\nKNYTRA NOTIFICATIONS\nnoreply@knytra.com\nhttps://knytra.in`;
@@ -76,24 +76,51 @@ export function renderKnytraEmailLayout({
   return {
     html: `
       <html>
-        <body style="margin:0;padding:0;background:#000;color:#fff;font-family:Arial,Helvetica,sans-serif;">
+        <body style="margin:0;padding:0;background:#f4f4f4;color:#fff;font-family:Arial,Helvetica,sans-serif;-webkit-text-size-adjust:100%;">
           <span style="display:none!important;max-height:0;max-width:0;opacity:0;overflow:hidden;visibility:hidden">${preheader}</span>
-          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#000;max-width:480px;margin:0 auto;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.10);border:1px solid #222;">
-            <tr><td style="padding:32px 24px 0 24px">
-              <div style="font-size:24px;font-weight:900;letter-spacing:2px;color:#fff;margin-bottom:8px;">KNYTRA</div>
-              <div style="font-size:12px;font-weight:bold;letter-spacing:1px;color:rgba(255,255,255,0.60);margin-bottom:24px;">CAREERS</div>
-              <div style="font-size:20px;font-weight:700;color:#fff;margin-bottom:12px;">${title}</div>
-              <div style="font-size:15px;color:#fff;margin-bottom:24px;">${bodyHtml}</div>
-            </td></tr>
-            ${signatureHtml}
-            <tr><td style="padding:32px 24px 16px 24px">
-              <div style="font-size:13px;color:rgba(255,255,255,0.60);margin-bottom:16px;">Explore KNYTRA:<br/>
-                <a href=\"https://knytra.in\" style=\"color:rgba(255,255,255,0.60);text-decoration:none\">Website</a> &nbsp;|&nbsp;
-                <a href=\"https://instagram.com/knytra.in\" style=\"color:rgba(255,255,255,0.60);text-decoration:none\">Instagram</a> &nbsp;|&nbsp;
-                <a href=\"https://knytra.in/about\" style=\"color:rgba(255,255,255,0.60);text-decoration:none\">About</a>
-              </div>
-              <div style="font-size:12px;color:rgba(255,255,255,0.40);">${footerNote}</div>
-            </td></tr>
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f4f4f4;width:100%;min-width:100%;">
+            <tr>
+              <td align="center" style="padding:24px 12px;">
+                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;">
+                  <tr>
+                    <td style="padding:0;">
+                      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#050505;border:1px solid #242424;border-radius:18px;overflow:hidden;">
+                        <tr>
+                          <td style="padding:28px;">
+                            <div style="font-size:28px;font-weight:900;letter-spacing:3px;color:#ffffff;margin-bottom:10px;line-height:1;">KNYTRA</div>
+                            <div style="font-size:12px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.60);text-transform:uppercase;margin-bottom:20px;">CAREERS</div>
+                            <div style="font-size:26px;font-weight:700;color:#ffffff;line-height:1.1;margin-bottom:20px;">${title}</div>
+                            <div style="font-size:16px;line-height:1.6;color:#f0f0f0;">${bodyHtml}</div>
+                          </td>
+                        </tr>
+                        ${signatureHtml}
+                        <tr>
+                          <td style="padding:0 28px 20px 28px;">
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#111111;border:1px solid #242424;border-radius:14px;">
+                              <tr>
+                                <td style="padding:16px;">
+                                  <div style="font-size:12px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.65);text-transform:uppercase;margin-bottom:12px;">Explore KNYTRA</div>
+                                  <div style="font-size:14px;line-height:1.6;color:#dcdcdc;">
+                                    <a href=\"https://knytra.in\" style=\"color:#dcdcdc;text-decoration:none;\">Website</a><span style=\"color:rgba(255,255,255,0.40);\"> • </span>
+                                    <a href=\"https://instagram.com/knytra.in\" style=\"color:#dcdcdc;text-decoration:none;\">Instagram</a><span style=\"color:rgba(255,255,255,0.40);\"> • </span>
+                                    <a href=\"https://knytra.in/about\" style=\"color:#dcdcdc;text-decoration:none;\">About</a>
+                                  </div>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding:0 36px 24px 36px;">
+                            <div style="font-size:12px;color:rgba(255,255,255,0.50);line-height:1.5;">${footerNote}</div>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
           </table>
         </body>
       </html>
