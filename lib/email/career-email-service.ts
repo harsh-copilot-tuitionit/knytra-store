@@ -17,6 +17,7 @@ export function getEmailTemplateForStage(stage: string): CareerEmailTemplateType
 }
 import { smtpTransport } from "./smtp-client";
 import { careerEmailTemplates, CareerEmailTemplateType } from "./career-email-templates";
+import type { SendMailOptions } from 'nodemailer';
 
 interface SendCareerEmailParams {
   to: string;
@@ -24,6 +25,7 @@ interface SendCareerEmailParams {
   candidateName: string;
   jobTitle?: string;
   replyTo?: string;
+  cc?: string | string[];
   sentBy: string;
 }
 
@@ -33,6 +35,7 @@ export async function sendCareerEmail({
   candidateName,
   jobTitle,
   replyTo,
+  cc,
   sentBy,
 }: SendCareerEmailParams) {
   const template = careerEmailTemplates[type];
@@ -42,13 +45,15 @@ export async function sendCareerEmail({
   const fromEmail = process.env.ZOHO_SMTP_FROM_EMAIL || "noreply@knytra.com";
   const replyToEmail = replyTo || process.env.CAREERS_REPLY_TO || fromEmail;
 
-  const mailOptions = {
+  const mailOptions: SendMailOptions = {
     from: `"${fromName}" <${fromEmail}>`,
     to,
     subject: template.subject,
     html: template.html({ candidateName, jobTitle }),
+    text: template.text({ candidateName, jobTitle }),
     replyTo: replyToEmail,
   };
+  if (cc) mailOptions.cc = cc;
 
   const result = await smtpTransport.sendMail(mailOptions);
 
