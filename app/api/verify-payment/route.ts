@@ -161,6 +161,7 @@ async function sendToQikink(
     await db.collection("orders").doc(orderId).update({
       qikinkStatus: "failed",
       qikinkError: errorMessage,
+      qikinkFailedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
     return { success: false, qikinkStatus: "failed", qikinkError: errorMessage };
   }
