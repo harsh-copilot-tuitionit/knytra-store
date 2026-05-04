@@ -133,6 +133,12 @@
   resize: vertical;
 }
 
+.qikinkProductGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-4);
+}
+
 .imageGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
@@ -237,4 +243,117 @@
   font-size: 13px;
   color: var(--color-white-40);
   margin-top: var(--sp-1);
+}
+
+.variantHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.addVariantButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  border: 1px solid var(--color-white-12);
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: var(--color-white-80);
+  font-size: 13px;
+  font-weight: 600;
+  transition: all var(--ease-fast);
+}
+
+.addVariantButton:hover {
+  border-color: var(--color-white-40);
+  color: var(--color-white);
+}
+
+.variantsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.variantCard {
+  border: 1px solid var(--color-white-12);
+  border-radius: 8px;
+  padding: var(--sp-4);
+  background-color: var(--color-black);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.variantCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.variantCardHeader h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-white-80);
+}
+
+.removeVariantButton {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: 1px solid var(--color-white-12);
+  color: var(--color-white-60);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--ease-fast);
+}
+
+.removeVariantButton:hover {
+  border-color: rgba(255, 74, 74, 0.5);
+  color: #ff7b7b;
+}
+
+.variantGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-3);
+}
+
+.variantImageUrl {
+  grid-column: 1 / -1;
+}
+
+.formError {
+  color: #ff9d9d;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid rgba(255, 120, 120, 0.25);
+  background: rgba(255, 90, 90, 0.08);
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+
+@media (max-width: 1100px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .variantGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .qikinkProductGrid,
+  .variantGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--sp-3);
+  }
 }

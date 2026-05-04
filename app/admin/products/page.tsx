@@ -17,7 +17,35 @@ export interface Product {
   images: string[];
   sizes: string[];
   status: "active" | "draft";
+  qikinkProductId?: string | null;
+  variants?: Array<{
+    size?: string | null;
+    qikinkCatalogSku?: string | null;
+    qikinkPrintTypeId?: number | null;
+  }>;
   createdAt: any;
+}
+
+function getQikinkReadiness(product: Product): {
+  label: "Ready" | "Needs Config";
+  className: string;
+} {
+  const variants = product.variants ?? [];
+  if (variants.length === 0) {
+    return { label: "Needs Config", className: styles.needsConfig };
+  }
+
+  const hasInvalidCatalogVariant = variants.some((variant) => {
+    const hasCatalogSku = Boolean(variant.qikinkCatalogSku);
+    const printTypeId = Number(variant.qikinkPrintTypeId);
+    return hasCatalogSku && (!Number.isFinite(printTypeId) || printTypeId <= 0);
+  });
+
+  if (hasInvalidCatalogVariant) {
+    return { label: "Needs Config", className: styles.needsConfig };
+  }
+
+  return { label: "Ready", className: styles.ready };
 }
 
 export default function AdminProducts() {
@@ -92,52 +120,75 @@ export default function AdminProducts() {
                 <th>Status</th>
                 <th>Price</th>
                 <th>Sizes</th>
+                <th>Qikink Product ID</th>
+                <th>Variants</th>
+                <th>Qikink</th>
                 <th className={styles.actionCol}></th>
               </tr>
             </thead>
             <tbody>
-              {products.map((product) => (
-                <tr key={product.id}>
-                  <td>
-                    <div className={styles.productCell}>
-                      <div className={styles.productImage}>
-                        {product.images && product.images.length > 0 ? (
-                          <Image 
-                            src={product.images[0]} 
-                            alt={product.name}
-                            fill
-                            sizes="40px"
-                            className={styles.image}
-                          />
-                        ) : (
-                          <ImageIcon size={16} className={styles.placeholderIcon} />
-                        )}
+              {products.map((product) => {
+                const variantsCount = product.variants?.length ?? 0;
+                const readiness = getQikinkReadiness(product);
+
+                return (
+                  <tr key={product.id}>
+                    <td>
+                      <div className={styles.productCell}>
+                        <div className={styles.productImage}>
+                          {product.images && product.images.length > 0 ? (
+                            <Image
+                              src={product.images[0]}
+                              alt={product.name}
+                              fill
+                              sizes="40px"
+                              className={styles.image}
+                            />
+                          ) : (
+                            <ImageIcon size={16} className={styles.placeholderIcon} />
+                          )}
+                        </div>
+                        <span className={styles.productName}>{product.name}</span>
                       </div>
-                      <span className={styles.productName}>{product.name}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <span className={`${styles.statusBadge} ${styles[product.status]}`}>
-                      {product.status}
-                    </span>
-                  </td>
-                  <td className={styles.priceCell}>
-                    ₹{product.price.toLocaleString("en-IN")}
-                  </td>
-                  <td>
-                    <div className={styles.sizesRow}>
-                      {product.sizes.map((size) => (
-                        <span key={size} className={styles.sizeBadge}>{size}</span>
-                      ))}
-                    </div>
-                  </td>
-                  <td className={styles.actionCol}>
-                    <button className={styles.actionButton}>
-                      <MoreVertical size={16} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td>
+                      <span className={`${styles.statusBadge} ${styles[product.status]}`}>
+                        {product.status}
+                      </span>
+                    </td>
+                    <td className={styles.priceCell}>
+                      ₹{product.price.toLocaleString("en-IN")}
+                    </td>
+                    <td>
+                      <div className={styles.sizesRow}>
+                        {(product.sizes ?? []).map((size) => (
+                          <span key={size} className={styles.sizeBadge}>{size}</span>
+                        ))}
+                      </div>
+                    </td>
+                    <td className={styles.metaCell}>
+                      {product.qikinkProductId ? (
+                        <span className={styles.metaText}>{product.qikinkProductId}</span>
+                      ) : (
+                        <span className={styles.metaMuted}>-</span>
+                      )}
+                    </td>
+                    <td className={styles.metaCell}>
+                      <span className={styles.metaText}>{variantsCount}</span>
+                    </td>
+                    <td>
+                      <span className={`${styles.readinessBadge} ${readiness.className}`}>
+                        {readiness.label}
+                      </span>
+                    </td>
+                    <td className={styles.actionCol}>
+                      <button className={styles.actionButton}>
+                        <MoreVertical size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
