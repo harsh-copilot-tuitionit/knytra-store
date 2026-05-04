@@ -32,6 +32,7 @@ interface OrderData {
 interface OrderItem {
   qikinkCatalogSku?: string;
   qikinkProductSku?: string;
+  qikinkPrintTypeId?: number | null;
   name?: string;
   productId?: string;
   size?: string;
@@ -92,7 +93,7 @@ export function buildQikinkOrderPayload(
     throw new Error("[qikink-order-builder] Missing shipping address (state)");
   }
 
-  // ── Validate each item: SKU, quantity, price ──
+  // ── Validate each item: SKU, quantity, price, print_type_id ──
   for (const item of orderItems) {
     const itemLabel = getItemLabel(item);
 
@@ -118,18 +119,31 @@ export function buildQikinkOrderPayload(
         `[qikink-order-builder] Invalid Qikink item price for item: ${itemLabel}`,
       );
     }
+
+    // In catalog SKU mode (search_from_my_products: 0), print_type_id is required.
+    if (
+      typeof item.qikinkPrintTypeId !== "number" ||
+      !Number.isFinite(item.qikinkPrintTypeId) ||
+      item.qikinkPrintTypeId <= 0
+    ) {
+      throw new Error(
+        `[qikink-order-builder] Missing Qikink print_type_id for item: ${itemLabel}`,
+      );
+    }
   }
 
   // ── Build line items with resolved SKU and validated quantities/prices ──
   const line_items: QikinkLineItem[] = orderItems.map((item) => {
     const sku = item.qikinkCatalogSku ?? item.qikinkProductSku ?? "";
     const qty = item.quantity ?? 1;
+    const printTypeId = item.qikinkPrintTypeId as number;
     console.log("[qikink-order-builder] Using catalog SKU:", sku);
     return {
       search_from_my_products: 0 as const,
       quantity: String(qty),
       price: String(item.price),
       sku,
+      print_type_id: printTypeId,
     };
   });
 

@@ -10,6 +10,7 @@
  * Optional env vars:
  *   QIKINK_API_BASE      — default: https://sandbox.qikink.com
  *   QIKINK_TEST_SKU      — default: MVnHs-Wh-S  (Qikink catalog SKU)
+ *   QIKINK_TEST_PRINT_TYPE_ID — required for catalog SKU mode
  *   QIKINK_TEST_PRICE    — default: 299
  *   QIKINK_TEST_CITY     — default: Mumbai
  *   QIKINK_TEST_PINCODE  — default: 400001
@@ -36,6 +37,7 @@ const CLIENT_ID  = process.env.QIKINK_CLIENT_ID;
 const CLIENT_SECRET = process.env.QIKINK_CLIENT_SECRET;
 
 const TEST_SKU   = process.env.QIKINK_TEST_SKU     ?? "MVnHs-Wh-S";
+const TEST_PRINT_TYPE_ID = process.env.QIKINK_TEST_PRINT_TYPE_ID;
 const TEST_PRICE = process.env.QIKINK_TEST_PRICE   ?? "299";
 const TEST_CITY  = process.env.QIKINK_TEST_CITY    ?? "Mumbai";
 const TEST_ZIP   = process.env.QIKINK_TEST_PINCODE ?? "400001";
@@ -93,6 +95,17 @@ try {
 // ── Step 2: Create a test order (catalog SKU mode) ────
 console.log("\n── Step 2: Creating test order...");
 
+if (!TEST_PRINT_TYPE_ID) {
+  console.error("❌ Missing QIKINK_TEST_PRINT_TYPE_ID. Qikink catalog SKU mode requires print_type_id.");
+  process.exit(1);
+}
+
+const printTypeId = Number(TEST_PRINT_TYPE_ID);
+if (!Number.isFinite(printTypeId) || printTypeId <= 0) {
+  console.error("❌ Invalid QIKINK_TEST_PRINT_TYPE_ID. It must be a positive number.");
+  process.exit(1);
+}
+
 const testOrder = {
   order_number: `KT${Date.now().toString(36)}`,
   qikink_shipping: "1",
@@ -104,6 +117,7 @@ const testOrder = {
       quantity: "1",
       price: TEST_PRICE,
       sku: TEST_SKU,
+      print_type_id: printTypeId,
     },
   ],
   shipping_address: {

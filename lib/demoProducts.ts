@@ -4,6 +4,7 @@ export interface DemoVariant {
   sku: string;
   qikinkCatalogSku: string | null;
   qikinkProductSku: string | null;
+  qikinkPrintTypeId: number | null;
   qikinkDesignSku: string | null;
 }
 
@@ -44,6 +45,7 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
         sku: "UOsTMRnHs-Mn-M",
         qikinkCatalogSku: "UOsTMRnHs-Mn-M",
         qikinkProductSku: "UOsTMRnHs-Mn-M",
+        qikinkPrintTypeId: null,
         qikinkDesignSku: null,
       },
     ],

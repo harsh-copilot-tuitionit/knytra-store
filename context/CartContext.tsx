@@ -12,6 +12,7 @@ export interface CartItem {
   quantity: number;
   qikinkCatalogSku?: string;
   qikinkProductSku?: string;
+  qikinkPrintTypeId?: number;
 }
 
 interface CartContextType {

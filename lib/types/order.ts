@@ -9,6 +9,7 @@ export interface OrderItem {
   image: string;
   qikinkCatalogSku?: string;
   qikinkProductSku?: string;
+  qikinkPrintTypeId?: number;
 }
 
 export interface OrderUser {
