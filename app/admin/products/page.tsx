@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { collection, getDocs, orderBy, query } from "firebase/firestore";
-import { Plus, Search, MoreVertical, Image as ImageIcon } from "lucide-react";
+import { Plus, Search, Pencil, Image as ImageIcon } from "lucide-react";
 import { db } from "@/lib/firebase";
 import styles from "./products.module.css";
 
@@ -189,9 +189,9 @@ export default function AdminProducts() {
                       </span>
                     </td>
                     <td className={styles.actionCol}>
-                      <button className={styles.actionButton}>
-                        <MoreVertical size={16} />
-                      </button>
+                      <Link href={`/admin/products/${product.id}`} className={styles.actionButton}>
+                        <Pencil size={16} />
+                      </Link>
                     </td>
                   </tr>
                 );
