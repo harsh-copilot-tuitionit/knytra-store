@@ -111,8 +111,9 @@ export function buildQikinkOrderPayload(
       );
     }
 
-    // Check price
-    if (item.price !== undefined && item.price !== null && item.price <= 0) {
+    // Check price — must be a finite number > 0; missing or 0 are not allowed
+    const price = item.price;
+    if (typeof price !== "number" || !Number.isFinite(price) || price <= 0) {
       throw new Error(
         `[qikink-order-builder] Invalid Qikink item price for item: ${itemLabel}`,
       );
@@ -123,12 +124,11 @@ export function buildQikinkOrderPayload(
   const line_items: QikinkLineItem[] = orderItems.map((item) => {
     const sku = item.qikinkCatalogSku ?? item.qikinkProductSku ?? "";
     const qty = item.quantity ?? 1;
-    const price = item.price ?? 0;
     console.log("[qikink-order-builder] Using catalog SKU:", sku);
     return {
       search_from_my_products: 0 as const,
       quantity: String(qty),
-      price: String(price),
+      price: String(item.price),
       sku,
     };
   });
