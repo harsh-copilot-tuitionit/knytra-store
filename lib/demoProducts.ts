@@ -41,11 +41,11 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
     variants: [
       {
         size: "M",
-        color: "Maroon",
-        sku: "UOsTMRnHs-Mn-M",
-        qikinkCatalogSku: "UOsTMRnHs-Mn-M",
-        qikinkProductSku: "UOsTMRnHs-Mn-M",
-        qikinkPrintTypeId: null,
+        color: "White",
+        sku: "MVnHs-Wh-M",
+        qikinkCatalogSku: "MVnHs-Wh-M",
+        qikinkProductSku: "MVnHs-Wh-M",
+        qikinkPrintTypeId: 1,
         qikinkDesignSku: null,
       },
     ],
