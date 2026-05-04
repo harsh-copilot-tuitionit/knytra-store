@@ -86,17 +86,30 @@ async function getAccessToken(): Promise<string> {
       client_secret: clientSecret,
     }),
   });
-  const text = await res.text();
+
+  const rawText = await res.text();
+
   if (!res.ok) {
-    console.error("[qikink] Token request failed:", res.status, text);
+    console.error("[qikink] Token request failed:", res.status, rawText);
     throw new Error(`Qikink token request failed (${res.status})`);
   }
 
-  const data = JSON.parse(text);
-  cachedToken = data.access_token ?? data.Accesstoken;
-  tokenExpiresAt = Date.now() + (data.expires_in ?? 3600) * 1000;
+  let data: Record<string, unknown>;
+  try {
+    data = rawText ? JSON.parse(rawText) : {};
+  } catch {
+    throw new Error("Qikink token response was not valid JSON");
+  }
+
+  const token = (data.access_token ?? data.Accesstoken ?? data.token) as string | undefined;
+  if (!token) {
+    throw new Error("Qikink token response did not include access token");
+  }
+
+  cachedToken = token;
+  tokenExpiresAt = Date.now() + ((data.expires_in as number | undefined) ?? 3600) * 1000;
   console.log("[qikink] Token acquired, expires in", data.expires_in ?? "unknown");
-  return cachedToken!;
+  return cachedToken;
 }
 
 // ── Create order ───────────────────────────────────────
@@ -123,22 +136,35 @@ export async function createQikinkOrder(
       body: JSON.stringify(payload),
     });
 
-    const body = await res.json().catch(() => null);
+    const rawText = await res.text();
+    let body: unknown = null;
+    try {
+      body = rawText ? JSON.parse(rawText) : null;
+    } catch {
+      body = rawText;
+    }
 
     if (!res.ok) {
-      console.error("[qikink] Order creation failed:", res.status, body);
+      console.error("[qikink] Order creation failed:", res.status);
       return {
         success: false,
         qikinkStatus: "failed",
         qikinkResponse: body,
-        qikinkError: `HTTP ${res.status}: ${JSON.stringify(body)}`,
+        qikinkError: `HTTP ${res.status}: ${typeof body === "string" ? body : JSON.stringify(body)}`,
       };
     }
 
-    console.log("[qikink] Order created:", body?.order_id ?? body);
+    const bodyObj = body !== null && typeof body === "object" ? (body as Record<string, unknown>) : null;
+    const qikinkOrderId = bodyObj?.order_id != null
+      ? String(bodyObj.order_id)
+      : bodyObj?.id != null
+        ? String(bodyObj.id)
+        : undefined;
+
+    console.log("[qikink] Order created:", qikinkOrderId ?? body);
     return {
       success: true,
-      qikinkOrderId: body?.order_id?.toString() ?? undefined,
+      qikinkOrderId,
       qikinkStatus: "created",
       qikinkResponse: body,
     };
