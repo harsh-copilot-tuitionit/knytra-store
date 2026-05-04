@@ -36,12 +36,19 @@ function getQikinkReadiness(product: Product): {
   }
 
   const hasInvalidCatalogVariant = variants.some((variant) => {
-    const hasCatalogSku = Boolean(variant.qikinkCatalogSku);
+    const catalogSku = (variant.qikinkCatalogSku ?? "").trim();
+    const hasCatalogSku = catalogSku.length > 0;
     const printTypeId = Number(variant.qikinkPrintTypeId);
     return hasCatalogSku && (!Number.isFinite(printTypeId) || printTypeId <= 0);
   });
 
-  if (hasInvalidCatalogVariant) {
+  const hasFulfillableVariant = variants.some((variant) => {
+    const catalogSku = (variant.qikinkCatalogSku ?? "").trim();
+    const printTypeId = Number(variant.qikinkPrintTypeId);
+    return catalogSku.length > 0 && Number.isFinite(printTypeId) && printTypeId > 0;
+  });
+
+  if (hasInvalidCatalogVariant || !hasFulfillableVariant) {
     return { label: "Needs Config", className: styles.needsConfig };
   }
 
