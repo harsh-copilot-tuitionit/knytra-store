@@ -119,10 +119,19 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // 3. Send order to Qikink (non-blocking — failures don't break payment flow)
-    sendToQikink(db, firestore_order_id).catch((err) =>
-      console.error("[verify-payment] Qikink background error:", err),
-    );
+    // 3. Send order to Qikink and wait for completion.
+    // Payment remains successful even if Qikink fails.
+    try {
+      await sendToQikink(db, firestore_order_id);
+    } catch (err) {
+      console.error("[verify-payment] Qikink fulfillment error:", err);
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      await db.collection("orders").doc(firestore_order_id).update({
+        qikinkStatus: "failed",
+        qikinkError: errorMessage,
+        qikinkFailedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+    }
 
     return Response.json({ success: true });
   } catch (error: unknown) {
@@ -131,7 +140,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// ── Qikink fulfilment helper (fire-and-forget) ──────────
+// ── Qikink fulfilment helper ──────────
 
 async function sendToQikink(
   db: FirebaseFirestore.Firestore,
