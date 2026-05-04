@@ -42,6 +42,11 @@ export async function sendToQikink(
     return { success: false, qikinkStatus: "failed", qikinkError: errorMessage };
   }
 
+  // Persist merchant-facing order number used in Qikink payload for webhook matching.
+  await db.collection("orders").doc(orderId).update({
+    qikinkOrderNumber: payload.order_number,
+  });
+
   const result = await createQikinkOrder(payload);
 
   // Persist Qikink result to Firestore
@@ -51,6 +56,7 @@ export async function sendToQikink(
       .doc(orderId)
       .update({
         qikinkOrderId: result.qikinkOrderId ?? null,
+        qikinkOrderNumber: payload.order_number,
         qikinkStatus: result.qikinkStatus,
         qikinkResponse: result.qikinkResponse ?? null,
         qikinkError: null,
@@ -62,6 +68,7 @@ export async function sendToQikink(
       .doc(orderId)
       .update({
         qikinkOrderId: result.qikinkOrderId ?? null,
+        qikinkOrderNumber: payload.order_number,
         qikinkStatus: result.qikinkStatus,
         qikinkResponse: result.qikinkResponse ?? null,
         qikinkError: result.qikinkError,
