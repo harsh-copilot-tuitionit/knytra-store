@@ -15,6 +15,7 @@ interface ProductVariant {
   size: string;
   color: string;
   sku: string;
+  qikinkCatalogSku: string | null;
   qikinkProductSku: string | null;
   qikinkDesignSku: string | null;
 }
@@ -145,6 +146,8 @@ export default function ProductDetailClient() {
     }
     if (!product) return;
     const selectedVariant = product.variants?.find((variant) => variant.size === selectedSize);
+    const qikinkCatalogSku =
+      selectedVariant?.qikinkCatalogSku ?? selectedVariant?.qikinkProductSku ?? undefined;
     setSizeError(false);
     addToCart({
       id: `${product.id}-${selectedSize}`,
@@ -154,6 +157,7 @@ export default function ProductDetailClient() {
       price: product.price,
       image: product.images?.[0] ?? "",
       quantity,
+      qikinkCatalogSku,
       qikinkProductSku: selectedVariant?.qikinkProductSku ?? undefined,
     });
     setAddedPulse(true);
@@ -167,6 +171,8 @@ export default function ProductDetailClient() {
     }
     if (!product) return;
     const selectedVariant = product.variants?.find((variant) => variant.size === selectedSize);
+    const qikinkCatalogSku =
+      selectedVariant?.qikinkCatalogSku ?? selectedVariant?.qikinkProductSku ?? undefined;
     setSizeError(false);
     triggerBuyNow({
       id: `${product.id}-${selectedSize}`,
@@ -176,6 +182,7 @@ export default function ProductDetailClient() {
       price: product.price,
       image: product.images?.[0] ?? "",
       quantity,
+      qikinkCatalogSku,
       qikinkProductSku: selectedVariant?.qikinkProductSku ?? undefined,
     });
     router.push("/checkout");

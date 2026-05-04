@@ -161,11 +161,12 @@ async function sendToQikink(
   }
 
   const missingSkuItem = orderItems.find(
-    (item: { qikinkProductSku?: string }) => !item.qikinkProductSku,
+    (item: { qikinkCatalogSku?: string; qikinkProductSku?: string }) =>
+      !(item.qikinkCatalogSku ?? item.qikinkProductSku),
   );
   if (missingSkuItem) {
-    const errorMessage = "Missing qikinkProductSku";
-    console.error("[qikink] Missing qikinkProductSku", missingSkuItem);
+    const errorMessage = "Missing Qikink catalog SKU";
+    console.error("[qikink] Missing Qikink catalog SKU", missingSkuItem);
     await db.collection("orders").doc(orderId).update({
       qikinkStatus: "failed",
       qikinkError: errorMessage,
@@ -174,13 +175,14 @@ async function sendToQikink(
   }
 
   const line_items: QikinkLineItem[] = orderItems.map(
-    (item: { qikinkProductSku?: string; quantity?: number; price?: number }) => {
-      console.log("QIKINK USING PRODUCT SKU:", item.qikinkProductSku);
+    (item: { qikinkCatalogSku?: string; qikinkProductSku?: string; quantity?: number; price?: number }) => {
+      const sku = item.qikinkCatalogSku ?? item.qikinkProductSku ?? "";
+      console.log("QIKINK USING CATALOG SKU:", sku);
       return {
         search_from_my_products: 0 as const,
         quantity: String(item.quantity ?? 1),
         price: String(item.price ?? 0),
-        sku: item.qikinkProductSku ?? "",
+        sku,
       };
     },
   );

@@ -7,6 +7,7 @@ export interface OrderItem {
   quantity: number;
   size: string;
   image: string;
+  qikinkCatalogSku?: string;
   qikinkProductSku?: string;
 }
 

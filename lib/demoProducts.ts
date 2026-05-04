@@ -2,6 +2,7 @@ export interface DemoVariant {
   size: string;
   color: string;
   sku: string;
+  qikinkCatalogSku: string | null;
   qikinkProductSku: string | null;
   qikinkDesignSku: string | null;
 }
@@ -41,6 +42,7 @@ export const DEMO_PRODUCTS: DemoProduct[] = [
         size: "M",
         color: "Maroon",
         sku: "UOsTMRnHs-Mn-M",
+        qikinkCatalogSku: "UOsTMRnHs-Mn-M",
         qikinkProductSku: "UOsTMRnHs-Mn-M",
         qikinkDesignSku: null,
       },
