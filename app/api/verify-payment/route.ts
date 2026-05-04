@@ -160,6 +160,12 @@ async function sendToQikink(
     return;
   }
 
+  await db.collection("orders").doc(orderId).update({
+    qikinkStatus: "pending",
+    qikinkAttemptCount: admin.firestore.FieldValue.increment(1),
+    qikinkLastAttemptAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+
   // Build Qikink payload using helper
   let payload;
   try {
@@ -171,6 +177,7 @@ async function sendToQikink(
       qikinkStatus: "failed",
       qikinkError: errorMessage,
       qikinkFailedAt: admin.firestore.FieldValue.serverTimestamp(),
+      qikinkLastFailedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
     return { success: false, qikinkStatus: "failed", qikinkError: errorMessage };
   }
@@ -178,15 +185,29 @@ async function sendToQikink(
   const result = await createQikinkOrder(payload);
 
   // Persist Qikink result to Firestore
-  await db
-    .collection("orders")
-    .doc(orderId)
-    .update({
-      qikinkOrderId: result.qikinkOrderId ?? null,
-      qikinkStatus: result.qikinkStatus,
-      qikinkResponse: result.qikinkResponse ?? null,
-      ...(result.qikinkError ? { qikinkError: result.qikinkError } : {}),
-    });
+  if (result.qikinkStatus === "created") {
+    await db
+      .collection("orders")
+      .doc(orderId)
+      .update({
+        qikinkOrderId: result.qikinkOrderId ?? null,
+        qikinkStatus: result.qikinkStatus,
+        qikinkResponse: result.qikinkResponse ?? null,
+        qikinkError: null,
+        qikinkCreatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+  } else {
+    await db
+      .collection("orders")
+      .doc(orderId)
+      .update({
+        qikinkOrderId: result.qikinkOrderId ?? null,
+        qikinkStatus: result.qikinkStatus,
+        qikinkResponse: result.qikinkResponse ?? null,
+        qikinkError: result.qikinkError,
+        qikinkLastFailedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+  }
 
   console.log(
     `[qikink] Order ${orderId}: ${result.qikinkStatus}`,
