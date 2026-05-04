@@ -1,0 +1,98 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 980px;
+}
+
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 28px;
+}
+
+.subtitle {
+  margin: 6px 0 0;
+  color: var(--color-white-60);
+}
+
+.backLink {
+  color: var(--color-white);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.card {
+  background-color: var(--color-off-black);
+  border: 1px solid var(--color-white-12);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.sectionTitle {
+  margin: 0 0 14px;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-white-60);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+@media (max-width: 720px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.label {
+  font-size: 12px;
+  color: var(--color-white-40);
+  margin-bottom: 4px;
+}
+
+.value {
+  font-size: 14px;
+  color: var(--color-white);
+  word-break: break-word;
+}
+
+.retryButton {
+  margin-top: 14px;
+  background: var(--color-white);
+  color: var(--color-black);
+  border: none;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.retryButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.successMsg {
+  margin: 14px 0 0;
+  color: #40d67a;
+  font-size: 13px;
+}
+
+.errorMsg {
+  margin: 14px 0 0;
+  color: #ff7070;
+  font-size: 13px;
+}

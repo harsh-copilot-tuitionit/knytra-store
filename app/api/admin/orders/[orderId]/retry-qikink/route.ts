@@ -1,18 +1,35 @@
 import { NextRequest } from "next/server";
 import * as admin from "firebase-admin";
-import { getAdminDb } from "@/lib/firebase-admin";
+import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import { getSessionFromRequest } from "@/lib/careers-auth";
 import { sendToQikink } from "@/lib/qikink-fulfillment";
 
-function isAdmin(request: NextRequest): boolean {
-  return getSessionFromRequest(request.cookies) !== null;
+async function isAdmin(request: NextRequest): Promise<boolean> {
+  // Existing careers-admin session auth path
+  if (getSessionFromRequest(request.cookies) !== null) {
+    return true;
+  }
+
+  // Admin panel Firebase auth path
+  const authHeader = request.headers.get("authorization") ?? "";
+  if (!authHeader.startsWith("Bearer ")) {
+    return false;
+  }
+
+  const idToken = authHeader.slice(7);
+  try {
+    const decoded = await getAdminAuth().verifyIdToken(idToken);
+    return decoded.uid === process.env.NEXT_PUBLIC_ADMIN_UID;
+  } catch {
+    return false;
+  }
 }
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ orderId: string }> },
 ) {
-  if (!isAdmin(request)) {
+  if (!(await isAdmin(request))) {
     return Response.json({ error: "Unauthorized." }, { status: 401 });
   }
 
