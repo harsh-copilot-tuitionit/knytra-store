@@ -5,10 +5,9 @@ import { getAdminDb } from "@/lib/firebase-admin";
 import { sendOrderConfirmationWhatsApp } from "@/lib/twilio";
 import {
   createQikinkOrder,
-  QikinkLineItem,
-  QikinkShippingAddress,
   QikinkResult,
 } from "@/lib/qikink";
+import { buildQikinkOrderPayload } from "@/lib/qikink-order-builder";
 
 export async function POST(request: NextRequest) {
   try {
@@ -152,21 +151,13 @@ async function sendToQikink(
     return;
   }
 
-  // Guard: skip if no items or no shipping address
-  const orderItems = order.items ?? [];
-  const addr = order.address ?? {};
-  if (orderItems.length === 0 || !addr.fullAddress) {
-    console.warn(`[qikink] Skipping ${orderId}: empty items or missing address`);
-    return;
-  }
-
-  const missingSkuItem = orderItems.find(
-    (item: { qikinkCatalogSku?: string; qikinkProductSku?: string }) =>
-      !(item.qikinkCatalogSku ?? item.qikinkProductSku),
-  );
-  if (missingSkuItem) {
-    const errorMessage = "Missing Qikink catalog SKU";
-    console.error("[qikink] Missing Qikink catalog SKU", missingSkuItem);
+  // Build Qikink payload using helper
+  let payload;
+  try {
+    payload = buildQikinkOrderPayload(orderId, order);
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : "Failed to build Qikink payload";
+    console.error("[qikink]", errorMessage);
     await db.collection("orders").doc(orderId).update({
       qikinkStatus: "failed",
       qikinkError: errorMessage,
@@ -174,45 +165,7 @@ async function sendToQikink(
     return { success: false, qikinkStatus: "failed", qikinkError: errorMessage };
   }
 
-  const line_items: QikinkLineItem[] = orderItems.map(
-    (item: { qikinkCatalogSku?: string; qikinkProductSku?: string; quantity?: number; price?: number }) => {
-      const sku = item.qikinkCatalogSku ?? item.qikinkProductSku ?? "";
-      console.log("QIKINK USING CATALOG SKU:", sku);
-      return {
-        search_from_my_products: 0 as const,
-        quantity: String(item.quantity ?? 1),
-        price: String(item.price ?? 0),
-        sku,
-      };
-    },
-  );
-
-  // Parse name into first/last
-  const fullName = order.user?.name ?? addr.name ?? "";
-  const nameParts = fullName.trim().split(/\s+/);
-  const firstName = nameParts[0] ?? "";
-  const lastName = nameParts.slice(1).join(" ") || undefined;
-
-  const shipping_address: QikinkShippingAddress = {
-    first_name: firstName,
-    last_name: lastName,
-    address1: addr.fullAddress ?? "",
-    phone: order.user?.phone ?? addr.phone ?? "",
-    email: order.user?.email ?? "",
-    city: addr.city ?? "",
-    zip: addr.pincode ?? "",
-    province: addr.state ?? "",
-    country_code: "IN",
-  };
-
-  const result = await createQikinkOrder({
-    order_number: orderId.slice(0, 15),
-    qikink_shipping: "1",
-    gateway: "Prepaid",
-    total_order_value: String(order.totalAmount ?? order.total ?? 0),
-    line_items,
-    shipping_address,
-  });
+  const result = await createQikinkOrder(payload);
 
   // Persist Qikink result to Firestore
   await db
@@ -229,4 +182,6 @@ async function sendToQikink(
     `[qikink] Order ${orderId}: ${result.qikinkStatus}`,
     result.qikinkOrderId ?? result.qikinkError ?? "",
   );
+
+  return result;
 }
