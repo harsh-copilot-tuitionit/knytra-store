@@ -37,10 +37,12 @@ export default function Shop() {
       q,
       (snapshot) => {
         const fb = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Product[];
-        const fbIds = new Set(fb.map((p) => p.id));
-        const demos: Product[] = DEMO_PRODUCTS.map((d: DemoProduct) => ({ ...d }));
-        const merged = [...fb, ...demos.filter((d) => !fbIds.has(d.id))];
-        setAllProducts(merged);
+        if (fb.length > 0) {
+          setAllProducts(fb);
+        } else {
+          const demos: Product[] = DEMO_PRODUCTS.map((d: DemoProduct) => ({ ...d }));
+          setAllProducts(demos);
+        }
         setLoading(false);
       },
       () => {

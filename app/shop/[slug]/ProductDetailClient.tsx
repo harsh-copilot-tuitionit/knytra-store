@@ -106,19 +106,22 @@ export default function ProductDetailClient() {
 
   useEffect(() => {
     if (!slug) return;
-    const demo = getDemoProduct(slug);
-    if (demo) {
-      setProduct(demo as Product);
-      setLoading(false);
-      return;
-    }
 
     async function fetchProduct() {
       try {
         const snap = await getDoc(doc(db, "products", slug));
-        setProduct(snap.exists() ? ({ id: snap.id, ...snap.data() } as Product) : null);
+        if (snap.exists()) {
+          setProduct({ id: snap.id, ...snap.data() } as Product);
+        } else {
+          // Fall back to demo product only when Firestore has no matching document
+          const demo = getDemoProduct(slug);
+          setProduct(demo ? (demo as Product) : null);
+        }
       } catch (e) {
         console.error(e);
+        // On network/permission error, try demo fallback
+        const demo = getDemoProduct(slug);
+        setProduct(demo ? (demo as Product) : null);
       } finally {
         setLoading(false);
       }
