@@ -4,9 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, UploadCloud, X, Save, Plus, Trash2 } from "lucide-react";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { db, storage } from "@/lib/firebase";
+import { storage } from "@/lib/firebase";
+import { useAuth } from "@/context/AuthContext";
 import styles from "./newProduct.module.css";
 import Image from "next/image";
 
@@ -47,7 +47,8 @@ const unique = (values: string[]) => Array.from(new Set(values));
 
 export default function NewProduct() {
   const router = useRouter();
-  
+  const { user } = useAuth();
+
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -213,19 +214,40 @@ export default function NewProduct() {
         uploadedImageUrls.push(downloadUrl);
       }
 
-      // 2. Save Product to Firestore
-      await addDoc(collection(db, "products"), {
-        name,
-        description: formData.description,
-        price: sellingPrice,
-        status: formData.status,
-        qikinkProductId: formData.qikinkProductId.trim() || null,
-        qikinkProductName: formData.qikinkProductName.trim() || null,
-        variants: saveVariants,
-        sizes,
-        images: uploadedImageUrls,
-        createdAt: serverTimestamp(),
+      if (!user) {
+        setFormError("You must be logged in as admin to create products.");
+        return;
+      }
+
+      const idToken = await user.getIdToken();
+      const response = await fetch("/api/admin/products", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({
+          name,
+          description: formData.description,
+          price: sellingPrice,
+          status: formData.status,
+          qikinkProductId: formData.qikinkProductId.trim() || null,
+          qikinkProductName: formData.qikinkProductName.trim() || null,
+          variants: saveVariants,
+          sizes,
+          images: uploadedImageUrls,
+        }),
       });
+
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setFormError(
+          typeof result?.error === "string"
+            ? result.error
+            : "Failed to create product.",
+        );
+        return;
+      }
 
       router.push("/admin/products");
     } catch (error) {

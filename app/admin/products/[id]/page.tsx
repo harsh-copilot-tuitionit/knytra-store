@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, UploadCloud, X, Save, Plus, Trash2 } from "lucide-react";
-import { doc, getDoc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "@/lib/firebase";
+import { useAuth } from "@/context/AuthContext";
 import styles from "../new/newProduct.module.css";
 import Image from "next/image";
 
@@ -86,6 +87,7 @@ export default function EditProductPage() {
   const router = useRouter();
   const params = useParams();
   const productId = String(params?.id ?? "");
+  const { user } = useAuth();
 
   const [loading, setLoading] = useState(false);
   const [loadingProduct, setLoadingProduct] = useState(true);
@@ -303,18 +305,40 @@ export default function EditProductPage() {
 
       const images = [...existingImages, ...uploadedImageUrls];
 
-      await updateDoc(doc(db, "products", productId), {
-        name,
-        description: formData.description,
-        price: sellingPrice,
-        status: formData.status,
-        qikinkProductId: formData.qikinkProductId.trim() || null,
-        qikinkProductName: formData.qikinkProductName.trim() || null,
-        variants: saveVariants,
-        sizes,
-        images,
-        updatedAt: serverTimestamp(),
+      if (!user) {
+        setFormError("You must be logged in as admin to update products.");
+        return;
+      }
+
+      const idToken = await user.getIdToken();
+      const response = await fetch(`/api/admin/products/${productId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({
+          name,
+          description: formData.description,
+          price: sellingPrice,
+          status: formData.status,
+          qikinkProductId: formData.qikinkProductId.trim() || null,
+          qikinkProductName: formData.qikinkProductName.trim() || null,
+          variants: saveVariants,
+          sizes,
+          images,
+        }),
       });
+
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setFormError(
+          typeof result?.error === "string"
+            ? result.error
+            : "Failed to update product.",
+        );
+        return;
+      }
 
       router.push("/admin/products");
     } catch (error) {
